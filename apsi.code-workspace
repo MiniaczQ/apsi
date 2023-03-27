@@ -1,0 +1,24 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "files.autoSave": "afterDelay",
+        "editor.formatOnPaste": true,
+        "editor.formatOnSave": true,
+        "files.eol": "\n",
+        "rust-analyzer.procMacro.attributes.enable": true,
+    },
+    "extensions": {
+        "recommendations": [
+            "rust-lang.rust-analyzer",
+            "donjayamanne.git-extension-pack",
+            "wayou.vscode-todo-highlight",
+            "mhutchie.git-graph",
+            "waderyan.gitblame",
+            "tamasfe.even-better-toml"
+        ]
+    }
+}

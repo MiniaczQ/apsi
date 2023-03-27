@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  database:
+    container_name: database
+    hostname: database
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=admin
+    profiles:
+      - db
+      - all
+
+  webserver:
+    container_name: webserver
+    image:
+      path: "backend"
+      build: "."
+      name: "webserver"
+    hostname: webserver
+    ports:
+      - 8000:8000
+    profiles:
+      - all

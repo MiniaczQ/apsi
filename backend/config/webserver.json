@@ -1,0 +1,14 @@
+{
+    "mongo": {
+        "hosts": [
+            "192.168.33.10:27017"
+        ],
+        "maxPoolSize": 16,
+        "credential": {
+            "username": "admin",
+            "password": "admin"
+        },
+        "defaultDatabase": "test"
+    },
+    "url": "[::1]:3000"
+}

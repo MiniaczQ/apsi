@@ -9,8 +9,8 @@ use self::{api::api_router, healthcheck::healthcheck_router, static_files::stati
 
 pub fn main_route() -> Router {
     Router::new()
-        .layer(TraceLayer::new_for_http())
         .merge(healthcheck_router())
         .nest("/api", api_router())
         .fallback_service(static_files_service())
+        .layer(TraceLayer::new_for_http())
 }

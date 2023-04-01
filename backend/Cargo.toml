@@ -15,7 +15,7 @@ tokio = { version = "1.27.0", features = [
     "signal",
     "rt-multi-thread",
 ] }
-tower-http = { version = "0.4.0", features = ["trace", "fs"] }
+tower-http = { version = "0.4.0", features = ["trace", "fs", "cors"] }
 tower-service = "0.3.2"
 tracing = "0.1.37"
 tracing-appender = "0.2.2"

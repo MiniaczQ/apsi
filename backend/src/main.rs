@@ -1,12 +1,12 @@
 mod config;
 mod routing;
-mod signal_handler;
+mod signals;
 mod tracing;
 
 use ::tracing::info;
 
 use crate::{
-    config::get_config, routing::main_route, signal_handler::shutdown_signal,
+    config::get_config, routing::main_route, signals::shutdown_signal,
     tracing::setup_tracing,
 };
 

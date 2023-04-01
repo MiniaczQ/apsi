@@ -6,8 +6,7 @@ mod tracing;
 use ::tracing::info;
 
 use crate::{
-    config::get_config, routing::main_route, signals::shutdown_signal,
-    tracing::setup_tracing,
+    config::get_config, routing::main_route, signals::shutdown_signal, tracing::setup_tracing,
 };
 
 #[tokio::main]
@@ -22,7 +21,7 @@ async fn main() {
     // New server bound to provided address
     axum::Server::bind(&config.url)
         // Router turned into a service to be served
-        .serve(main_route().into_make_service())
+        .serve(main_route(&config).into_make_service())
         // Shutdown detected by a `Future` (Task / async function) finishing
         .with_graceful_shutdown(shutdown_signal())
         // Wait for future to finish

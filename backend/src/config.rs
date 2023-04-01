@@ -10,6 +10,7 @@ use serde::Deserialize;
 pub struct AppConfig {
     // Built-in type for IPv4 and IPv6 + ports
     pub url: SocketAddr,
+    pub cors: bool,
 }
 
 pub fn get_config() -> AppConfig {

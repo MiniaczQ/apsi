@@ -3,46 +3,24 @@ import ReactDOM from 'react-dom/client';
 import {
   createBrowserRouter,
   createRoutesFromElements,
-  redirect,
   RouterProvider,
   Route,
-} from "react-router-dom";
-import { getCookie, setCookie, removeCookie } from 'typescript-cookie'
+} from 'react-router-dom';
 import './index.css';
 import App from './App';
 import Hello from './Hello';
 import Login from './Login';
 import reportWebVitals from './reportWebVitals';
-
-const cookieName = 'jwt-token';
-
-const loginLoader = async () => {
-  if (getCookie(cookieName) === undefined)
-    return redirect('/login');
-  return null;
-};
-
-const loginAction = async () => {
-  if (Math.random() < 0.2) {
-    setCookie(cookieName, 'dummy', { expires: 1 });
-    return redirect('/');
-  }
-  return 'Failed to login';
-};
-
-const logoutAction = async () => {
-  removeCookie(cookieName);
-  return redirect('/login');
-};
+import { redirectIfNotLoggedIn, loginAndRedirect, logoutAndRedirect } from './LoginManager';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
-      <Route loader={loginLoader}>
+      <Route loader={redirectIfNotLoggedIn}>
         <Route index element={<Hello />} />
-        <Route path='logout' action={logoutAction} />
+        <Route path='logout' action={logoutAndRedirect} />
       </Route>
-      <Route path='login' element={<Login />} action={loginAction} />
+      <Route path='login' element={<Login />} action={loginAndRedirect} />
     </Route>
   )
 );

@@ -1,18 +1,29 @@
-import { Form, useActionData } from "react-router-dom";
+import { Form as RouterForm, useActionData } from 'react-router-dom';
+import { Alert, Button, Form } from 'react-bootstrap';
 import './App.css';
 
 function Login() {
   const error = useActionData()?.toString();
-  const errorElement = error ? <p>{error}</p> : <></>
+  const errorElement = error? <Alert variant="danger">{error}</Alert> : <></>
 
   return (
-    <div>
-      <p>Login page.</p>
+    <>
+      <p className="display-5">Login form</p>
       {errorElement}
-      <Form method="post">
-        <button type="submit">Login</button>
+      <Form as={RouterForm} method="post">
+        <Form.Group className="mb-3" controlId="username">
+          <Form.Label>Username</Form.Label>
+          <Form.Control type="text" placeholder="Enter username" />
+        </Form.Group>
+        <Form.Group className="mb-3" controlId="password">
+          <Form.Label>Password</Form.Label>
+          <Form.Control type="password" placeholder="Enter password" />
+        </Form.Group>
+        <Button variant="primary" type="submit">
+          Sign in
+        </Button>
       </Form>
-    </div>
+    </>
   );
 }
 

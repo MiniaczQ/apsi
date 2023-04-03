@@ -1,16 +1,16 @@
 import { Button, Nav, Navbar, Container } from 'react-bootstrap';
 import { Link, Outlet } from 'react-router-dom';
-import { LoginManager } from './App';
+import { LoginState } from './App';
 import './App.css';
 
 type RoutingRootProps = {
-  loginManager: LoginManager;
+  loginState: LoginState;
 };
 
-function RoutingRoot({ loginManager }: RoutingRootProps) {
-  const logout = () => loginManager.setToken(undefined);
+function RoutingRoot({ loginState }: RoutingRootProps) {
+  const logout = () => loginState.setToken(undefined);
 
-  const loginLogoutButton = loginManager.isLoggedIn
+  const loginLogoutButton = loginState.isLoggedIn
     ? <Nav.Link as={Button} onClick={logout}>Logout</Nav.Link>
     : <Nav.Link as={Link} to="/login">Login</Nav.Link>;
 

@@ -1,14 +1,14 @@
 import { useState, FormEventHandler } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 import './App.css';
-import { LoginManager } from './App';
+import { LoginState } from './App';
 import { login } from './ApiCommunication';
 
 type LoginProps = {
-  loginManager: LoginManager;
+  loginState: LoginState;
 };
 
-function Login({ loginManager }: LoginProps) {
+function Login({ loginState }: LoginProps) {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | undefined>(undefined);
@@ -17,7 +17,7 @@ function Login({ loginManager }: LoginProps) {
   const loginAndUpdateState: FormEventHandler<HTMLFormElement> = async (evt) => {
     evt.preventDefault();
     try {
-      loginManager.setToken(await login(username, password));
+      loginState.setToken(await login(username, password));
     } catch (e) {
       setError(e?.toString());
     }

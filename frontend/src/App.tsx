@@ -10,7 +10,7 @@ import Login from './Login';
 import './App.css';
 import { useCookies } from 'react-cookie';
 
-export type LoginManager = {
+export type LoginState = {
   isLoggedIn: boolean;
   token: string | undefined;
   setToken: ((token: string | undefined) => void);
@@ -20,7 +20,7 @@ function App() {
   const cookieName = 'jwt-token';
   const [cookies, setCookie, removeCookie] = useCookies([cookieName, 'not-existing']);
 
-  const loginManager: LoginManager = {
+  const loginState: LoginState = {
     isLoggedIn: cookies[cookieName] !== undefined,
     token: cookies[cookieName] as (string | undefined),
     setToken: token => token !== undefined ? setCookie(cookieName, token) : removeCookie(cookieName),
@@ -28,13 +28,13 @@ function App() {
 
   const router = createBrowserRouter(
     createRoutesFromElements(
-      loginManager.isLoggedIn ? (
-        <Route path="/" element={<RoutingRoot loginManager={loginManager} />}>
+      loginState.isLoggedIn ? (
+        <Route path="/" element={<RoutingRoot loginState={loginState} />}>
           <Route index element={<Hello />} />
         </Route>
       ) : (
-        <Route element={<RoutingRoot loginManager={loginManager} />}>
-          <Route path="/*" element={<Login loginManager={loginManager} />} />
+        <Route element={<RoutingRoot loginState={loginState} />}>
+          <Route path="/*" element={<Login loginState={loginState} />} />
         </Route>
       )
     )

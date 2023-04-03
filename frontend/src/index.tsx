@@ -1,29 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import {
-  createBrowserRouter,
-  createRoutesFromElements,
-  RouterProvider,
-  Route,
-} from 'react-router-dom';
 import './index.css';
 import App from './App';
-import Hello from './Hello';
-import Login from './Login';
 import reportWebVitals from './reportWebVitals';
-import { redirectIfNotLoggedIn, loginAndRedirect, logoutAndRedirect } from './LoginManager';
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<App />}>
-      <Route loader={redirectIfNotLoggedIn}>
-        <Route index element={<Hello />} />
-        <Route path='logout' action={logoutAndRedirect} />
-      </Route>
-      <Route path='login' element={<Login />} action={loginAndRedirect} />
-    </Route>
-  )
-);
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -31,7 +10,7 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <App />
   </React.StrictMode>
 );
 

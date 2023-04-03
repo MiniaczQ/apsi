@@ -1,5 +1,3 @@
-import { getToken } from './LoginManager';
-
 const apiBaseUrl = 'http://example.com/api/';  // the trailing slash is important
 
 const baseRequestOptions: RequestInit = {
@@ -19,17 +17,17 @@ const addPostDataToRequestOptions = (options: RequestInit, data: any) => ({
   body: JSON.stringify(data),
 });
 
-const addCredentialsToRequestOptions = (options: RequestInit) => ({
+const addCredentialsToRequestOptions = (options: RequestInit, token: string) => ({
   ...options,
   headers: {
     ...(options.headers ?? {}),
-    'Authorization': `Bearer ${getToken()}`,
+    'Authorization': `Bearer ${token}`,
   },
 });
 
-const post = async (relPath: string, data: any, includeCredentials = true) => {
+const post = async (relPath: string, data: any, token: string | undefined = undefined) => {
   const postReqOptions = addPostDataToRequestOptions(baseRequestOptions, data);
-  const finalReqOptions = includeCredentials ? addCredentialsToRequestOptions(postReqOptions) : postReqOptions;
+  const finalReqOptions = token ? addCredentialsToRequestOptions(postReqOptions, token) : postReqOptions;
   return await (await fetch(new URL(relPath, apiBaseUrl), finalReqOptions)).json();
 };
 

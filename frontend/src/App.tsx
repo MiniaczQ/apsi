@@ -1,31 +1,48 @@
-import { Button, Nav, Navbar, NavDropdown, Container } from "react-bootstrap";
-import { Link, Outlet, useSubmit } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Route,
+  RouterProvider,
+} from 'react-router-dom';
+import RoutingRoot from './RoutingRoot';
+import Hello from './Hello';
+import Login from './Login';
 import './App.css';
+import { useCookies } from 'react-cookie';
+
+export type LoginManager = {
+  isLoggedIn: boolean;
+  token: string | undefined;
+  setToken: ((token: string | undefined) => void);
+};
 
 function App() {
-  const clientSubmit = useSubmit();
-  const logout = () => clientSubmit(null, { method: 'post', action: '/logout' });
+  const cookieName = 'jwt-token';
+  const [cookies, setCookie, removeCookie] = useCookies([cookieName, 'not-existing']);
+
+  const loginManager: LoginManager = {
+    isLoggedIn: cookies[cookieName] !== undefined,
+    token: cookies[cookieName] as (string | undefined),
+    setToken: token => token !== undefined ? setCookie(cookieName, token) : removeCookie(cookieName),
+  };
+
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      loginManager.isLoggedIn ? (
+        <Route path="/" element={<RoutingRoot loginManager={loginManager} />}>
+          <Route index element={<Hello />} />
+        </Route>
+      ) : (
+        <Route element={<RoutingRoot loginManager={loginManager} />}>
+          <Route path="/*" element={<Login loginManager={loginManager} />} />
+        </Route>
+      )
+    )
+  );
 
   return (
     <div id="App">
-      <Navbar bg="light" expand="lg">
-        <Container>
-          <Navbar.Brand as={Link} to="/">APSI Docs</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-              <Nav.Link as={Link} to="/">Home</Nav.Link>
-              <NavDropdown title="Account" id="basic-nav-dropdown">
-                <NavDropdown.Item as={Link} to="/login">Login</NavDropdown.Item>
-                <NavDropdown.Item as={Button} onClick={logout}>Logout</NavDropdown.Item>
-              </NavDropdown>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-      <div id="outlet" className="d-flex flex-column align-items-stretch p-3">
-        <Outlet />
-      </div>
+      <RouterProvider router={router} />
     </div>
   );
 }

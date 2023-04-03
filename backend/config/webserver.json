@@ -1,4 +1,8 @@
 {
     "url": "0.0.0.0:3000",
-    "cors": true
+    "cors": true,
+    "authorization_keys": {
+        "encoding": "devkeys/pub.pem",
+        "decoding": "devkeys/priv.pem"
+    }
 }

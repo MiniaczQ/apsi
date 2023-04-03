@@ -5,12 +5,15 @@ use std::net::SocketAddr;
 use config::{Config, Environment, File, FileFormat};
 use serde::Deserialize;
 
+use crate::routing::api::auth::authorization_keys::AuthorizationKeysConfig;
+
 // Automatic trait implementations
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     // Built-in type for IPv4 and IPv6 + ports
     pub url: SocketAddr,
     pub cors: bool,
+    pub authorization_keys: AuthorizationKeysConfig,
 }
 
 pub fn get_config() -> AppConfig {

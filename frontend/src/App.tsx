@@ -1,24 +1,48 @@
-import React from 'react';
-import logo from './logo.svg';
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Route,
+  RouterProvider,
+} from 'react-router-dom';
+import RoutingRoot from './RoutingRoot';
+import Hello from './Hello';
+import Login from './Login';
 import './App.css';
+import { useCookies } from 'react-cookie';
+
+export type LoginState = {
+  isLoggedIn: boolean;
+  token: string | undefined;
+  setToken: ((token: string | undefined) => void);
+};
 
 function App() {
+  const cookieName = 'jwt-token';
+  const [cookies, setCookie, removeCookie] = useCookies([cookieName, 'not-existing']);
+
+  const loginState: LoginState = {
+    isLoggedIn: cookies[cookieName] !== undefined,
+    token: cookies[cookieName] as (string | undefined),
+    setToken: token => token !== undefined ? setCookie(cookieName, token) : removeCookie(cookieName),
+  };
+
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      loginState.isLoggedIn ? (
+        <Route path="/" element={<RoutingRoot loginState={loginState} />}>
+          <Route index element={<Hello />} />
+        </Route>
+      ) : (
+        <Route element={<RoutingRoot loginState={loginState} />}>
+          <Route path="/*" element={<Login loginState={loginState} />} />
+        </Route>
+      )
+    )
+  );
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div id="App">
+      <RouterProvider router={router} />
     </div>
   );
 }

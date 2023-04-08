@@ -14,6 +14,6 @@ where
     T: 'static + Send + Sync + Clone,
 {
     Router::new()
-        .route("authorize", get(authorize))
-        .route("who-am-i", get(who_am_i))
+        .route("/authorize", get(authorize))
+        .route("/who-am-i", get(who_am_i))
 }

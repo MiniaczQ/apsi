@@ -12,7 +12,7 @@ where
     T: 'static + Send + Sync + Clone,
 {
     Router::new()
-        .nest("auth", auth_router())
+        .nest("/auth", auth_router())
         .fallback(handler_404)
 }
 

@@ -17,12 +17,11 @@ services:
 
   webserver:
     container_name: webserver
-    image:
-      path: "backend"
-      build: "."
-      name: "webserver"
+    build: './backend'
     hostname: webserver
     ports:
-      - 8000:8000
+      - 8000:3000
+    environment:
+      - RUST_BACKTRACE=1
     profiles:
       - all

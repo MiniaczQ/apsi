@@ -72,10 +72,19 @@ function Versions() {
     return(
       <>
         {
-          versions?.map(ver =>
-            <tr >
-              <td> {ver.versions} </td>
-              <Button onClick={() => go_to_doc_ver(ver.doc_id, ver.ver_id)}> Check versions</Button>
+          versions?.map( (ver, id) =>
+            <tr>
+              <td> 
+                {id} 
+              </td>
+
+              <td align='center'> 
+                {ver.versions} 
+              </td>
+
+              <td align='center'>
+                <Button variant = 'outline-secondary' onClick={() => go_to_doc_ver(ver.doc_id, ver.ver_id)}> Inspect version</Button>
+              </td>
             </tr>)
         }
       
@@ -88,11 +97,19 @@ function Versions() {
 
   return (
     <Container>
-      <Table size='xxl' responsive="sm">
+      <h3>
+        {location.state.doc_name}
+      </h3>
+
+      <Table striped bordered hover size="sm">
         <thead>
           <tr>
             <th>
-              Versions
+              #
+            </th>
+
+            <th>
+              Version
             </th>
           
             <th>
@@ -106,6 +123,12 @@ function Versions() {
       </tbody>
 
       </Table>
+
+      <p>
+        <Button variant = 'outline-primary'>
+          Create New Document Version
+        </Button>
+      </p>
     </Container>
   );
 }

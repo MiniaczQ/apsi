@@ -28,14 +28,21 @@ function Documents() {
 
   return (
     <Container>
-      <Table size='xxl' responsive="sm">
+      <h3>
+        Documents
+      </h3>
+      <Table striped bordered hover size="sm" >
         <thead>
           <tr>
-            <th>
-              Document Name
+            <th >
+              #
+            </th>
+
+            <th >
+              Name
             </th>
           
-            <th>
+            <th >
               Options
             </th>
           </tr>
@@ -43,16 +50,31 @@ function Documents() {
 
         <tbody>
 
-        {docs.map(doc =>
-          <tr key = {doc.doc_id}>
-            <td> {doc.document_name} </td>
+        {docs.map( (doc,id) =>
+          <tr key = {id}>
+            <td> 
+              {id} 
+            </td>
 
-            <Button onClick={() => go_to_ver(doc.doc_id, doc.document_name)}> Check versions</Button>
+            <td align='center'> 
+              {doc.document_name} 
+            </td>
+
+            <td align='center'>
+              <Button variant = 'outline-secondary' onClick={() => go_to_ver(doc.doc_id, doc.document_name)}> Check versions</Button>
+            </td>
           </tr>
         )}
       </tbody>
 
       </Table>
+
+      <p>
+        <Button variant = 'outline-primary'>
+          Create Document
+        </Button>
+      </p>
+
     </Container>
   );
 }

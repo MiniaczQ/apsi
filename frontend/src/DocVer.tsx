@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import './App.css';
 import { useLocation } from 'react-router';
 import { Container } from 'react-bootstrap';
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
+import styles from './docVer.module.css';
 
 var docs =[
     {
@@ -57,16 +59,40 @@ function DocVer(){
 
     return (
     <Container>
-      <h3>
-        Document {doc_ver?.doc_id}
-      </h3>
-      <h3>
-        Version { doc_ver?.versions}
-      </h3>
+      <Tabs
+        defaultActiveKey="details"
+        id="noanim-tab-example"
+        className="mb-3"
+        fill
+        justify
 
-      <text>
-        { doc_ver?.text}
-      </text>
+      >
+        <Tab eventKey="details" title="Details">
+          <h4 className={styles.pblue}>
+            Document name
+          </h4>
+          <p className={styles.textblack}>
+            {doc_ver?.doc_id}
+          </p>
+
+          <h5 className={styles.pblue}>
+            Version
+          </h5>
+          <p className={styles.textblack}>
+            {doc_ver?.versions}
+          </p>
+
+        </Tab>
+        <Tab eventKey="text" title="Text">
+          <text className={styles.textblack}>
+            {doc_ver?.text}
+          </text>
+        </Tab>
+        <Tab eventKey="past" title="Past Version" disabled>
+        </Tab>
+        <Tab eventKey="future" title="Future versions" disabled>
+        </Tab>
+      </Tabs>
     </Container>
     )
 }

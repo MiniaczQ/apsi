@@ -1,0 +1,13 @@
+.pblue {
+    color: DodgerBlue;
+    padding: 10px;
+    font-family: Arial;
+    text-align: left;
+  }
+
+.textblack {
+  color: black;
+  padding: 5px;
+  font-family: Arial;
+  text-align: left;
+}

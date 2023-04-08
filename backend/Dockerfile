@@ -1,7 +1,7 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
-WORKDIR /usr/local/bin//app
+WORKDIR app
 
-FROM chef AS webserver
+FROM chef AS planner
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
@@ -11,10 +11,11 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build application
 COPY . .
-RUN cargo build --release --bin app
+RUN cargo build --release --bin webserver
 
 # We do not need the Rust toolchain to run the binary!
 FROM debian:buster-slim AS runtime
-WORKDIR /usr/local/bin//app
-COPY --from=builder /app/target/release/app /usr/local/bin
-ENTRYPOINT ["/usr/local/bin/app"]
+WORKDIR app
+COPY --from=builder /app/target/release/webserver /usr/local/bin
+COPY --from=builder /app/config/ /app/config/
+ENTRYPOINT ["/usr/local/bin/webserver"]

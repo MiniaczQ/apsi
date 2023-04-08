@@ -8,6 +8,7 @@ import RoutingRoot from './RoutingRoot';
 import Hello from './Hello';
 import Documents from './Documents';
 import Versions from './Versions';
+import DocVer from './DocVer';
 
 import Login from './Login';
 import './App.css';
@@ -35,6 +36,7 @@ function App() {
         <Route path="/" element={<RoutingRoot loginState={loginState} />}>
           <Route index element={<Documents />} />
           <Route path ="/Versions" index element={<Versions />} />
+          <Route path ="/DocVer" index element={<DocVer />} />
         </Route>
       ) : (
         <Route element={<RoutingRoot loginState={loginState} />}>

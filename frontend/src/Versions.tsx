@@ -2,6 +2,7 @@ import { Table, Button, Container } from 'react-bootstrap';
 import './App.css';
 import { useLocation } from 'react-router';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 var docs =[
   {
@@ -38,12 +39,14 @@ var docs =[
 
 
 function Versions() {
+  const navigate = useNavigate();
   const location = useLocation();
+
   const [versions, setVersions] = useState<{
-    doc_id: Number,
-    ver_id: Number,
-    versions: String,
-    text: String
+    doc_id: number,
+    ver_id: number,
+    versions: string,
+    text: string
   }[]>();
 
   useEffect(() => {
@@ -57,6 +60,12 @@ function Versions() {
   })
 
 
+  function go_to_doc_ver(document_id :number, version_id:number)
+  {
+    navigate("/DocVer", {state:{ doc_id : document_id, ver_id: version_id}})
+  }
+
+
   function returnVersion()
   {
     if(versions != undefined){
@@ -66,7 +75,7 @@ function Versions() {
           versions?.map(ver =>
             <tr >
               <td> {ver.versions} </td>
-              <Button onClick={() => console.log("baba")}> Check versions</Button>
+              <Button onClick={() => go_to_doc_ver(ver.doc_id, ver.ver_id)}> Check versions</Button>
             </tr>)
         }
       

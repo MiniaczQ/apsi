@@ -1,19 +1,30 @@
-use axum::{extract::FromRef, routing::get, Router};
+use axum::{
+    extract::FromRef,
+    routing::{get, post},
+    Router,
+};
 
-use self::{authorization_keys::AuthorizationKeys, authorize::authorize, who_am_i::who_am_i};
+use crate::database::DbPool;
+
+use self::{
+    authorization_keys::AuthorizationKeys, login::login, register::register, who_am_i::who_am_i,
+};
 
 pub mod authorization_keys;
-mod authorize;
 pub mod claims;
 mod error;
+mod login;
+mod register;
 mod who_am_i;
 
 pub fn auth_router<T>() -> Router<T>
 where
     AuthorizationKeys: FromRef<T>,
+    DbPool: FromRef<T>,
     T: 'static + Send + Sync + Clone,
 {
     Router::new()
-        .route("/authorize", get(authorize))
+        .route("/register", post(register))
+        .route("/login", post(login))
         .route("/who-am-i", get(who_am_i))
 }

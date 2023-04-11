@@ -8,8 +8,8 @@ mod tracing;
 use ::tracing::info;
 
 use crate::{
-    config::get_config, database::postgres_connection_pool, routing::main_route,
-    signals::shutdown_signal, state::AppState, tracing::setup_tracing,
+    config::get_config, database::setup_database, routing::main_route, signals::shutdown_signal,
+    state::AppState, tracing::setup_tracing,
 };
 
 #[tokio::main]
@@ -19,14 +19,17 @@ async fn main() {
     // Setup config
     let config = get_config();
 
+    // Setup database connection
+    let database_pool = setup_database(&config)
+        .await
+        .expect("Could not setup database");
+
     // App state
     let state = AppState {
         authorization_keys: (&config.authorization_keys)
             .try_into()
             .expect("Missing PEMs"),
-        database: postgres_connection_pool(&config)
-            .await
-            .expect("Could not establish database connection"),
+        database: database_pool,
     };
 
     // Example log

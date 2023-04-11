@@ -10,6 +10,7 @@
         "editor.formatOnSave": true,
         "files.eol": "\n",
         "rust-analyzer.procMacro.attributes.enable": true,
+        "rust-analyzer.showUnlinkedFileNotification": false,
     },
     "extensions": {
         "recommendations": [

@@ -5,7 +5,7 @@ mod static_files;
 use axum::{extract::FromRef, Router};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use crate::config::AppConfig;
+use crate::{config::AppConfig, database::DbPool};
 
 use self::{
     api::{api_router, auth::authorization_keys::AuthorizationKeys},
@@ -16,6 +16,7 @@ use self::{
 pub fn main_route<T>(config: &AppConfig) -> Router<T>
 where
     AuthorizationKeys: FromRef<T>,
+    DbPool: FromRef<T>,
     T: 'static + Send + Sync + Clone,
 {
     let mut router = Router::new()

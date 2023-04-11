@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -17,6 +19,7 @@ impl From<&PostgresConfig> for tokio_postgres::Config {
         this.dbname(&value.dbname);
         this.host(&value.host);
         this.port(value.port);
+        this.connect_timeout(Duration::from_secs(5));
         this
     }
 }

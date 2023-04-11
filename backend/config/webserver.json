@@ -2,14 +2,14 @@
     "url": "0.0.0.0:3000",
     "cors": true,
     "authorization_keys": {
-        "encoding": "devkeys/pub.pem",
-        "decoding": "devkeys/priv.pem"
+        "encoding": "devkeys/priv.pem",
+        "decoding": "devkeys/pub.pem"
     },
     "database": {
         "user": "admin",
         "password": "admin",
         "dbname": "admin",
-        "host": "localhost",
+        "host": "127.0.0.1",
         "port": 5432
     }
 }

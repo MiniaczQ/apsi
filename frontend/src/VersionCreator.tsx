@@ -1,51 +1,54 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
-import { Button, Container, Form } from 'react-bootstrap';
-import Tab from 'react-bootstrap/Tab';
-import Tabs from 'react-bootstrap/Tabs';
-import styles from './docVer.module.css';
+import { FunctionComponent, useEffect, useState } from 'react';
+import { Button, Form } from 'react-bootstrap';
 import { UUID } from 'crypto';
 import { useSearchParams } from 'react-router-dom';
 import { getVersion } from './ApiCommunication';
+import { LoginState } from './App';
 
 type VersionCreatorProps = {
-  parentId: UUID
+  loginState: LoginState
 };
 
-type CreateVersionRequest = {
-  author: UUID,
-  text: string
-};
-
-export default function VersionCreator() {
+export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginState }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [versionText, setVersionText] = useState('');
+  const [documentName, setDocumentName] = useState('');
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams()[0];
   const parentId = searchParams.get('parent') ?? undefined;
 
   const createVersion = async () => {};
 
-  useCallback(async () => {
-    if (parentId !== null) {
-      setVersionText(await getVersion(parentId as UUID));
+  useEffect(() => {
+    console.log(parentId);
+    if (parentId !== undefined) {
+      (async () => {
+        setVersionText(await getVersion(parentId as UUID));
+        setDocumentName('Sample name');
+        setIsLoading(false);
+      })();
+    } else {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }, [parentId]);
+
+  const parentVersionField = parentId !== undefined ? (
+    <Form.Group className="mb-3" controlId="versionName">
+      <Form.Label>Parent version</Form.Label>
+      <Form.Control disabled type="text" value={parentId} />
+    </Form.Group>
+  ) : undefined;
 
   return (
     <>
       <Form.Group className="mb-3" controlId="documentName">
         <Form.Label>Document name</Form.Label>
-        <Form.Control disabled type="text" value={parentId} />
+        <Form.Control disabled={parentId !== undefined} type="text" value={documentName} onChange={evt => setDocumentName(evt.target.value)} placeholder="Enter document name" />
       </Form.Group>
-      <Form.Group className="mb-3" controlId="versionName">
-        <Form.Label>Parent version</Form.Label>
-        <Form.Control disabled type="text" value={parentId} />
-      </Form.Group>
+      {parentVersionField}
       <Form.Group className="mb-3" controlId="author">
         <Form.Label>Author</Form.Label>
-        <Form.Control disabled type="text" value={parentId} />
+        <Form.Control disabled type="text" value={loginState.username} />
       </Form.Group>
       <Form.Group className="mb-3" controlId="content">
         <Form.Label>Content</Form.Label>
@@ -55,3 +58,5 @@ export default function VersionCreator() {
     </>
   );
 }
+
+export default VersionCreator;

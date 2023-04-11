@@ -83,7 +83,7 @@ function App() {
         <Route path="/" element={<RoutingRoot loginState={loginState} />}>
           <Route index element={<Documents />} />
           <Route path="Versions">
-            <Route index path="new" element={<VersionCreator />} />
+            <Route index path="new" element={<VersionCreator loginState={loginState} />} />
             <Route path="*" element={<Versions />} />
           </Route>
           <Route path="DocVer" index element={<DocVer />} />

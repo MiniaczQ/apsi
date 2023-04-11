@@ -13,6 +13,7 @@ import DocVer from './DocVer';
 import Login from './Login';
 import './App.css';
 import { useCookies } from 'react-cookie';
+import VersionCreator from './VersionCreator';
 
 export type LoginState = {
   isLoggedIn: boolean;
@@ -35,8 +36,11 @@ function App() {
       loginState.isLoggedIn ? (
         <Route path="/" element={<RoutingRoot loginState={loginState} />}>
           <Route index element={<Documents />} />
-          <Route path ="/Versions" index element={<Versions />} />
-          <Route path ="/DocVer" index element={<DocVer />} />
+          <Route path="Versions">
+            <Route index path="new" element={<VersionCreator />} />
+            <Route path="*" element={<Versions />} />
+          </Route>
+          <Route path="DocVer" index element={<DocVer />} />
         </Route>
       ) : (
         <Route element={<RoutingRoot loginState={loginState} />}>

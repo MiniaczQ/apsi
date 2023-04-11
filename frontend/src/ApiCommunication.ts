@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+
 const apiBaseUrl = 'http://example.com/api/';  // the trailing slash is important
 
 const baseRequestOptions: RequestInit = {
@@ -33,3 +35,5 @@ const post = async (relPath: string, data: any, token: string | undefined = unde
 
 
 export const login = async (username: string, password: string) => await post('user/login', { username, password }) as string;
+
+export const getVersion = async (id: UUID) => '';  // TODO

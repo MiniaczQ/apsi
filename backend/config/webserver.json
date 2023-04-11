@@ -4,5 +4,12 @@
     "authorization_keys": {
         "encoding": "devkeys/pub.pem",
         "decoding": "devkeys/priv.pem"
+    },
+    "database": {
+        "user": "admin",
+        "password": "admin",
+        "dbname": "admin",
+        "host": "localhost",
+        "port": 5432
     }
 }

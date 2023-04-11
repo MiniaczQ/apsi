@@ -5,7 +5,10 @@ use std::net::SocketAddr;
 use config::{Config, Environment, File, FileFormat};
 use serde::Deserialize;
 
-use crate::routing::api::auth::authorization_keys::AuthorizationKeysConfig;
+use crate::{
+    database::config::PostgresConfig,
+    routing::api::auth::authorization_keys::AuthorizationKeysConfig,
+};
 
 // Automatic trait implementations
 #[derive(Debug, Deserialize)]
@@ -14,6 +17,7 @@ pub struct AppConfig {
     pub url: SocketAddr,
     pub cors: bool,
     pub authorization_keys: AuthorizationKeysConfig,
+    pub database: PostgresConfig,
 }
 
 pub fn get_config() -> AppConfig {

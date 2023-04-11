@@ -1,8 +1,8 @@
-import { useState, FormEventHandler } from 'react';
+import { useState, MouseEventHandler } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 import './App.css';
 import { LoginState } from './App';
-import { login } from './ApiCommunication';
+import { login, register } from './ApiCommunication';
 
 type LoginProps = {
   loginState: LoginState;
@@ -11,23 +11,38 @@ type LoginProps = {
 function Login({ loginState }: LoginProps) {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string | undefined>(undefined);
-  const errorElement = error ? <Alert variant="danger">{error}</Alert> : <></>
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const successElement = success.length > 0 ? <Alert variant="success">{success}</Alert> : <></>
+  const errorElement = error.length > 0 ? <Alert variant="danger">{error}</Alert> : <></>
 
-  const loginAndUpdateState: FormEventHandler<HTMLFormElement> = async (evt) => {
-    evt.preventDefault();
+  const loginAndUpdateState: MouseEventHandler<HTMLButtonElement> = async () => {
     try {
-      loginState.setToken(await login(username, password));
+      setError('');
+      setSuccess('');
+      loginState.setToken((await login(username, password)).token);
     } catch (e) {
-      setError(e?.toString());
+      setError(e?.toString() ?? '');
+    }
+  };
+
+  const registerAndClear: MouseEventHandler<HTMLButtonElement> = async () => {
+    try {
+      setError('');
+      setSuccess('');
+      await register(username, password);
+      setSuccess('Registered successfully. Try logging in now.');
+    } catch (e) {
+      setError(e?.toString() ?? '');
     }
   };
 
   return (
     <>
-      <p className="display-5">Login form</p>
+      <p className="display-5">Login / register</p>
+      {successElement}
       {errorElement}
-      <Form onSubmit={loginAndUpdateState}>
+      <Form>
         <Form.Group className="mb-3" controlId="username">
           <Form.Label>Username</Form.Label>
           <Form.Control type="text" placeholder="Enter username" value={username} onChange={evt => setUsername(evt.target.value)} />
@@ -36,8 +51,11 @@ function Login({ loginState }: LoginProps) {
           <Form.Label>Password</Form.Label>
           <Form.Control type="password" placeholder="Enter password" value={password} onChange={evt => setPassword(evt.target.value)} />
         </Form.Group>
-        <Button variant="primary" type="submit">
+        <Button variant="primary" className="me-2" onClick={loginAndUpdateState}>
           Sign in
+        </Button>
+        <Button variant="secondary" onClick={registerAndClear}>
+          Sign up
         </Button>
       </Form>
     </>

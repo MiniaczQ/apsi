@@ -34,6 +34,11 @@ const post = async (relPath: string, data: any, token: string | undefined = unde
 };
 
 
-export const login = async (username: string, password: string) => await post('user/login', { username, password }) as string;
+export type AuthResponse = {
+  token: string
+};
+
+export const register = async (username: string, password: string) => { await post('auth/register', { username, password }); }
+export const login = async (username: string, password: string) => await post('auth/login', { username, password }) as AuthResponse;
 
 export const getVersion = async (id: UUID) => '';  // TODO

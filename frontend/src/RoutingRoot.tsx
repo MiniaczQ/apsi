@@ -11,7 +11,7 @@ function RoutingRoot({ loginState }: RoutingRootProps) {
   const logout = () => loginState.setToken(undefined);
 
   const loginLogoutButton = loginState.isLoggedIn
-    ? <Nav.Link as={Button} onClick={logout}>Logout</Nav.Link>
+    ? <Nav.Link as={Button} onClick={logout}>Logout ({loginState.username})</Nav.Link>
     : <Nav.Link as={Link} to="/login">Login</Nav.Link>;
 
   return (

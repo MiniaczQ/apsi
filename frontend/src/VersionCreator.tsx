@@ -35,7 +35,11 @@ export default function VersionCreator() {
 
   return (
     <>
-      <Form.Group className="mb-3" controlId="parentId">
+      <Form.Group className="mb-3" controlId="documentName">
+        <Form.Label>Document name</Form.Label>
+        <Form.Control disabled type="text" value={parentId} />
+      </Form.Group>
+      <Form.Group className="mb-3" controlId="versionName">
         <Form.Label>Parent version</Form.Label>
         <Form.Control disabled type="text" value={parentId} />
       </Form.Group>

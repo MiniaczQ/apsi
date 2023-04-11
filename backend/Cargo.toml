@@ -10,6 +10,7 @@ edition = "2021"
 axum = { version = "0.6.12", features = ["headers", "macros"] }
 bb8 = "0.8.0"
 bb8-postgres = { version = "0.8.1", features = ["with-uuid-1"] }
+chrono = { version = "0.4.24", features = ["serde"] }
 config = { version = "0.13.3", default-features = false, features = ["json"] }
 hex = "0.4.3"
 jsonwebtoken = "8.3.0"
@@ -23,7 +24,10 @@ tokio = { version = "1.27.0", features = [
     "signal",
     "rt-multi-thread",
 ] }
-tokio-postgres = { version = "0.7.8", features = ["with-uuid-1"] }
+tokio-postgres = { version = "0.7.8", features = [
+    "with-uuid-1",
+    "with-chrono-0_4",
+] }
 tower-http = { version = "0.4.0", features = ["trace", "fs", "cors"] }
 tower-service = "0.3.2"
 tracing = "0.1.37"

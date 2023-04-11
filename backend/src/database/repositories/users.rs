@@ -100,15 +100,10 @@ where
 
     async fn from_request_parts(_: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         let pool = DbPool::from_ref(state);
-        let conn = pool.get_owned().await.map_err(internal_error)?;
+        let conn = pool.get_owned().await.map_err(|e| {
+            error!("{}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
         Ok(Self { conn })
     }
-}
-
-fn internal_error<E>(err: E) -> StatusCode
-where
-    E: std::error::Error,
-{
-    error!("{}", err);
-    StatusCode::INTERNAL_SERVER_ERROR
 }

@@ -6,6 +6,10 @@ import {
 } from 'react-router-dom';
 import RoutingRoot from './RoutingRoot';
 import Hello from './Hello';
+import Documents from './Documents';
+import Versions from './Versions';
+import DocVer from './DocVer';
+
 import Login from './Login';
 import './App.css';
 import { useCookies } from 'react-cookie';
@@ -30,7 +34,9 @@ function App() {
     createRoutesFromElements(
       loginState.isLoggedIn ? (
         <Route path="/" element={<RoutingRoot loginState={loginState} />}>
-          <Route index element={<Hello />} />
+          <Route index element={<Documents />} />
+          <Route path ="/Versions" index element={<Versions />} />
+          <Route path ="/DocVer" index element={<DocVer />} />
         </Route>
       ) : (
         <Route element={<RoutingRoot loginState={loginState} />}>

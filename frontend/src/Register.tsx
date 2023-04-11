@@ -2,22 +2,27 @@ import { useState, MouseEventHandler } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 import './App.css';
 import { LoginState } from './App';
-import { login } from './ApiCommunication';
+import { login, register } from './ApiCommunication';
 
-type LoginProps = {
+type RegisterProps = {
   loginState: LoginState;
 };
 
-function Login({ loginState }: LoginProps) {
+function Register({ loginState }: RegisterProps) {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [password2, setPassword2] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
+  const successElement = success.length > 0 ? <Alert variant="success">{success}</Alert> : <></>
   const errorElement = error.length > 0 ? <Alert variant="danger">{error}</Alert> : <></>
 
-  const loginAndUpdateState: MouseEventHandler<HTMLButtonElement> = async () => {
+  const registerAndClear: MouseEventHandler<HTMLButtonElement> = async () => {
     try {
       setError('');
-      loginState.setToken((await login(username, password)).token);
+      setSuccess('');
+      await register(username, password);
+      setSuccess('Registered successfully. Try logging in now.');
     } catch (e) {
       setError(e?.toString() ?? '');
     }
@@ -25,7 +30,8 @@ function Login({ loginState }: LoginProps) {
 
   return (
     <>
-      <p className="display-5">Login form</p>
+      <p className="display-5">Registration form</p>
+      {successElement}
       {errorElement}
       <Form>
         <Form.Group className="mb-3" controlId="username">
@@ -36,12 +42,16 @@ function Login({ loginState }: LoginProps) {
           <Form.Label>Password</Form.Label>
           <Form.Control type="password" placeholder="Enter password" value={password} onChange={evt => setPassword(evt.target.value)} />
         </Form.Group>
-        <Button variant="primary" className="me-2" onClick={loginAndUpdateState}>
-          Log in
+        <Form.Group className="mb-3" controlId="password2">
+          <Form.Label>Repeat password</Form.Label>
+          <Form.Control type="password" placeholder="Repeat password" value={password2} onChange={evt => setPassword2(evt.target.value)} />
+        </Form.Group>
+        <Button variant="primary" onClick={registerAndClear}>
+          Register
         </Button>
       </Form>
     </>
   );
 }
 
-export default Login;
+export default Register;

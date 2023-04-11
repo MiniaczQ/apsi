@@ -10,6 +10,7 @@ import Versions from './Versions';
 import DocVer from './DocVer';
 
 import Login from './Login';
+import Register from './Register';
 import './App.css';
 import { useCookies } from 'react-cookie';
 import VersionCreator from './VersionCreator';
@@ -90,6 +91,7 @@ function App() {
         </Route>
       ) : (
         <Route element={<RoutingRoot loginState={loginState} />}>
+          <Route index path="/register" element={<Register loginState={loginState} />} />
           <Route path="/*" element={<Login loginState={loginState} />} />
         </Route>
       )

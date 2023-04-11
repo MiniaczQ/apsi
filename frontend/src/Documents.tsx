@@ -37,6 +37,23 @@ function Documents() {
     navigate("/Versions", {state:{ doc_id : id, doc_name: name}})
   }
 
+  function print_doc_row(document_name:string, document_id:number, row_id:number)
+  {
+    return(
+    <tr key = {row_id}>
+    <td> 
+      {row_id} 
+    </td>
+
+    <td align='center'> 
+      {document_name} 
+    </td>
+
+    <td align='center'>
+      <Button variant = 'outline-secondary' onClick={() => go_to_ver(document_id, document_name)}> Check versions</Button>
+    </td>
+  </tr>)
+  }
 
   return (
     <Container>
@@ -61,22 +78,9 @@ function Documents() {
         </thead>
 
         <tbody>
-
         {docs.map( (doc,id) =>
-          <tr key = {id}>
-            <td> 
-              {id} 
-            </td>
-
-            <td align='center'> 
-              {doc.document_name} 
-            </td>
-
-            <td align='center'>
-              <Button variant = 'outline-secondary' onClick={() => go_to_ver(doc.doc_id, doc.document_name)}> Check versions</Button>
-            </td>
-          </tr>
-        )}
+          print_doc_row(doc.document_name, doc.doc_id, id))
+        }
       </tbody>
 
       </Table>

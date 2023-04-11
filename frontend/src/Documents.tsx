@@ -8,16 +8,28 @@ function Documents() {
   var docs =[
     {
         doc_id: 1,
-        document_name: "Star Wars"
+        document_name: "Network Mail Transportation Protocol"
     },
     {
         doc_id: 2,
-        document_name: "Makafon"
+        document_name: "User Guide for Mid and Beginners"
     },
     {
         doc_id: 3,
-        document_name: "Homofobia"
+        document_name: "Health Assosiation Commision Agreement"
     },
+    {
+      doc_id: 4,
+      document_name: "Fire Schedule Evacution Procedures"
+  },
+  {
+      doc_id: 5,
+      document_name: "Cake Day"
+  },
+  {
+      doc_id: 6,
+      document_name: "Emergency Protocol"
+  },
   ] 
 
   function go_to_ver(id :number, name:string)

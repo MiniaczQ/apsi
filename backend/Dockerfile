@@ -18,4 +18,5 @@ FROM debian:buster-slim AS runtime
 WORKDIR app
 COPY --from=builder /app/target/release/webserver /usr/local/bin
 COPY --from=builder /app/config/ /app/config/
+COPY --from=builder /app/devkeys/ /app/devkeys/
 ENTRYPOINT ["/usr/local/bin/webserver"]

@@ -7,9 +7,12 @@ edition = "2021"
 
 # Specific versions to invalidate build cache less often
 [dependencies]
-axum = "0.6.12"
+axum = { version = "0.6.12", features = ["headers", "macros"] }
 config = { version = "0.13.3", default-features = false, features = ["json"] }
+jsonwebtoken = "8.3.0"
+once_cell = "1.17.1"
 serde = { version = "1.0.159", features = ["derive"] }
+serde_json = "1.0.95"
 tokio = { version = "1.27.0", features = [
     "macros",
     "signal",
@@ -20,6 +23,7 @@ tower-service = "0.3.2"
 tracing = "0.1.37"
 tracing-appender = "0.2.2"
 tracing-subscriber = { version = "0.3.16", features = ["env-filter", "json"] }
+uuid = { version = "1.3.0", features = ["serde"] }
 
 # Optimize dependencies as if it was release
 [profile.dev.package."*"]

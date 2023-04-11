@@ -19,4 +19,5 @@ WORKDIR app
 COPY --from=builder /app/target/release/webserver /usr/local/bin
 COPY --from=builder /app/config/ /app/config/
 COPY --from=builder /app/devkeys/ /app/devkeys/
+COPY --from=builder /app/migrations/ /app/migrations/
 ENTRYPOINT ["/usr/local/bin/webserver"]

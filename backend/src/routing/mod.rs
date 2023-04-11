@@ -5,7 +5,7 @@ mod static_files;
 use axum::{extract::FromRef, Router};
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use crate::config::AppConfig;
+use crate::{config::AppConfig, database::DbPool};
 
 use self::{
     api::{api_router, auth::authorization_keys::AuthorizationKeys},
@@ -13,27 +13,17 @@ use self::{
     static_files::static_files_service,
 };
 
-#[derive(FromRef, Clone)]
-struct AppState {
-    authorization_keys: AuthorizationKeys,
-}
-
 pub fn main_route<T>(config: &AppConfig) -> Router<T>
 where
+    AuthorizationKeys: FromRef<T>,
+    DbPool: FromRef<T>,
     T: 'static + Send + Sync + Clone,
 {
-    let state = AppState {
-        authorization_keys: (&config.authorization_keys)
-            .try_into()
-            .expect("Missing PEMs"),
-    };
-
     let mut router = Router::new()
         .merge(healthcheck_router())
         .nest("/api", api_router())
         .fallback_service(static_files_service())
-        .layer(TraceLayer::new_for_http())
-        .with_state(state);
+        .layer(TraceLayer::new_for_http());
 
     if config.cors {
         router = router.layer(CorsLayer::permissive());

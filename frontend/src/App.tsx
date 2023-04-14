@@ -82,10 +82,10 @@ function App() {
     createRoutesFromElements(
       isLoggedIn ? (
         <Route element={<RoutingRoot loginState={loginState} />}>
-          <Route index path="/DocVer" element={<DocVer />} />
+          <Route index path="/DocVer" element={<DocVer loginState={loginState} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} />} />
-          <Route index path="/versions" element={<Versions />} />
-          <Route index path="/*" element={<Documents />} />
+          <Route index path="/versions" element={<Versions loginState={loginState} />} />
+          <Route index path="/*" element={<Documents loginState={loginState} />} />
         </Route>
       ) : (
         <Route element={<RoutingRoot loginState={loginState} />}>

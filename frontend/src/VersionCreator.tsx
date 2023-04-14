@@ -1,30 +1,49 @@
 import { FunctionComponent, useEffect, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { useSearchParams } from 'react-router-dom';
-import { getVersionContent } from './ApiCommunication';
+import { useNavigate } from 'react-router';
+import { getVersionContent, createDocument, createVersion } from './ApiCommunication';
 import { LoginState } from './App';
+import CreateDocument from './models/CreateDocument';
+import CreateVersion from './models/CreateVersion';
 
 type VersionCreatorProps = {
   loginState: LoginState
 };
 
 export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginState }) => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [versionText, setVersionText] = useState('');
   const [documentName, setDocumentName] = useState('');
+  const [versionName, setVersionName] = useState('1');
 
   const searchParams = useSearchParams()[0];
   const documentId = searchParams.get('document') ?? undefined;
   const parentId = searchParams.get('parentVersion') ?? undefined;
+  const documentNameOld = searchParams.get('documentName') ?? undefined;
+  const parentName = searchParams.get('parentName') ?? undefined;
 
-  const createVersion = async () => {};
+  const _createVersion = async () => {
+    let cd: CreateDocument = { documentName: documentName };
+    let cv: CreateVersion = { versionName: versionName, content: versionText };
+    if (documentId === undefined) {
+      createDocument(cd, loginState.token!)
+        .then(response => createVersion(response.documentId, cv, loginState.token!))
+        .then(() => navigate('./Documents'));
+    } else {
+      createVersion(documentId!, cv, loginState.token!)
+        .then(() => navigate('./Documents'));
+    }
+
+  };
 
   useEffect(() => {
-    console.log(parentId);
     if (parentId !== undefined) {
       (async () => {
         setVersionText(await getVersionContent(documentId!, parentId, loginState.token!));
-        setDocumentName('Sample name');
+        setDocumentName(documentNameOld!);
+        setVersionName((+(parentName!) + 1).toString());
         setIsLoading(false);
       })();
     } else {
@@ -35,7 +54,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   const parentVersionField = parentId !== undefined ? (
     <Form.Group className="mb-3" controlId="versionName">
       <Form.Label>Parent version</Form.Label>
-      <Form.Control disabled type="text" value={parentId} />
+      <Form.Control disabled type="text" value={parentName} />
     </Form.Group>
   ) : undefined;
 
@@ -54,7 +73,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
         <Form.Label>Content</Form.Label>
         <Form.Control as="textarea" rows={5} value={versionText} onChange={evt => setVersionText(evt.target.value)} />
       </Form.Group>
-      <Button onClick={createVersion}>Create</Button>
+      <Button onClick={_createVersion}>Create</Button>
     </>
   );
 }

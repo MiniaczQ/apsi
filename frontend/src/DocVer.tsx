@@ -1,90 +1,32 @@
-import { useEffect, useState } from 'react';
+import { FunctionComponent, useState, useEffect } from "react";
 import { useNavigate, useLocation } from 'react-router';
 import { Button, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import styles from './docVer.module.css';
+import { LoginState } from './App';
+import { getVersionContent, getVersions } from './ApiCommunication';
+import DocumentVersion from "./models/DocumentVersion";
 
-var docs =[
-  {
-      doc_id: 1,
-      ver_id: 1,
-      doc_name: "Network Mail Transportation Protocol",
-      versions: "1",
-      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-  },
-  {
-    doc_id: 1,
-    ver_id: 2,
-    doc_name: "Network Mail Transportation Protocol",
-    versions: "1.1",
-    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-  },
-  {
-    doc_id: 1,
-    ver_id:3,
-    doc_name: "Network Mail Transportation Protocol",
-    versions: "1.2",
-    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-  },
-  {
-    doc_id: 1,
-    ver_id: 4,
-    doc_name: "Network Mail Transportation Protocol",
-    versions: "1.2.1",
-    text: "Miała matka syna syna jedynego\n Chciała go wychować na pana wielkiego \n Niech żyje wolność wolność i swoboda \nNiech żyje zabawa i dziewczyna młoda"
-  },
-  {
-    doc_id: 1,
-    ver_id: 5,
-    doc_name: "Network Mail Transportation Protocol",
-    versions: "1.2.2",
-    text: "Syna jedynego"
-  },
-  {
-    doc_id: 1,
-    ver_id: 5,
-    doc_name: "Network Mail Transportation Protocol",
-    versions: "1.3",
-    text: "Syna jedynego"
-  },
-  {
-    doc_id: 1,
-    ver_id: 5,
-    doc_name: "Network Mail Transportation Protocol",
-    versions: "2",
-    text: "Syna jedynego"
-  },
-  {
-    doc_id: 2,
-    ver_id: 4,
-    doc_name: "User Guide for Mid and Beginners",
-    versions: "1",
-    text: "Lot w kosmos Jerzyku"
-  },
-] 
+type DocVerProps = {
+  loginState: LoginState
+};
 
-interface Document_Ver {
-  doc_id: number,
-  ver_id: number,
-  doc_name: string,
-  versions: string,
-  text: string
+interface DocumentVersionWithContent {
+  dv: DocumentVersion,
+  content: string
 } 
 
-function DocVer(){
+export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const [doc_ver, setVersions] = useState<Document_Ver>();
+  const [doc_ver, setVersions] = useState<DocumentVersionWithContent>();
 
     useEffect(() => {
-        for(var doc of docs){
-          if(doc.doc_id === location.state.doc_id && doc.ver_id === location.state.ver_id){
-            setVersions(doc);
-          }
-        }
-      }, [location.state.doc_id, location.state.ver_id]);
+      getVersionContent(location.state.ver.documentId, location.state.ver.versionId, loginState.token!)
+        .then(response => setVersions({ dv: location.state.ver, content: response}))
+    }, [location.state.ver]);
 
     return (
     <Container>
@@ -101,23 +43,23 @@ function DocVer(){
             Document name
           </h4>
           <p className={styles.textblack}>
-            {doc_ver?.doc_name}
+            {location.state.doc_name}
           </p>
 
           <h5 className={styles.pblue}>
             Version
           </h5>
           <p className={styles.textblack}>
-            {doc_ver?.versions}
+            {doc_ver?.dv.versionName}
           </p>
 
           <h5 className={styles.pblue}>
             Content
           </h5>
           <div className={styles.textblack}>
-            {doc_ver?.text}
+            {doc_ver?.content}
           </div>
-          <Button variant="outline-primary" onClick={() => navigate(`/versions/new?document=${doc_ver?.doc_id}&parentVersion=${doc_ver?.ver_id}`)}>
+          <Button variant="outline-primary" onClick={() => navigate(`/versions/new?document=${doc_ver?.dv.documentId}&parentVersion=${doc_ver?.dv.versionId}&documentName=${location.state.doc_name}&parentName=${doc_ver?.dv.versionName}`)}>
             Create New Document Version
           </Button>
         </Tab>

@@ -20,13 +20,6 @@ function RoutingRoot({ loginState }: RoutingRootProps) {
     <Nav.Link as={Link} to="/login">Login</Nav.Link>
   </>);
 
-  const loginLogoutButton = loginState.isLoggedIn
-    ? <Nav.Link as={Button} onClick={logout}>Logout ({loginState.username})</Nav.Link>
-    : (<>
-        <Nav.Link as={Link} to="/register">Register</Nav.Link>
-        <Nav.Link as={Link} to="/login">Login</Nav.Link>
-      </>);
-
   return (
     <>
       <Navbar bg="light" expand="lg">

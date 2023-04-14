@@ -75,7 +75,7 @@ function Versions() {
       }
     }
     setVersions(listed);
-  })
+  }, [location.state.doc_id])
 
 
   function go_to_doc_ver(document_id :number, version_id:number)
@@ -86,12 +86,12 @@ function Versions() {
 
   function returnVersion()
   {
-    if(versions != undefined){
+    if(versions !== undefined){
     return(
       <>
         {
-          versions?.map( (ver, id) =>
-            <tr>
+          versions?.map((ver, id) =>
+            <tr key={id}>
               <td> 
                 {id} 
               </td>

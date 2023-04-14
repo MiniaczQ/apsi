@@ -81,9 +81,9 @@ function DocVer(){
         for(var doc of docs){
           if(doc.doc_id === location.state.doc_id && doc.ver_id === location.state.ver_id){
             setVersions(doc);
+          }
         }
-        }
-      })    
+      }, [location.state.doc_id, location.state.ver_id]);
 
     return (
     <Container>
@@ -113,11 +113,9 @@ function DocVer(){
           <h5 className={styles.pblue}>
             Content
           </h5>
-          <p>
-            <text className={styles.textblack}>
-              {doc_ver?.text}
-            </text>
-          </p>
+          <div className={styles.textblack}>
+            {doc_ver?.text}
+          </div>
         </Tab>
 
         <Tab eventKey="past" title="Past Versions" disabled>

@@ -2,7 +2,7 @@ import { useState, MouseEventHandler } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 import './App.css';
 import { LoginState } from './App';
-import { login, register } from './ApiCommunication';
+import { register } from './ApiCommunication';
 
 type RegisterProps = {
   loginState: LoginState;

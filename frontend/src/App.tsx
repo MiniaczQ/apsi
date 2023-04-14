@@ -81,18 +81,16 @@ function App() {
   const router = createBrowserRouter(
     createRoutesFromElements(
       isLoggedIn ? (
-        <Route path="/" element={<RoutingRoot loginState={loginState} />}>
-          <Route index element={<Documents />} />
-          <Route path="Versions">
-            <Route index path="new" element={<VersionCreator loginState={loginState} />} />
-            <Route path="*" element={<Versions />} />
-          </Route>
-          <Route path="DocVer" index element={<DocVer />} />
+        <Route element={<RoutingRoot loginState={loginState} />}>
+          <Route index path="/DocVer" element={<DocVer />} />
+          <Route index path="/versions/new" element={<VersionCreator loginState={loginState} />} />
+          <Route index path="/versions" element={<Versions />} />
+          <Route index path="/*" element={<Documents />} />
         </Route>
       ) : (
         <Route element={<RoutingRoot loginState={loginState} />}>
           <Route index path="/register" element={<Register loginState={loginState} />} />
-          <Route path="/*" element={<Login loginState={loginState} />} />
+          <Route index path="/*" element={<Login loginState={loginState} />} />
         </Route>
       )
     )

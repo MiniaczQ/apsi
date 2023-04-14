@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router';
-import { Container } from 'react-bootstrap';
+import { useNavigate, useLocation } from 'react-router';
+import { Button, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import styles from './docVer.module.css';
@@ -19,49 +19,49 @@ var docs =[
     doc_name: "Network Mail Transportation Protocol",
     versions: "1.1",
     text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-},
-{
-  doc_id: 1,
-  ver_id:3,
-  doc_name: "Network Mail Transportation Protocol",
-  versions: "1.2",
-  text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
-},
-{
-  doc_id: 1,
-  ver_id: 4,
-  doc_name: "Network Mail Transportation Protocol",
-  versions: "1.2.1",
-  text: "Miała matka syna syna jedynego\n Chciała go wychować na pana wielkiego \n Niech żyje wolność wolność i swoboda \nNiech żyje zabawa i dziewczyna młoda"
-},
-{
-  doc_id: 1,
-  ver_id: 5,
-  doc_name: "Network Mail Transportation Protocol",
-  versions: "1.2.2",
-  text: "Syna jedynego"
-},
-{
-  doc_id: 1,
-  ver_id: 5,
-  doc_name: "Network Mail Transportation Protocol",
-  versions: "1.3",
-  text: "Syna jedynego"
-},
-{
-  doc_id: 1,
-  ver_id: 5,
-  doc_name: "Network Mail Transportation Protocol",
-  versions: "2",
-  text: "Syna jedynego"
-},
-{
-  doc_id: 2,
-  ver_id: 4,
-  doc_name: "User Guide for Mid and Beginners",
-  versions: "1",
-  text: "Lot w kosmos Jerzyku"
-},
+  },
+  {
+    doc_id: 1,
+    ver_id:3,
+    doc_name: "Network Mail Transportation Protocol",
+    versions: "1.2",
+    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+  },
+  {
+    doc_id: 1,
+    ver_id: 4,
+    doc_name: "Network Mail Transportation Protocol",
+    versions: "1.2.1",
+    text: "Miała matka syna syna jedynego\n Chciała go wychować na pana wielkiego \n Niech żyje wolność wolność i swoboda \nNiech żyje zabawa i dziewczyna młoda"
+  },
+  {
+    doc_id: 1,
+    ver_id: 5,
+    doc_name: "Network Mail Transportation Protocol",
+    versions: "1.2.2",
+    text: "Syna jedynego"
+  },
+  {
+    doc_id: 1,
+    ver_id: 5,
+    doc_name: "Network Mail Transportation Protocol",
+    versions: "1.3",
+    text: "Syna jedynego"
+  },
+  {
+    doc_id: 1,
+    ver_id: 5,
+    doc_name: "Network Mail Transportation Protocol",
+    versions: "2",
+    text: "Syna jedynego"
+  },
+  {
+    doc_id: 2,
+    ver_id: 4,
+    doc_name: "User Guide for Mid and Beginners",
+    versions: "1",
+    text: "Lot w kosmos Jerzyku"
+  },
 ] 
 
 interface Document_Ver {
@@ -74,6 +74,7 @@ interface Document_Ver {
 
 function DocVer(){
     const location = useLocation();
+    const navigate = useNavigate();
 
     const [doc_ver, setVersions] = useState<Document_Ver>();
 
@@ -116,6 +117,9 @@ function DocVer(){
           <div className={styles.textblack}>
             {doc_ver?.text}
           </div>
+          <Button variant="outline-primary" onClick={() => navigate(`/versions/new?parent=${doc_ver?.ver_id}`)}>
+            Create New Document Version
+          </Button>
         </Tab>
 
         <Tab eventKey="past" title="Past Versions" disabled>

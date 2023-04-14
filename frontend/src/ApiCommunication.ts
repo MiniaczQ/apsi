@@ -27,10 +27,12 @@ const addCredentialsToRequestOptions = (options: RequestInit, token: string) => 
   },
 });
 
-const post = async (relPath: string, data: any, token: string | undefined = undefined) => {
+const post = async (relPath: string, data: any, token: string | undefined = undefined, returnBody = true) => {
   const postReqOptions = addPostDataToRequestOptions(baseRequestOptions, data);
   const finalReqOptions = token ? addCredentialsToRequestOptions(postReqOptions, token) : postReqOptions;
-  return await (await fetch(new URL(relPath, apiBaseUrl), finalReqOptions)).json();
+  const response = await fetch(new URL(relPath, apiBaseUrl), finalReqOptions);
+  if (returnBody)
+    return await response.json();
 };
 
 
@@ -38,7 +40,7 @@ export type AuthResponse = {
   token: string
 };
 
-export const register = async (username: string, password: string) => { await post('auth/register', { username, password }); }
+export const register = async (username: string, password: string) => await post('auth/register', { username, password }, undefined, false);
 export const login = async (username: string, password: string) => await post('auth/login', { username, password }) as AuthResponse;
 
 export const getVersion = async (id: UUID) => '';  // TODO

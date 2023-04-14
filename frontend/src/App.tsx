@@ -56,7 +56,7 @@ function App() {
     setLoginData({
       token,
       username: parsedToken.username as string,
-      userId: parsedToken.user_id as string
+      userId: parsedToken.userId as string
     });
   };
 

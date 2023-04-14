@@ -1,8 +1,7 @@
 import { FunctionComponent, useEffect, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
-import { UUID } from 'crypto';
 import { useSearchParams } from 'react-router-dom';
-import { getVersion } from './ApiCommunication';
+import { getVersionContent } from './ApiCommunication';
 import { LoginState } from './App';
 
 type VersionCreatorProps = {
@@ -15,7 +14,8 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   const [documentName, setDocumentName] = useState('');
 
   const searchParams = useSearchParams()[0];
-  const parentId = searchParams.get('parent') ?? undefined;
+  const documentId = searchParams.get('document') ?? undefined;
+  const parentId = searchParams.get('parentVersion') ?? undefined;
 
   const createVersion = async () => {};
 
@@ -23,7 +23,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     console.log(parentId);
     if (parentId !== undefined) {
       (async () => {
-        setVersionText(await getVersion(parentId as UUID));
+        setVersionText(await getVersionContent(documentId!, parentId, loginState.token!));
         setDocumentName('Sample name');
         setIsLoading(false);
       })();

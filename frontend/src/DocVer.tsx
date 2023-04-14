@@ -117,7 +117,7 @@ function DocVer(){
           <div className={styles.textblack}>
             {doc_ver?.text}
           </div>
-          <Button variant="outline-primary" onClick={() => navigate(`/versions/new?parent=${doc_ver?.ver_id}`)}>
+          <Button variant="outline-primary" onClick={() => navigate(`/versions/new?document=${doc_ver?.doc_id}&parentVersion=${doc_ver?.ver_id}`)}>
             Create New Document Version
           </Button>
         </Tab>

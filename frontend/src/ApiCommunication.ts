@@ -1,6 +1,6 @@
 import { UUID } from "crypto";
 
-const apiBaseUrl = 'http://example.com/api/';  // the trailing slash is important
+const apiBaseUrl = 'http://localhost:3000/api/';  // the trailing slash is important
 
 const baseRequestOptions: RequestInit = {
   mode: 'cors',

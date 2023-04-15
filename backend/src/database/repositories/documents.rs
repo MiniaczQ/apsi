@@ -79,6 +79,18 @@ impl DocumentsRepository {
         })
     }
 
+    pub async fn get_document(&self, document_id: Uuid) -> Result<Document, Box<dyn Error>> {
+        let document = self
+            .conn
+            .query_one(
+                "SELECT * FROM documents WHERE document_id = $1",
+                &[&document_id],
+            )
+            .await?;
+        let document = Document::try_from(document)?;
+        Ok(document)
+    }
+
     pub async fn get_documents(&self) -> Result<Vec<Document>, Box<dyn Error>> {
         let documents = self.conn.query("SELECT * FROM documents", &[]).await?;
         let documents = documents
@@ -114,6 +126,22 @@ impl DocumentsRepository {
             version_name,
             created_at,
         })
+    }
+
+    pub async fn get_version(
+        &self,
+        document_id: Uuid,
+        version_id: Uuid,
+    ) -> Result<DocumentVersion, Box<dyn Error>> {
+        let version = self
+            .conn
+            .query_one(
+                "SELECT * FROM document_versions WHERE document_id = $1 AND version_id = $2",
+                &[&document_id, &version_id],
+            )
+            .await?;
+        let version = DocumentVersion::try_from(version)?;
+        Ok(version)
     }
 
     pub async fn get_versions(

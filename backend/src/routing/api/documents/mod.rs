@@ -36,6 +36,21 @@ async fn create_document(
     Ok(Json(document))
 }
 
+async fn get_document(
+    documents_repository: DocumentsRepository,
+    _: Claims,
+    Path(document_id): Path<Uuid>,
+) -> Result<Json<Document>, StatusCode> {
+    let documents = documents_repository
+        .get_document(document_id)
+        .await
+        .map_err(|e| {
+            error!("{}", e);
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(documents))
+}
+
 async fn get_documents(
     documents_repository: DocumentsRepository,
     _: Claims,
@@ -68,6 +83,21 @@ async fn create_version(
             StatusCode::BAD_REQUEST
         })?;
     Ok(Json(version))
+}
+
+async fn get_version(
+    documents_repository: DocumentsRepository,
+    _: Claims,
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+) -> Result<Json<DocumentVersion>, StatusCode> {
+    let versions = documents_repository
+        .get_version(document_id, version_id)
+        .await
+        .map_err(|e| {
+            error!("{}", e);
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(versions))
 }
 
 async fn get_versions(
@@ -110,6 +140,11 @@ where
         .route("/", post(create_document))
         .route("/", get(get_documents))
         .route("/:document_id", post(create_version))
-        .route("/:document_id", get(get_versions))
-        .route("/:document_id/:version_id", get(get_version_content))
+        .route("/:document_id", get(get_document))
+        .route("/:document_id/versions", get(get_versions))
+        .route("/:document_id/:version_id", get(get_version))
+        .route(
+            "/:document_id/:version_id/content",
+            get(get_version_content),
+        )
 }

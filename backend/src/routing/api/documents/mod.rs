@@ -1,7 +1,7 @@
 use axum::{
     extract::{FromRef, Path},
     http::StatusCode,
-    routing::{get, post},
+    routing::{delete, get, patch, post},
     Json, Router,
 };
 use serde::Deserialize;
@@ -17,14 +17,14 @@ use super::auth::{authorization_keys::AuthorizationKeys, claims::Claims};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct CreateDocumentRequest {
+struct CreateOrUpdateDocumentRequest {
     document_name: String,
 }
 
 async fn create_document(
     documents_repository: DocumentsRepository,
     _: Claims,
-    Json(data): Json<CreateDocumentRequest>,
+    Json(data): Json<CreateOrUpdateDocumentRequest>,
 ) -> Result<Json<Document>, StatusCode> {
     let document = documents_repository
         .create_document(data.document_name)
@@ -62,9 +62,43 @@ async fn get_documents(
     Ok(Json(documents))
 }
 
+async fn update_document(
+    documents_repository: DocumentsRepository,
+    _: Claims,
+    Path(document_id): Path<Uuid>,
+    Json(update): Json<CreateOrUpdateDocumentRequest>,
+) -> StatusCode {
+    match documents_repository
+        .update_document(document_id, update.document_name)
+        .await
+    {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::NOT_FOUND,
+        Err(e) => {
+            error!("{}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
+async fn delete_document(
+    documents_repository: DocumentsRepository,
+    _: Claims,
+    Path(document_id): Path<Uuid>,
+) -> StatusCode {
+    match documents_repository.delete_document(document_id).await {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::NOT_FOUND,
+        Err(e) => {
+            error!("{}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct CreateVersionRequest {
+struct CreateOrUpdateVersionRequest {
     version_name: String,
     content: String,
 }
@@ -73,7 +107,7 @@ async fn create_version(
     documents_repository: DocumentsRepository,
     _: Claims,
     Path(document_id): Path<Uuid>,
-    Json(data): Json<CreateVersionRequest>,
+    Json(data): Json<CreateOrUpdateVersionRequest>,
 ) -> Result<Json<DocumentVersion>, StatusCode> {
     let version = documents_repository
         .create_version(document_id, data.version_name, data.content)
@@ -130,6 +164,43 @@ async fn get_version_content(
     Ok(content)
 }
 
+async fn update_version(
+    documents_repository: DocumentsRepository,
+    _: Claims,
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+    Json(data): Json<CreateOrUpdateVersionRequest>,
+) -> StatusCode {
+    match documents_repository
+        .update_version(document_id, version_id, data.version_name, data.content)
+        .await
+    {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::NOT_FOUND,
+        Err(e) => {
+            error!("{}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
+async fn delete_version(
+    documents_repository: DocumentsRepository,
+    _: Claims,
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+) -> StatusCode {
+    match documents_repository
+        .delete_version(document_id, version_id)
+        .await
+    {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::NOT_FOUND,
+        Err(e) => {
+            error!("{}", e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
 pub fn documents_router<T>() -> Router<T>
 where
     AuthorizationKeys: FromRef<T>,
@@ -141,8 +212,12 @@ where
         .route("/", get(get_documents))
         .route("/:document_id", post(create_version))
         .route("/:document_id", get(get_document))
+        .route("/:document_id", patch(update_document))
+        .route("/:document_id", delete(delete_document))
         .route("/:document_id/versions", get(get_versions))
         .route("/:document_id/:version_id", get(get_version))
+        .route("/:document_id/:version_id", patch(update_version))
+        .route("/:document_id/:version_id", delete(delete_version))
         .route(
             "/:document_id/:version_id/content",
             get(get_version_content),

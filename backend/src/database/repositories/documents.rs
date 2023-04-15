@@ -100,6 +100,32 @@ impl DocumentsRepository {
         Ok(documents)
     }
 
+    pub async fn update_document(
+        &self,
+        document_id: Uuid,
+        document_name: String,
+    ) -> Result<bool, Box<dyn Error>> {
+        let updated = self
+            .conn
+            .execute(
+                "UPDATE documents SET (version_name) = ($2) WHERE document_id = $1",
+                &[&document_id, &document_name],
+            )
+            .await?;
+        Ok(updated == 1)
+    }
+
+    pub async fn delete_document(&self, document_id: Uuid) -> Result<bool, Box<dyn Error>> {
+        let deleted = self
+            .conn
+            .execute(
+                "UPDATE FROM documents WHERE document_id = $1",
+                &[&document_id],
+            )
+            .await?;
+        Ok(deleted == 1)
+    }
+
     pub async fn create_version(
         &self,
         document_id: Uuid,
@@ -176,6 +202,38 @@ impl DocumentsRepository {
             .await?;
         let content: String = content.try_get(0)?;
         Ok(content)
+    }
+
+    pub async fn update_version(
+        &self,
+        document_id: Uuid,
+        version_id: Uuid,
+        version_name: String,
+        content: String,
+    ) -> Result<bool, Box<dyn Error>> {
+        let updated = self
+            .conn
+            .execute(
+                "UPDATE document_versions SET (version_name, content) = ($3, $4) WHERE document_id = $1 AND version_id = $2",
+                &[&document_id, &version_id, &version_name, &content],
+            )
+            .await?;
+        Ok(updated == 1)
+    }
+
+    pub async fn delete_version(
+        &self,
+        document_id: Uuid,
+        version_id: Uuid,
+    ) -> Result<bool, Box<dyn Error>> {
+        let deleted = self
+            .conn
+            .execute(
+                "UPDATE FROM document_versions WHERE document_id = $1 AND version_id = $2",
+                &[&document_id, &version_id],
+            )
+            .await?;
+        Ok(deleted == 1)
     }
 }
 

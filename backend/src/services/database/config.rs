@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct PostgresConfig {
     user: String,
     password: String,

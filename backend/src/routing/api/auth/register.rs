@@ -1,9 +1,7 @@
 use axum::Json;
 use serde::Deserialize;
 
-use crate::database::repositories::users::UsersRepository;
-
-use super::error::AuthError;
+use crate::services::{auth::error::AuthError, database::repositories::users::UsersRepository};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]

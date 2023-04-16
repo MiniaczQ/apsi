@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use tracing::error;
 use uuid::Uuid;
 
-use super::{authorization_keys::AuthorizationKeys, error::AuthError};
+use super::{auth_keys::AuthKeys, error::AuthError};
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,7 +44,7 @@ impl Claims {
 #[async_trait]
 impl<S> FromRequestParts<S> for Claims
 where
-    AuthorizationKeys: FromRef<S>,
+    AuthKeys: FromRef<S>,
     S: Send + Sync,
 {
     type Rejection = AuthError;
@@ -55,7 +55,7 @@ where
             .await
             .map_err(|_| AuthError::InvalidToken)?;
 
-        let keys = AuthorizationKeys::from_ref(state);
+        let keys = AuthKeys::from_ref(state);
 
         Claims::try_from_token(bearer.token(), &keys.decoding)
     }

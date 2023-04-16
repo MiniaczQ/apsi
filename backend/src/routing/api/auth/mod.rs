@@ -4,22 +4,17 @@ use axum::{
     Router,
 };
 
-use crate::database::DbPool;
+use crate::services::{auth::auth_keys::AuthKeys, database::DbPool};
 
-use self::{
-    authorization_keys::AuthorizationKeys, login::login, register::register, who_am_i::who_am_i,
-};
+use self::{login::login, register::register, who_am_i::who_am_i};
 
-pub mod authorization_keys;
-pub mod claims;
-mod error;
 mod login;
 mod register;
 mod who_am_i;
 
 pub fn auth_router<T>() -> Router<T>
 where
-    AuthorizationKeys: FromRef<T>,
+    AuthKeys: FromRef<T>,
     DbPool: FromRef<T>,
     T: 'static + Send + Sync + Clone,
 {

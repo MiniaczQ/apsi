@@ -3,20 +3,18 @@ mod healthcheck;
 mod static_files;
 
 use axum::{extract::FromRef, Router};
+use s3::Bucket;
 use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
-use crate::{config::AppConfig, database::DbPool};
+use crate::services::{auth::auth_keys::AuthKeys, config::Config, database::DbPool};
 
-use self::{
-    api::{api_router, auth::authorization_keys::AuthorizationKeys},
-    healthcheck::healthcheck_router,
-    static_files::static_files_service,
-};
+use self::{api::api_router, healthcheck::healthcheck_router, static_files::static_files_service};
 
-pub fn main_route<T>(config: &AppConfig) -> Router<T>
+pub fn main_route<T>(config: &Config) -> Router<T>
 where
-    AuthorizationKeys: FromRef<T>,
+    AuthKeys: FromRef<T>,
     DbPool: FromRef<T>,
+    Bucket: FromRef<T>,
     T: 'static + Send + Sync + Clone,
 {
     let mut router = Router::new()
@@ -25,7 +23,7 @@ where
         .fallback_service(static_files_service())
         .layer(TraceLayer::new_for_http());
 
-    if config.cors {
+    if config.webserver.cors {
         router = router.layer(CorsLayer::permissive());
     }
 

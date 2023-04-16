@@ -15,7 +15,7 @@ CREATE TABLE document_versions (
     version_id UUID DEFAULT gen_random_uuid(),
     version_name varchar(255) NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
-    content varchar(8388608) DEFAULT '',
+    content varchar(2047) DEFAULT '',
     PRIMARY KEY(document_id, version_id),
     UNIQUE(document_id, version_name),
     CONSTRAINT fk_document FOREIGN KEY(document_id) REFERENCES documents(document_id)

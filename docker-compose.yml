@@ -1,30 +1,10 @@
 version: '3.9'
 
 services:
-  database:
-    container_name: database
-    hostname: database
-    image: postgres
-    command: ["postgres", "-c", "log_statement=all"]
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_USER=admin
-      - POSTGRES_DB=admin
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    profiles:
-      - db
-      - all
-
   webserver:
     container_name: webserver
-    build: './backend'
     hostname: webserver
+    build: './backend'
     ports:
       - 3000:3000
     environment:
@@ -35,3 +15,59 @@ services:
     depends_on:
       database:
         condition: service_healthy
+      s3storage:
+        condition: service_healthy
+      s3storage-create-bucket:
+        condition: service_completed_successfully
+
+  database:
+    container_name: database
+    hostname: database
+    image: postgres
+    command: [ "postgres", "-c", "log_statement=all" ]
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=admin
+      - POSTGRES_DB=admin
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - db
+      - all
+
+  s3storage:
+    container_name: s3storage
+    hostname: s3storage
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: adminadmin
+      MINIO_ROOT_PASSWORD: adminadmin
+    healthcheck:
+      test: curl -If http://localhost:9000/minio/health/live || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    profiles:
+      - db
+      - all
+
+  s3storage-create-bucket:
+    image: minio/mc
+    depends_on:
+      s3storage:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c " /usr/bin/mc config host add s3storage http://s3storage:9000 adminadmin adminadmin; /usr/bin/mc mb --ignore-existing s3storage/file-attachments || true; /usr/bin/mc policy set download s3storage/file-attachments || true; exit 0; "
+    profiles:
+      - db
+      - all

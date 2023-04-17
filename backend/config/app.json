@@ -1,0 +1,32 @@
+{
+    "tracing": {
+        "console": true,
+        "json_directory": "logs",
+        "directives": [
+            "webserver=TRACE",
+            "tower_http=debug"
+        ]
+    },
+    "webserver": {
+        "url": "0.0.0.0:3000",
+        "cors": true
+    },
+    "auth_keys": {
+        "encoding": "devkeys/priv.pem",
+        "decoding": "devkeys/pub.pem"
+    },
+    "database": {
+        "user": "admin",
+        "password": "admin",
+        "dbname": "admin",
+        "host": "127.0.0.1",
+        "port": 5432
+    },
+    "s3storage": {
+        "bucket_name": "file-attachments",
+        "region_name": "eu-east",
+        "region_endpoint": "http://localhost:9000",
+        "access_key": "adminadmin",
+        "secret_key": "adminadmin"
+    }
+}

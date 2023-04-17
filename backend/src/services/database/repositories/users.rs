@@ -10,10 +10,10 @@ use tokio_postgres::Row;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::database::{DbConn, DbPool};
+use crate::services::database::{DbConn, DbPool};
 
 pub struct UsersRepository {
-    conn: DbConn,
+    database: DbConn,
 }
 
 pub struct User {
@@ -49,7 +49,7 @@ impl UsersRepository {
         let user_id = Uuid::new_v4();
         let salt = Uuid::new_v4();
         let password_hash = Self::hash_password(&user_id, &password, &salt);
-        self.conn
+        self.database
             .execute(
                 "INSERT INTO users VALUES ($1, $2,  $3, $4)",
                 &[&user_id, &salt, &username, &password_hash],
@@ -69,7 +69,7 @@ impl UsersRepository {
         password: &str,
     ) -> Result<Option<User>, Box<dyn Error>> {
         let user: User = self
-            .conn
+            .database
             .query_one("SELECT * FROM users WHERE username = $1", &[&username])
             .await?
             .try_into()?;
@@ -99,11 +99,10 @@ where
     type Rejection = StatusCode;
 
     async fn from_request_parts(_: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let pool = DbPool::from_ref(state);
-        let conn = pool.get_owned().await.map_err(|e| {
+        let database = DbPool::from_ref(state).get_owned().await.map_err(|e| {
             error!("{}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
-        Ok(Self { conn })
+        Ok(Self { database })
     }
 }

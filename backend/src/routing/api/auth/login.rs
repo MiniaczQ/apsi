@@ -4,9 +4,10 @@ use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 
-use crate::database::repositories::users::UsersRepository;
-
-use super::{authorization_keys::AuthorizationKeys, claims::Claims, error::AuthError};
+use crate::services::{
+    auth::{auth_keys::AuthKeys, claims::Claims, error::AuthError},
+    database::repositories::users::UsersRepository,
+};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,7 +29,7 @@ pub struct AuthorizeRequest {
 }
 
 pub async fn login(
-    State(keys): State<AuthorizationKeys>,
+    State(keys): State<AuthKeys>,
     users_repository: UsersRepository,
     Json(data): Json<AuthorizeRequest>,
 ) -> Result<Json<AuthorizeResponse>, AuthError> {

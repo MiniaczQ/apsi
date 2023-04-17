@@ -1,46 +1,34 @@
-mod config;
-pub mod database;
 mod routing;
-mod signals;
-pub mod state;
-mod tracing;
+mod services;
 
 use ::tracing::info;
 
 use crate::{
-    config::get_config, database::setup_database, routing::main_route, signals::shutdown_signal,
-    state::AppState, tracing::setup_tracing,
+    routing::main_route,
+    services::{
+        config::setup_config, database::setup_database, s3storage::setup_s3storage,
+        signals::shutdown_signal, state::AppState, tracing::setup_tracing,
+    },
 };
 
 #[tokio::main]
 async fn main() {
-    setup_tracing();
+    let config = setup_config();
+    setup_tracing(&config);
+    let auth_keys = (&config.auth_keys).try_into().expect("Missing PEMs");
+    let database = setup_database(&config).await;
+    let s3storage = setup_s3storage(&config).await;
 
-    // Setup config
-    let config = get_config();
-
-    // Setup database connection
-    let database_pool = setup_database(&config)
-        .await
-        .expect("Could not setup database");
-
-    // App state
     let state = AppState {
-        authorization_keys: (&config.authorization_keys)
-            .try_into()
-            .expect("Missing PEMs"),
-        database: database_pool,
+        auth_keys,
+        database,
+        s3storage,
     };
 
-    // Example log
-    info!("Hosting started. Listening on: {}", &config.url);
-    // New server bound to provided address
-    axum::Server::bind(&config.url)
-        // Router turned into a service to be served
+    info!("Hosting started. Listening on: {}", &config.webserver.url);
+    axum::Server::bind(&config.webserver.url)
         .serve(main_route(&config).with_state(state).into_make_service())
-        // Shutdown detected by a `Future` (Task / async function) finishing
         .with_graceful_shutdown(shutdown_signal())
-        // Wait for future to finish
         .await
         .unwrap();
 }

@@ -11,10 +11,12 @@ use tokio_postgres::Row;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::database::{DbConn, DbPool};
+use crate::services::database::{DbConn, DbPool};
+
+use super::files::File;
 
 pub struct DocumentsRepository {
-    conn: DbConn,
+    database: DbConn,
 }
 
 #[derive(Debug, Serialize)]
@@ -44,6 +46,7 @@ pub struct DocumentVersion {
     pub version_id: Uuid,
     pub version_name: String,
     pub created_at: DateTime<Utc>,
+    pub content: String,
 }
 
 impl TryFrom<Row> for DocumentVersion {
@@ -54,12 +57,14 @@ impl TryFrom<Row> for DocumentVersion {
         let version_id: Uuid = value.try_get(1)?;
         let version_name: String = value.try_get(2)?;
         let created_at: DateTime<Utc> = value.try_get(3)?;
+        let content: String = value.try_get(4)?;
 
         Ok(Self {
             document_id,
             version_id,
             version_name,
             created_at,
+            content,
         })
     }
 }
@@ -67,7 +72,7 @@ impl TryFrom<Row> for DocumentVersion {
 impl DocumentsRepository {
     pub async fn create_document(&self, document_name: String) -> Result<Document, Box<dyn Error>> {
         let document_id = Uuid::new_v4();
-        self.conn
+        self.database
             .execute(
                 "INSERT INTO documents VALUES ($1, $2)",
                 &[&document_id, &document_name],
@@ -81,7 +86,7 @@ impl DocumentsRepository {
 
     pub async fn get_document(&self, document_id: Uuid) -> Result<Document, Box<dyn Error>> {
         let document = self
-            .conn
+            .database
             .query_one(
                 "SELECT * FROM documents WHERE document_id = $1",
                 &[&document_id],
@@ -92,7 +97,7 @@ impl DocumentsRepository {
     }
 
     pub async fn get_documents(&self) -> Result<Vec<Document>, Box<dyn Error>> {
-        let documents = self.conn.query("SELECT * FROM documents", &[]).await?;
+        let documents = self.database.query("SELECT * FROM documents", &[]).await?;
         let documents = documents
             .into_iter()
             .map(Document::try_from)
@@ -106,9 +111,9 @@ impl DocumentsRepository {
         document_name: String,
     ) -> Result<bool, Box<dyn Error>> {
         let updated = self
-            .conn
+            .database
             .execute(
-                "UPDATE documents SET (version_name) = ($2) WHERE document_id = $1",
+                "UPDATE documents SET document_name = $2 WHERE document_id = $1",
                 &[&document_id, &document_name],
             )
             .await?;
@@ -117,9 +122,9 @@ impl DocumentsRepository {
 
     pub async fn delete_document(&self, document_id: Uuid) -> Result<bool, Box<dyn Error>> {
         let deleted = self
-            .conn
+            .database
             .execute(
-                "UPDATE FROM documents WHERE document_id = $1",
+                "DELETE FROM documents WHERE document_id = $1",
                 &[&document_id],
             )
             .await?;
@@ -134,7 +139,7 @@ impl DocumentsRepository {
     ) -> Result<DocumentVersion, Box<dyn Error>> {
         let version_id = Uuid::new_v4();
         let created_at = Utc::now();
-        self.conn
+        self.database
             .execute(
                 "INSERT INTO document_versions VALUES ($1, $2, $3, $4, $5)",
                 &[
@@ -151,6 +156,7 @@ impl DocumentsRepository {
             version_id,
             version_name,
             created_at,
+            content,
         })
     }
 
@@ -160,7 +166,7 @@ impl DocumentsRepository {
         version_id: Uuid,
     ) -> Result<DocumentVersion, Box<dyn Error>> {
         let version = self
-            .conn
+            .database
             .query_one(
                 "SELECT * FROM document_versions WHERE document_id = $1 AND version_id = $2",
                 &[&document_id, &version_id],
@@ -175,7 +181,7 @@ impl DocumentsRepository {
         document_id: Uuid,
     ) -> Result<Vec<DocumentVersion>, Box<dyn Error>> {
         let versions = self
-            .conn
+            .database
             .query(
                 "SELECT * FROM document_versions WHERE document_id = $1",
                 &[&document_id],
@@ -188,22 +194,6 @@ impl DocumentsRepository {
         Ok(versions)
     }
 
-    pub async fn get_version_content(
-        &self,
-        document_id: Uuid,
-        version_id: Uuid,
-    ) -> Result<String, Box<dyn Error>> {
-        let content = self
-            .conn
-            .query_one(
-                "SELECT content FROM document_versions WHERE document_id = $1 AND version_id = $2",
-                &[&document_id, &version_id],
-            )
-            .await?;
-        let content: String = content.try_get(0)?;
-        Ok(content)
-    }
-
     pub async fn update_version(
         &self,
         document_id: Uuid,
@@ -212,9 +202,9 @@ impl DocumentsRepository {
         content: String,
     ) -> Result<bool, Box<dyn Error>> {
         let updated = self
-            .conn
+            .database
             .execute(
-                "UPDATE document_versions SET (version_name, content) = ($3, $4) WHERE document_id = $1 AND version_id = $2",
+                "UPDATE document_versions SET version_name = $3, content = $4 WHERE document_id = $1 AND version_id = $2",
                 &[&document_id, &version_id, &version_name, &content],
             )
             .await?;
@@ -227,10 +217,78 @@ impl DocumentsRepository {
         version_id: Uuid,
     ) -> Result<bool, Box<dyn Error>> {
         let deleted = self
-            .conn
+            .database
             .execute(
-                "UPDATE FROM document_versions WHERE document_id = $1 AND version_id = $2",
+                "DELETE FROM document_versions WHERE document_id = $1 AND version_id = $2",
                 &[&document_id, &version_id],
+            )
+            .await?;
+        Ok(deleted == 1)
+    }
+
+    pub async fn get_file_attachments(
+        &self,
+        document_id: Uuid,
+        version_id: Uuid,
+    ) -> Result<Vec<File>, Box<dyn Error>> {
+        let attached_files = self
+            .database
+            .query(
+                "SELECT f.* FROM file_attachments fa JOIN files f ON fa.file_id = f.file_id WHERE document_id = $1 AND version_id = $2",
+                &[&document_id, &version_id],
+            )
+            .await?;
+        let attached_files = attached_files
+            .into_iter()
+            .map(File::try_from)
+            .collect::<Result<_, _>>()?;
+        Ok(attached_files)
+    }
+
+    pub async fn get_file_attachment(
+        &self,
+        document_id: Uuid,
+        version_id: Uuid,
+        file_id: Uuid,
+    ) -> Result<File, Box<dyn Error>> {
+        let attached_file = self
+            .database
+            .query_one(
+                "SELECT f.* FROM file_attachments fa JOIN files f ON fa.file_id = f.file_id WHERE document_id = $1 AND version_id = $2 AND file_id = $3",
+                &[&document_id, &version_id, &file_id],
+            )
+            .await?;
+        let attached_file = File::try_from(attached_file)?;
+        Ok(attached_file)
+    }
+
+    pub async fn attach_file(
+        &self,
+        document_id: Uuid,
+        version_id: Uuid,
+        file_id: Uuid,
+    ) -> Result<bool, Box<dyn Error>> {
+        let attached = self
+            .database
+            .execute(
+                "INSERT INTO file_attachments VALUES ($1, $2, $3)",
+                &[&document_id, &version_id, &file_id],
+            )
+            .await?;
+        Ok(attached == 1)
+    }
+
+    pub async fn detach_file(
+        &self,
+        document_id: Uuid,
+        version_id: Uuid,
+        file_id: Uuid,
+    ) -> Result<bool, Box<dyn Error + Send + Sync>> {
+        let deleted = self
+            .database
+            .execute(
+                "DELETE FROM file_attachments WHERE document_id = $1 AND version_id = $2 AND file_id = $3",
+                &[&document_id, &version_id, &file_id],
             )
             .await?;
         Ok(deleted == 1)
@@ -246,11 +304,10 @@ where
     type Rejection = StatusCode;
 
     async fn from_request_parts(_: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let pool = DbPool::from_ref(state);
-        let conn = pool.get_owned().await.map_err(|e| {
+        let database = DbPool::from_ref(state).get_owned().await.map_err(|e| {
             error!("{}", e);
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
-        Ok(Self { conn })
+        Ok(Self { database })
     }
 }

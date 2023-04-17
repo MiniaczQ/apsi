@@ -1,0 +1,686 @@
+{
+	"info": {
+		"_postman_id": "76959435-1429-4d11-8743-3f3afc6fd491",
+		"name": "Apsi",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21770631"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Who Am I",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODEzMjY3MDMsIm5iZiI6MTY4MTI0MDMwMywiaWF0IjoxNjgxMjQwMzAzLCJ1c2VySWQiOiJiNDM3OGIyMy0xODNjLTQ3YTQtYWE1Zi1mNzM1ODEwNWZhOTAiLCJ1c2VybmFtZSI6ImFkbWluIn0.AS3knx4AbG9xTO8pVtFj8-H95Iwwn6xbhu4ki-x9JjPPV3sFboPFxMZxcceTY4vLAxpTcqZuCdWNzj6NuH-DMr9drzfHJbOnQjxuZ7IJ5nyxHh6hpOug2mv45Um1zWlTM6uJ1DPf4mNLj8uvsVdz1_CsCVMA6yCf0b8tIxN17yCUZIeiGfq8xPqzLZzEaC3NmOIP8ZwauHxkTCXs-HPfVDR7NUoFD1UcRK11_59ggFkLMMfoTCu-Kd6Mr_4mwKvlIz1vX3awjPyFxJMWnT94KIBV9amgD8ZUmZyie-uvYP5RzNhXpn_sJ3zgMhNdUb8CMh421qex4GrwVSDjllK9Sg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/who-am-i",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"who-am-i"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Documents",
+			"item": [
+				{
+					"name": "Versions",
+					"item": [
+						{
+							"name": "Files",
+							"item": [
+								{
+									"name": "Get Files",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/files",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"documents",
+												":documentId",
+												":versionId",
+												"files"
+											],
+											"variable": [
+												{
+													"key": "documentId",
+													"value": "{{documentId}}"
+												},
+												{
+													"key": "versionId",
+													"value": "{{versionId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get File",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/files/:fileId",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"documents",
+												":documentId",
+												":versionId",
+												"files",
+												":fileId"
+											],
+											"variable": [
+												{
+													"key": "documentId",
+													"value": "{{documentId}}"
+												},
+												{
+													"key": "versionId",
+													"value": "{{versionId}}"
+												},
+												{
+													"key": "fileId",
+													"value": "{{fileId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete File",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/files/:fileId",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"documents",
+												":documentId",
+												":versionId",
+												"files",
+												":fileId"
+											],
+											"variable": [
+												{
+													"key": "documentId",
+													"value": "{{documentId}}"
+												},
+												{
+													"key": "versionId",
+													"value": "{{versionId}}"
+												},
+												{
+													"key": "fileId",
+													"value": "{{fileId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Patch File",
+									"request": {
+										"method": "PATCH",
+										"header": [],
+										"body": {
+											"mode": "file",
+											"file": {
+												"src": "/C:/Users/Jakub Motyka/Downloads/bilet_167285289.pdf"
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/files",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"documents",
+												":documentId",
+												":versionId",
+												"files"
+											],
+											"variable": [
+												{
+													"key": "documentId",
+													"value": "{{documentId}}"
+												},
+												{
+													"key": "versionId",
+													"value": "{{versionId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get File Content",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/files/:fileId/content",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"documents",
+												":documentId",
+												":versionId",
+												"files",
+												":fileId",
+												"content"
+											],
+											"variable": [
+												{
+													"key": "documentId",
+													"value": "{{documentId}}"
+												},
+												{
+													"key": "versionId",
+													"value": "{{versionId}}"
+												},
+												{
+													"key": "fileId",
+													"value": "{{fileId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Create Version",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"versionName\": \"piąty maja\",\r\n    \"content\": \"dobro wspólnie\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/documents/:documentId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"documents",
+										":documentId"
+									],
+									"variable": [
+										{
+											"key": "documentId",
+											"value": "{{documentId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Versions",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/documents/:documentId/versions",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"documents",
+										":documentId",
+										"versions"
+									],
+									"variable": [
+										{
+											"key": "documentId",
+											"value": "{{documentId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Version",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/documents/:documentId/:versionId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"documents",
+										":documentId",
+										":versionId"
+									],
+									"variable": [
+										{
+											"key": "documentId",
+											"value": "{{documentId}}"
+										},
+										{
+											"key": "versionId",
+											"value": "{{versionId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Version",
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"versionName\": \"trzeci maja\",\r\n    \"content\": \"dobro wspólne\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/documents/:documentId/:versionId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"documents",
+										":documentId",
+										":versionId"
+									],
+									"variable": [
+										{
+											"key": "documentId",
+											"value": "{{documentId}}"
+										},
+										{
+											"key": "versionId",
+											"value": "{{versionId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Version",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/documents/:documentId/:versionId",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"documents",
+										":documentId",
+										":versionId"
+									],
+									"variable": [
+										{
+											"key": "documentId",
+											"value": "{{documentId}}"
+										},
+										{
+											"key": "versionId",
+											"value": "{{versionId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Create Document",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"documentName\": \"konstytucja\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Documents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								"documents"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Document",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Document",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"documentName\": \"konstypacja\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Document",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/health",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "jwtToken",
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODEzMzU0MzksIm5iZiI6MTY4MTI0OTAzOSwiaWF0IjoxNjgxMjQ5MDM5LCJ1c2VySWQiOiJkZWFkNDRlMC0yODkyLTRlZGQtYjU5ZC01OGQyNWE2MGU4OTMiLCJ1c2VybmFtZSI6ImFkbWluIn0.L-qy_SoNE2TXthJP9AKy36vfuzjUFqSLOps6oaSSVYJPujrdQ1o7xvRWddmXXuhyOeU5vp4rtluoc2JvJ5D9naLb3yEPwXTIDeaJvjboE4QK1yi93mGsHlrZmi0TA5qtYLPCpbcFjYxiWdgk97R8V4sri6xB3QHfbQ-Q_rQ4yGSLzmK7m3Ag_gYkBIlBhsxxKPfxe1I1VWwBWGiqe7-1mVPjL5bICUdYCXorDYvTVKGDPQet7nrf44iYQZgdt-kOerLbHJslsRZjZRjJaGzaD7j7vrNSN327VfXxzMsPkkajcTVA_DVRx38PZdmiXUvS6g79Mjud6g3haMg0T0zExA"
+		},
+		{
+			"key": "documentId",
+			"value": "53a9f0da-bb50-41db-9385-2b5fd8c12170",
+			"type": "string"
+		},
+		{
+			"key": "versionId",
+			"value": "91742c6f-2c5e-4df2-aab2-5b412d48a90b",
+			"type": "string"
+		},
+		{
+			"key": "fileId",
+			"value": "1fdcec2b-7f59-4cf4-9c9d-f6fdcb0b26a4",
+			"type": "string"
+		}
+	]
+}

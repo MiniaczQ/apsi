@@ -1,5 +1,5 @@
 FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
-WORKDIR app
+WORKDIR /app
 
 FROM chef AS planner
 COPY . .
@@ -14,8 +14,8 @@ COPY . .
 RUN cargo build --release --bin webserver
 
 # We do not need the Rust toolchain to run the binary!
-FROM debian:buster-slim AS runtime
-WORKDIR app
+FROM debian:bullseye-slim AS runtime
+WORKDIR /app
 COPY --from=builder /app/target/release/webserver /usr/local/bin
 COPY --from=builder /app/config/ /app/config/
 COPY --from=builder /app/devkeys/ /app/devkeys/

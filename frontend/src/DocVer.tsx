@@ -45,30 +45,30 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
 
       >
         <Tab eventKey="details" title="Details">
-          <h3 className={styles.pblue}>
+          <h4 className={styles.pblue}>
             Document name
-          </h3>
+          </h4>
           <p className={styles.textblack}>
             {location.state.doc_name}
           </p>
 
-          <h4 className={styles.pblue}>
+          <h5 className={styles.pblue}>
             Version
-          </h4>
+          </h5>
           <p className={styles.textblack}>
             {doc_ver?.dv.versionName}
           </p>
 
-          <h4 className={styles.pblue}>
+          <h5 className={styles.pblue}>
             Creation date
-          </h4>
+          </h5>
           <p className={styles.textblack}>
             {show_date(doc_ver?.dv.createdAt as string)}
           </p>
 
-          <h4 className={styles.pblue}>
+          <h5 className={styles.pblue}>
             Content
-          </h4>
+          </h5>
 
           <div className={styles.textblack}>
             {doc_ver?.content}

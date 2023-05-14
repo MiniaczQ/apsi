@@ -110,13 +110,13 @@ struct CreateOrUpdateVersionRequest {
 }
 
 async fn create_version(
-    documents_repository: DocumentsRepository,
-    _: Claims,
+    mut documents_repository: DocumentsRepository,
+    claims: Claims,
     Path(document_id): Path<Uuid>,
     Json(data): Json<CreateOrUpdateVersionRequest>,
 ) -> Result<Json<DocumentVersion>, StatusCode> {
     let version = documents_repository
-        .create_version(document_id, data.version_name, data.content)
+        .create_version(claims.user_id, document_id, data.version_name, data.content)
         .await
         .map_err(|e| {
             error!("{}", e);

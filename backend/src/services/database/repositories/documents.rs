@@ -13,7 +13,7 @@ use uuid::Uuid;
 
 use crate::services::database::{DbConn, DbPool};
 
-use super::files::File;
+use super::{files::File, permission::DocumentVersionRole};
 
 pub struct DocumentsRepository {
     database: DbConn,
@@ -132,14 +132,16 @@ impl DocumentsRepository {
     }
 
     pub async fn create_version(
-        &self,
+        &mut self,
+        user_id: Uuid,
         document_id: Uuid,
         version_name: String,
         content: String,
     ) -> Result<DocumentVersion, Box<dyn Error>> {
         let version_id = Uuid::new_v4();
         let created_at = Utc::now();
-        self.database
+        let transaction = self.database.transaction().await?;
+        transaction
             .execute(
                 "INSERT INTO document_versions VALUES ($1, $2, $3, $4, $5)",
                 &[
@@ -151,6 +153,13 @@ impl DocumentsRepository {
                 ],
             )
             .await?;
+        transaction
+            .execute(
+                "INSERT INTO user_document_version_roles VALUES ($1, $2, $3, $4)",
+                &[&user_id, &document_id, &version_id, &i16::from(DocumentVersionRole::Owner)],
+            )
+            .await?;
+        transaction.commit().await?;
         Ok(DocumentVersion {
             document_id,
             version_id,

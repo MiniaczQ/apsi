@@ -18,5 +18,5 @@ CREATE TABLE document_versions (
     content varchar(2047) DEFAULT '',
     PRIMARY KEY(document_id, version_id),
     UNIQUE(document_id, version_name),
-    CONSTRAINT fk_document FOREIGN KEY(document_id) REFERENCES documents(document_id)
+    CONSTRAINT fk__document_versions__documents FOREIGN KEY(document_id) REFERENCES documents(document_id)
 );

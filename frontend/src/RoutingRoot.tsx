@@ -10,9 +10,15 @@ type RoutingRootProps = {
 function RoutingRoot({ loginState }: RoutingRootProps) {
   const logout = () => loginState.setToken(undefined);
 
-  const loginLogoutButton = loginState.isLoggedIn
-    ? <Nav.Link as={Button} onClick={logout}>Logout</Nav.Link>
-    : <Nav.Link as={Link} to="/login">Login</Nav.Link>;
+  const loggedInLinks = (<>
+    <Nav.Link as={Link} to="/">Home</Nav.Link>
+    <Nav.Link as={Button} onClick={logout}>Logout ({loginState.username})</Nav.Link>
+  </>);
+
+  const loggedOutLinks = (<>
+    <Nav.Link as={Link} to="/register">Register</Nav.Link>
+    <Nav.Link as={Link} to="/login">Login</Nav.Link>
+  </>);
 
   return (
     <>
@@ -22,8 +28,7 @@ function RoutingRoot({ loginState }: RoutingRootProps) {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
-              <Nav.Link as={Link} to="/">Home</Nav.Link>
-              {loginLogoutButton}
+              {loginState.isLoggedIn ? loggedInLinks : loggedOutLinks}
             </Nav>
           </Navbar.Collapse>
         </Container>

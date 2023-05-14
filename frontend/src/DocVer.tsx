@@ -28,6 +28,12 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
         .then(response => setVersions({ dv: location.state.ver, content: response}))
     }, [location.state.ver]);
 
+    function show_date(date_string: string)
+    {
+      let date = new Date(date_string)
+      return date.toDateString()
+    }
+
     return (
     <Container>
       <Tabs
@@ -39,23 +45,31 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
 
       >
         <Tab eventKey="details" title="Details">
-          <h4 className={styles.pblue}>
+          <h3 className={styles.pblue}>
             Document name
-          </h4>
+          </h3>
           <p className={styles.textblack}>
             {location.state.doc_name}
           </p>
 
-          <h5 className={styles.pblue}>
+          <h4 className={styles.pblue}>
             Version
-          </h5>
+          </h4>
           <p className={styles.textblack}>
             {doc_ver?.dv.versionName}
           </p>
 
-          <h5 className={styles.pblue}>
+          <h4 className={styles.pblue}>
+            Creation date
+          </h4>
+          <p className={styles.textblack}>
+            {show_date(doc_ver?.dv.createdAt as string)}
+          </p>
+
+          <h4 className={styles.pblue}>
             Content
-          </h5>
+          </h4>
+
           <div className={styles.textblack}>
             {doc_ver?.content}
           </div>

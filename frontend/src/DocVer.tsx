@@ -52,30 +52,30 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
       >
         <Tab eventKey="details" title="Details">
           <div className="container" style={{ width: "80%" }}>
-            <h4 className={styles.pblue}>
+            <h3 className={styles.pblue}>
               Document name
-            </h4>
+            </h3>
             <p className={styles.textblack}>
               {document?.documentName}
             </p>
 
-            <h5 className={styles.pblue}>
+            <h4 className={styles.pblue}>
               Version
-            </h5>
+            </h4>
             <p className={styles.textblack}>
               {version?.versionName}
             </p>
 
-            <h5 className={styles.pblue}>
+            <h4 className={styles.pblue}>
               Creation date
-            </h5>
+            </h4>
             <p className={styles.textblack}>
               {show_date(version?.createdAt ?? '')}
             </p>
 
-            <h5 className={styles.pblue}>
+            <h4 className={styles.pblue}>
               Content
-            </h5>
+            </h4>
             <div className={styles.textblack} style={{ whiteSpace: 'pre' }}>
               {version?.content}
             </div>

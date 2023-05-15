@@ -2,6 +2,7 @@ import CreateDocument from "./models/CreateDocument";
 import CreateVersion from "./models/CreateVersion";
 import DocumentVersion from "./models/DocumentVersion";
 import Document from "./models/Document";
+import DocFile from "./models/DocFile";
 
 const apiBaseUrl = 'http://localhost:3000/api/';  // the trailing slash is important
 
@@ -68,5 +69,5 @@ export const getVersions = async (documentId: string, token: string) => await ge
 export const createVersion = async (documentId: string, data: CreateVersion, token: string) => await post(`documents/${documentId}`, data, token, false);
 export const getVersionContent = async (documentId: string, versionId: string, token: string) => await getString(`documents/${documentId}/${versionId}`, token) as string;
 
-export const getFiles = async (documentId: string, versionId: string) => await getJSON(`documents/${documentId}/${versionId}/files`);
+export const getFiles = async (documentId: string, versionId: string, token:string) => await getJSON(`documents/${documentId}/${versionId}/files`, token) as DocFile[];
 export const postFiles = async (documentId: string, versionId: string, token:string,  data:FormData) => await post(`documents/${documentId}/${versionId}/files`, data, token);

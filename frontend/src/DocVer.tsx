@@ -7,6 +7,7 @@ import styles from './docVer.module.css';
 import { LoginState } from './App';
 import { getVersionContent, getVersions } from './ApiCommunication';
 import DocumentVersion from "./models/DocumentVersion";
+import Attachments from "./Attachments";
 
 type DocVerProps = {
   loginState: LoginState
@@ -42,9 +43,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
         className="mb-3"
         fill
         justify
-
-      >
+        >
         <Tab eventKey="details" title="Details">
+          <div className="container" style={{ width: "80%" }}>
           <h4 className={styles.pblue}>
             Document name
           </h4>
@@ -76,8 +77,15 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
           <Button variant="outline-primary" onClick={() => navigate(`/versions/new?document=${doc_ver?.dv.documentId}&parentVersion=${doc_ver?.dv.versionId}&documentName=${location.state.doc_name}&parentName=${doc_ver?.dv.versionName}`)}>
             Create New Document Version
           </Button>
+          </div>
         </Tab>
 
+        <Tab eventKey="comments" title="Comments">
+        </Tab>
+
+        <Tab eventKey="attachments" title="Attachments">
+          <Attachments loginState={loginState}/>
+        </Tab>
         <Tab eventKey="past" title="Past Versions" disabled>
         </Tab>
         <Tab eventKey="future" title="Derived Versions" disabled>

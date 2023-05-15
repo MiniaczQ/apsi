@@ -7,7 +7,7 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use tokio_postgres::Row;
+use tokio_postgres::{Row, Transaction};
 use tracing::error;
 use uuid::Uuid;
 
@@ -47,6 +47,8 @@ pub struct DocumentVersion {
     pub version_name: String,
     pub created_at: DateTime<Utc>,
     pub content: String,
+    pub children: Vec<Uuid>,
+    pub parents: Vec<Uuid>,
 }
 
 impl TryFrom<Row> for DocumentVersion {
@@ -58,6 +60,8 @@ impl TryFrom<Row> for DocumentVersion {
         let version_name: String = value.try_get(2)?;
         let created_at: DateTime<Utc> = value.try_get(3)?;
         let content: String = value.try_get(4)?;
+        let children: Vec<Uuid> = value.try_get(5)?;
+        let parents: Vec<Uuid> = value.try_get(6)?;
 
         Ok(Self {
             document_id,
@@ -65,22 +69,111 @@ impl TryFrom<Row> for DocumentVersion {
             version_name,
             created_at,
             content,
+            children,
+            parents,
         })
     }
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentWithInitialVersion {
+    document: Document,
+    initial_version: DocumentVersion,
+}
+
 impl DocumentsRepository {
-    pub async fn create_document(&self, document_name: String) -> Result<Document, Box<dyn Error>> {
+    async fn create_version_inner<'a>(
+        transaction: &Transaction<'a>,
+        user_id: Uuid,
+        document_id: Uuid,
+        version_name: String,
+        content: String,
+        parent_ids: &[Uuid],
+    ) -> Result<DocumentVersion, Box<dyn Error>> {
+        let version_id = Uuid::new_v4();
+        let created_at = Utc::now();
+        transaction
+            .execute(
+                "INSERT INTO document_versions VALUES ($1, $2, $3, $4, $5)",
+                &[
+                    &document_id,
+                    &version_id,
+                    &version_name,
+                    &created_at,
+                    &content,
+                ],
+            )
+            .await?;
+        for parent_id in parent_ids {
+            transaction
+                .execute(
+                    "INSERT INTO documents_dependencies (document_id, parent_version_id, child_version_id) VALUES ($1, $2, $3)",
+                    &[&document_id, &parent_id, &version_id],
+                )
+                .await?;
+        }
+        transaction
+            .execute(
+                "INSERT INTO user_document_version_roles VALUES ($1, $2, $3, $4)",
+                &[
+                    &user_id,
+                    &document_id,
+                    &version_id,
+                    &i16::from(DocumentVersionRole::Owner),
+                ],
+            )
+            .await?;
+        let document_version = transaction
+            .query_one(
+                "
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content,
+                    array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
+                    array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
+                FROM document_versions v
+                WHERE v.document_id = $1
+                AND v.version_id = $2
+                GROUP BY (v.document_id, v.version_id)
+                ",
+                &[&document_id, &version_id],
+            )
+            .await?;
+        let document_version = DocumentVersion::try_from(document_version)?;
+        Ok(document_version)
+    }
+
+    pub async fn create_document(
+        &mut self,
+        document_name: String,
+        user_id: Uuid,
+        version_name: String,
+        content: String,
+    ) -> Result<DocumentWithInitialVersion, Box<dyn Error>> {
         let document_id = Uuid::new_v4();
-        self.database
+        let transaction = self.database.transaction().await?;
+        transaction
             .execute(
                 "INSERT INTO documents VALUES ($1, $2)",
                 &[&document_id, &document_name],
             )
             .await?;
-        Ok(Document {
+        let initial_version = Self::create_version_inner(
+            &transaction,
+            user_id,
+            document_id,
+            version_name,
+            content,
+            &[],
+        )
+        .await?;
+        transaction.commit().await?;
+        let document = Document {
             document_id,
             document_name,
+        };
+        Ok(DocumentWithInitialVersion {
+            document,
+            initial_version,
         })
     }
 
@@ -137,41 +230,20 @@ impl DocumentsRepository {
         document_id: Uuid,
         version_name: String,
         content: String,
+        parents: Vec<Uuid>,
     ) -> Result<DocumentVersion, Box<dyn Error>> {
-        let version_id = Uuid::new_v4();
-        let created_at = Utc::now();
         let transaction = self.database.transaction().await?;
-        transaction
-            .execute(
-                "INSERT INTO document_versions VALUES ($1, $2, $3, $4, $5)",
-                &[
-                    &document_id,
-                    &version_id,
-                    &version_name,
-                    &created_at,
-                    &content,
-                ],
-            )
-            .await?;
-        transaction
-            .execute(
-                "INSERT INTO user_document_version_roles VALUES ($1, $2, $3, $4)",
-                &[
-                    &user_id,
-                    &document_id,
-                    &version_id,
-                    &i16::from(DocumentVersionRole::Owner),
-                ],
-            )
-            .await?;
-        transaction.commit().await?;
-        Ok(DocumentVersion {
+        let document_version = Self::create_version_inner(
+            &transaction,
+            user_id,
             document_id,
-            version_id,
             version_name,
-            created_at,
             content,
-        })
+            &parents,
+        )
+        .await?;
+        transaction.commit().await?;
+        Ok(document_version)
     }
 
     pub async fn get_version(
@@ -182,7 +254,15 @@ impl DocumentsRepository {
         let version = self
             .database
             .query_one(
-                "SELECT * FROM document_versions WHERE document_id = $1 AND version_id = $2",
+                "
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content,
+                    array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
+                    array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
+                FROM document_versions v
+                WHERE v.document_id = $1
+                AND v.version_id = $2
+                GROUP BY (v.document_id, v.version_id)
+                ",
                 &[&document_id, &version_id],
             )
             .await?;
@@ -197,7 +277,14 @@ impl DocumentsRepository {
         let versions = self
             .database
             .query(
-                "SELECT * FROM document_versions WHERE document_id = $1",
+                "
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content,
+                    array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
+                    array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
+                FROM document_versions v
+                WHERE v.document_id = $1
+                GROUP BY (v.document_id, v.version_id)
+                ",
                 &[&document_id],
             )
             .await?;

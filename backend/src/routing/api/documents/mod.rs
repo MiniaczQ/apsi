@@ -14,7 +14,9 @@ use crate::services::{
     auth::{auth_keys::AuthKeys, claims::Claims},
     database::{
         repositories::{
-            documents::{Document, DocumentVersion, DocumentsRepository},
+            documents::{
+                Document, DocumentVersion, DocumentWithInitialVersion, DocumentsRepository,
+            },
             files::{File, FilesRepository},
             permission::{DocumentVersionRole, PermissionRepository, PublicUserWithRoles},
         },
@@ -24,17 +26,29 @@ use crate::services::{
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct CreateOrUpdateDocumentRequest {
+struct CreateDocumentRequest {
+    document_name: String,
+    initial_version: CreateInitialOrUpdateVersionRequest,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdateDocumentRequest {
     document_name: String,
 }
 
 async fn create_document(
-    documents_repository: DocumentsRepository,
-    _: Claims,
-    Json(data): Json<CreateOrUpdateDocumentRequest>,
-) -> Result<Json<Document>, StatusCode> {
+    mut documents_repository: DocumentsRepository,
+    claims: Claims,
+    Json(data): Json<CreateDocumentRequest>,
+) -> Result<Json<DocumentWithInitialVersion>, StatusCode> {
     let document = documents_repository
-        .create_document(data.document_name)
+        .create_document(
+            data.document_name,
+            claims.user_id,
+            data.initial_version.version_name,
+            data.initial_version.content,
+        )
         .await
         .map_err(|e| {
             error!("{}", e);
@@ -73,7 +87,7 @@ async fn update_document(
     documents_repository: DocumentsRepository,
     _: Claims,
     Path(document_id): Path<Uuid>,
-    Json(update): Json<CreateOrUpdateDocumentRequest>,
+    Json(update): Json<UpdateDocumentRequest>,
 ) -> StatusCode {
     match documents_repository
         .update_document(document_id, update.document_name)
@@ -105,19 +119,33 @@ async fn delete_document(
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct CreateOrUpdateVersionRequest {
+struct CreateInitialOrUpdateVersionRequest {
     version_name: String,
     content: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CreateVersionWithParentsRequest {
+    version_name: String,
+    content: String,
+    parents: Vec<Uuid>,
 }
 
 async fn create_version(
     mut documents_repository: DocumentsRepository,
     claims: Claims,
     Path(document_id): Path<Uuid>,
-    Json(data): Json<CreateOrUpdateVersionRequest>,
+    Json(data): Json<CreateVersionWithParentsRequest>,
 ) -> Result<Json<DocumentVersion>, StatusCode> {
     let version = documents_repository
-        .create_version(claims.user_id, document_id, data.version_name, data.content)
+        .create_version(
+            claims.user_id,
+            document_id,
+            data.version_name,
+            data.content,
+            data.parents,
+        )
         .await
         .map_err(|e| {
             error!("{}", e);
@@ -160,7 +188,7 @@ async fn update_version(
     documents_repository: DocumentsRepository,
     _: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
-    Json(data): Json<CreateOrUpdateVersionRequest>,
+    Json(data): Json<CreateInitialOrUpdateVersionRequest>,
 ) -> StatusCode {
     match documents_repository
         .update_version(document_id, version_id, data.version_name, data.content)

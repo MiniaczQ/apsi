@@ -176,7 +176,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"piąty maja\",\r\n    \"content\": \"dobro wspólnie\"\r\n}",
+							"raw": "{\r\n    \"versionName\": \"piąty massdsddaja\",\r\n    \"content\": \"dobro wssdsdpólnie\",\r\n    \"parents\": [\"054dd38b-36a7-4d1e-a6ea-7d73b17aa16f\"]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -586,7 +586,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"documentName\": \"konstytucja\"\r\n}",
+							"raw": "{\r\n    \"documentName\": \"konstyddtucja\",\r\n    \"initialVersion\": {\r\n        \"versionName\": \"aaa\",\r\n        \"content\": \"bbb\"\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -970,12 +970,12 @@
 		},
 		{
 			"key": "documentId",
-			"value": "53a9f0da-bb50-41db-9385-2b5fd8c12170",
+			"value": "b03ee9b1-3462-4166-8975-51628c24bc6f",
 			"type": "string"
 		},
 		{
 			"key": "versionId",
-			"value": "53dc601a-1176-4d39-b757-78008e07793e",
+			"value": "054dd38b-36a7-4d1e-a6ea-7d73b17aa16f",
 			"type": "string"
 		},
 		{

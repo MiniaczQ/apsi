@@ -5,7 +5,7 @@ use axum::{
     extract::{FromRef, FromRequestParts},
     http::{request::Parts, StatusCode},
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 use tracing::error;
 use uuid::Uuid;
@@ -18,7 +18,7 @@ pub struct PermissionRepository {
     database: DbConn,
 }
 
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[repr(i16)]
 pub enum Role {
@@ -31,7 +31,7 @@ impl From<Role> for i16 {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[repr(i16)]
 pub enum DocumentVersionRole {
@@ -102,7 +102,7 @@ impl PermissionRepository {
         Ok(count >= 1)
     }
 
-    pub async fn can_give_or_revoke_document_version_role(
+    pub async fn is_owner(
         &self,
         user_id: Uuid,
         document_id: Uuid,
@@ -119,7 +119,7 @@ impl PermissionRepository {
         Ok(count >= 1)
     }
 
-    pub async fn give_document_version_role(
+    pub async fn grant_document_version_role(
         &self,
         user_id: Uuid,
         document_id: Uuid,

@@ -40,10 +40,11 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   }, [documentId, apiClient, parentId]);
 
   const _createVersion = async () => {
-    if (parentId === undefined)
-      return;
     let cd: CreateDocument = { documentName: documentName };
-    let cv: CreateVersion = { versionName: versionName, content: versionText, parents: [...parents, parentId] };
+    let cv: CreateVersion = { versionName: versionName, content: versionText, parents: parents };
+    if (parentId !== undefined) {
+      cv.parents = [...parents, parentId]
+    }
     if (documentId === undefined) {
       apiClient.createDocument(cd)
         .then(response => apiClient.createVersion(response.documentId, cv))

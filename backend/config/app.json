@@ -20,7 +20,8 @@
         "password": "admin",
         "dbname": "admin",
         "host": "127.0.0.1",
-        "port": 5432
+        "port": 5432,
+        "seed_folder": "seeding"
     },
     "s3storage": {
         "bucket_name": "file-attachments",

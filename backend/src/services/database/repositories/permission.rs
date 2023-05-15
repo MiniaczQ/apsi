@@ -161,17 +161,18 @@ impl PermissionRepository {
         let rows = self
             .database
             .query(
-                "SELECT r.user_id, r.username, array_agg(r.role_id) FROM user_document_version_roles r JOIN users u ON r.user_id = u.user_id WHERE r.document_id = $1 AND r.version_id = $2 GROUP BY u.*",
+                "SELECT u.user_id, u.username, array_agg(r.role_id) FROM user_document_version_roles r JOIN users u ON r.user_id = u.user_id WHERE r.document_id = $1 AND r.version_id = $2 GROUP BY (u.user_id, u.username)",
                 &[&document_id, &version_id],
             )
             .await?;
         let users: Vec<PublicUserWithRoles> = rows
             .into_iter()
-            .map(|r| PublicUserWithRoles::try_from(r))
+            .map(PublicUserWithRoles::try_from)
             .collect::<Result<Vec<_>, _>>()?;
         Ok(users)
     }
 
+    #[allow(dead_code)]
     pub async fn does_user_have_document_version_roles(
         &self,
         user_id: Uuid,
@@ -189,6 +190,18 @@ impl PermissionRepository {
             .await?;
         let count: i64 = row.try_get(0)?;
         Ok(count >= 1)
+    }
+
+    pub async fn get_all_users(&self) -> Result<Vec<PublicUser>, Box<dyn Error>> {
+        let users = self
+            .database
+            .query("SELECT user_id, username FROM users", &[])
+            .await?;
+        let users = users
+            .into_iter()
+            .map(PublicUser::try_from)
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(users)
     }
 }
 

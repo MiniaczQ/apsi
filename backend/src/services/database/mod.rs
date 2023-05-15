@@ -50,8 +50,8 @@ async fn seed_database(
                     error!({error = "Invalid extension", path = path_str}, "Error when reading seed folder content");
                     continue;
                 };
-                if extension != ".exe" {
-                    error!({error = "Wrong extension", expected = ".sql"}, "Error when reading seed folder content");
+                if extension != "sql" {
+                    error!({error = "Wrong extension", expected = "sql", got = extension}, "Error when reading seed folder content");
                     continue;
                 }
                 let Ok(content) = read_to_string(&path).await else {

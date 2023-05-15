@@ -156,7 +156,12 @@ impl DocumentsRepository {
         transaction
             .execute(
                 "INSERT INTO user_document_version_roles VALUES ($1, $2, $3, $4)",
-                &[&user_id, &document_id, &version_id, &i16::from(DocumentVersionRole::Owner)],
+                &[
+                    &user_id,
+                    &document_id,
+                    &version_id,
+                    &i16::from(DocumentVersionRole::Owner),
+                ],
             )
             .await?;
         transaction.commit().await?;

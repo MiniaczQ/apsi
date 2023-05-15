@@ -24,6 +24,16 @@ pub struct PublicUser {
     pub username: String,
 }
 
+impl TryFrom<Row> for PublicUser {
+    type Error = tokio_postgres::Error;
+
+    fn try_from(value: Row) -> Result<Self, Self::Error> {
+        let user_id: Uuid = value.try_get(0)?;
+        let username: String = value.try_get(1)?;
+        Ok(Self { user_id, username })
+    }
+}
+
 pub struct User {
     pub user_id: Uuid,
     salt: Uuid,

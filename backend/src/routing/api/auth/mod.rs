@@ -6,11 +6,14 @@ use axum::{
 
 use crate::services::{auth::auth_keys::AuthKeys, database::DbPool};
 
-use self::{am_admin::am_admin, login::login, register::register, who_am_i::who_am_i};
+use self::{
+    am_admin::am_admin, login::login, register::register, users::users, who_am_i::who_am_i,
+};
 
 mod am_admin;
 mod login;
 mod register;
+mod users;
 mod who_am_i;
 
 pub fn auth_router<T>() -> Router<T>
@@ -24,4 +27,5 @@ where
         .route("/login", post(login))
         .route("/who-am-i", get(who_am_i))
         .route("/am-admin", get(am_admin))
+        .route("/users", get(users))
 }

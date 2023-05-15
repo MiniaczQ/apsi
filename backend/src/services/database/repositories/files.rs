@@ -90,8 +90,8 @@ impl FilesRepository {
                     .await?;
                 transaction
                     .execute(
-                        "INSERT INTO files VALUES ($1, $2, $3)",
-                        &[&file_id, &file_name, &file_hash],
+                        "INSERT INTO files VALUES ($1, $2, $3, $4)",
+                        &[&file_id, &file_name, &file_mime_type, &file_hash],
                     )
                     .await?;
                 transaction.commit().await?;

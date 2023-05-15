@@ -1,11 +1,10 @@
 use axum::{
-    debug_handler,
     extract::{FromRef, Multipart, Path},
     http::StatusCode,
-    routing::{delete, get, patch, post, put},
+    routing::{delete, get, patch, post},
     Json, Router,
 };
-use mime::{Mime, APPLICATION};
+use mime::Mime;
 use s3::Bucket;
 use serde::Deserialize;
 use tracing::{error, info};
@@ -21,7 +20,6 @@ use crate::services::{
         },
         DbPool,
     },
-    state::AppState,
 };
 
 #[derive(Debug, Deserialize)]
@@ -218,14 +216,6 @@ async fn patch_file_attachment(
         error!("{}", e);
         StatusCode::BAD_REQUEST
     })?;
-    if mime_type.type_() != APPLICATION {
-        error!(
-            "Content type is {} when it should be {}",
-            mime_type.type_(),
-            APPLICATION
-        );
-        return Err(StatusCode::BAD_REQUEST);
-    }
     let Some(file_name) = field.file_name() else {
         error!("Field name not found");
         return Err(StatusCode::BAD_REQUEST);
@@ -443,10 +433,10 @@ where
         .route("/:document_id/:version_id/am-owner", get(am_owner))
         .route(
             "/:document_id/:version_id/grant/:user_id/:role",
-            put(grant_version_role),
+            post(grant_version_role),
         )
         .route(
             "/:document_id/:version_id/revoke/:user_id/:role",
-            put(revoke_version_role),
+            post(revoke_version_role),
         )
 }

@@ -8,8 +8,9 @@ services:
     ports:
       - 3000:3000
     environment:
-      - RUST_BACKTRACE=1
-      - database__host=database
+      RUST_BACKTRACE: 1
+      database__host: database
+      s3storage__region_endpoint: http://s3storage:9000
     profiles:
       - all
     depends_on:
@@ -28,9 +29,9 @@ services:
     ports:
       - 5432:5432
     environment:
-      - POSTGRES_PASSWORD=admin
-      - POSTGRES_USER=admin
-      - POSTGRES_DB=admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: admin
+      POSTGRES_DB: admin
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready" ]
       interval: 10s

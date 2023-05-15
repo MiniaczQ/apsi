@@ -54,7 +54,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
           <h5 className={styles.pblue}>
             Content
           </h5>
-          <div className={styles.textblack}>
+          <div className={styles.textblack} style={{ whiteSpace: 'pre' }}>
             {doc_ver?.content}
           </div>
           <Button variant="outline-primary" onClick={() => navigate(`/versions/new?document=${doc_ver?.dv.documentId}&parentVersion=${doc_ver?.dv.versionId}&documentName=${location.state.doc_name}&parentName=${doc_ver?.dv.versionName}`)}>

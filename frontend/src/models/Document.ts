@@ -1,6 +1,6 @@
 export type Document = {
     documentId: string,
-    documentName: string
+    documentName: string,
 };
 
 export default Document;

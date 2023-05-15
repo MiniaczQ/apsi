@@ -1,5 +1,5 @@
 export type UpdateDocument = {
-    documentName: string
+    documentName: string,
 };
 
 export default UpdateDocument;

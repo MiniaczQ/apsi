@@ -1,6 +1,6 @@
 export type UpdateVersion = {
     versionName: string,
-    content: string
+    content: string,
 };
 
 export default UpdateVersion;

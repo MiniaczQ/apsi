@@ -89,8 +89,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
 
         <Tab eventKey="comments" title="Comments">
         </Tab>
-
-        <Tab eventKey="attachments" title="Attachments">
+        <Tab eventKey="files" title="File Attachments">
           <Attachments loginState={loginState} />
         </Tab>
         <Tab eventKey="past" title="Past Versions" disabled>

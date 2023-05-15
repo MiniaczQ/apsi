@@ -4,7 +4,7 @@ use axum::{
     routing::{delete, get, patch, post},
     Json, Router,
 };
-use mime::{Mime, APPLICATION};
+use mime::Mime;
 use s3::Bucket;
 use serde::Deserialize;
 use tracing::{error, info};
@@ -16,6 +16,7 @@ use crate::services::{
         repositories::{
             documents::{Document, DocumentVersion, DocumentsRepository},
             files::{File, FilesRepository},
+            permission::{DocumentVersionRole, PermissionRepository, PublicUserWithRoles},
         },
         DbPool,
     },
@@ -110,13 +111,13 @@ struct CreateOrUpdateVersionRequest {
 }
 
 async fn create_version(
-    documents_repository: DocumentsRepository,
-    _: Claims,
+    mut documents_repository: DocumentsRepository,
+    claims: Claims,
     Path(document_id): Path<Uuid>,
     Json(data): Json<CreateOrUpdateVersionRequest>,
 ) -> Result<Json<DocumentVersion>, StatusCode> {
     let version = documents_repository
-        .create_version(document_id, data.version_name, data.content)
+        .create_version(claims.user_id, document_id, data.version_name, data.content)
         .await
         .map_err(|e| {
             error!("{}", e);
@@ -211,18 +212,10 @@ async fn patch_file_attachment(
         error!("Content type not found");
         return Err(StatusCode::BAD_REQUEST);
     };
-    let content_type = content_type.parse::<Mime>().map_err(|e| {
+    let mime_type = content_type.parse::<Mime>().map_err(|e| {
         error!("{}", e);
         StatusCode::BAD_REQUEST
     })?;
-    if content_type.type_() != APPLICATION {
-        error!(
-            "Content type is {} when it should be {}",
-            content_type.type_(),
-            APPLICATION
-        );
-        return Err(StatusCode::BAD_REQUEST);
-    }
     let Some(file_name) = field.file_name() else {
         error!("Field name not found");
         return Err(StatusCode::BAD_REQUEST);
@@ -242,7 +235,7 @@ async fn patch_file_attachment(
     };
 
     let file = files_repository
-        .try_upload_file(file_name, &content)
+        .try_upload_file(file_name, mime_type.to_string(), &content)
         .await
         .map_err(|e| {
             error!("{}", e);
@@ -332,6 +325,71 @@ async fn delete_file_attachment(
     }
 }
 
+async fn get_members(
+    permission_repository: PermissionRepository,
+    _: Claims,
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+) -> Result<Json<Vec<PublicUserWithRoles>>, StatusCode> {
+    match permission_repository
+        .get_document_version_users(document_id, version_id)
+        .await
+    {
+        Ok(users) => Ok(Json(users)),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+async fn am_owner(
+    permission_repository: PermissionRepository,
+    claims: Claims,
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+) -> StatusCode {
+    match permission_repository
+        .is_owner(claims.user_id, document_id, version_id)
+        .await
+    {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::UNAUTHORIZED,
+        Err(error) => {
+            error!("{}", error);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
+async fn grant_version_role(
+    permission_repository: PermissionRepository,
+    _: Claims,
+    Path((document_id, version_id, user_id, role)): Path<(Uuid, Uuid, Uuid, DocumentVersionRole)>,
+) -> StatusCode {
+    match permission_repository
+        .grant_document_version_role(user_id, document_id, version_id, role)
+        .await
+    {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::BAD_REQUEST,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
+async fn revoke_version_role(
+    permission_repository: PermissionRepository,
+    _: Claims,
+    Path((document_id, version_id, user_id, role)): Path<(Uuid, Uuid, Uuid, DocumentVersionRole)>,
+) -> StatusCode {
+    match permission_repository
+        .revoke_document_version_role(user_id, document_id, version_id, role)
+        .await
+    {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::BAD_REQUEST,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
 pub fn documents_router<T>() -> Router<T>
 where
     AuthKeys: FromRef<T>,
@@ -340,16 +398,19 @@ where
     T: 'static + Send + Sync + Clone,
 {
     Router::new()
+        // Documents
         .route("/", post(create_document))
         .route("/documents", get(get_documents))
         .route("/:document_id", get(get_document))
         .route("/:document_id", patch(update_document))
         .route("/:document_id", delete(delete_document))
+        // Versions
         .route("/:document_id", post(create_version))
         .route("/:document_id/versions", get(get_versions))
         .route("/:document_id/:version_id", get(get_version))
         .route("/:document_id/:version_id", patch(update_version))
         .route("/:document_id/:version_id", delete(delete_version))
+        // Attachhments
         .route("/:document_id/:version_id/files", get(get_file_attachments))
         .route(
             "/:document_id/:version_id/files",
@@ -366,5 +427,16 @@ where
         .route(
             "/:document_id/:version_id/files/:file_id",
             delete(delete_file_attachment),
+        )
+        // Permission
+        .route("/:document_id/:version_id/members", get(get_members))
+        .route("/:document_id/:version_id/am-owner", get(am_owner))
+        .route(
+            "/:document_id/:version_id/grant/:user_id/:role",
+            post(grant_version_role),
+        )
+        .route(
+            "/:document_id/:version_id/revoke/:user_id/:role",
+            post(revoke_version_role),
         )
 }

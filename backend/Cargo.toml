@@ -47,7 +47,7 @@ features = ["macros", "signal", "rt-multi-thread"]
 
 [dependencies.tokio-postgres]
 version = "0.7.8"
-features = ["with-uuid-1", "with-chrono-0_4"]
+features = ["with-uuid-1", "with-chrono-0_4", "array-impls"]
 
 [dependencies.tower-http]
 version = "0.4.0"

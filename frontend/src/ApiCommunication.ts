@@ -66,3 +66,5 @@ export const createDocument = async (data: CreateDocument, token: string) => awa
 export const getVersions = async (documentId: string, token: string) => await getJSON(`documents/${documentId}`, token) as DocumentVersion[];
 export const createVersion = async (documentId: string, data: CreateVersion, token: string) => await post(`documents/${documentId}`, data, token, false);
 export const getVersionContent = async (documentId: string, versionId: string, token: string) => await getString(`documents/${documentId}/${versionId}`, token) as string;
+
+export const getFiles = async (documentId: string, versionId: string) => await getString(`documents/${documentId}/${versionId}`) as string;

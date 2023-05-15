@@ -8,6 +8,7 @@ import RoutingRoot from './RoutingRoot';
 import Documents from './Documents';
 import Versions from './Versions';
 import DocVer from './DocVer';
+import Attachments from './Attachments';
 
 import Login from './Login';
 import Register from './Register';

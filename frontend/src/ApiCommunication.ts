@@ -53,6 +53,7 @@ const getString = async (relPath: string, token: string | undefined = undefined,
 };
 
 
+
 export type AuthResponse = {
   token: string
 };
@@ -60,11 +61,12 @@ export type AuthResponse = {
 export const register = async (username: string, password: string) => await post('auth/register', { username, password }, undefined, false);
 export const login = async (username: string, password: string) => await post('auth/login', { username, password }) as AuthResponse;
 
-export const getDocuments = async (token: string) => await getJSON(`documents`, token) as Document[];
+export const getDocuments = async (token: string) => await getJSON(`documents/documents`, token) as Document[];
 export const createDocument = async (data: CreateDocument, token: string) => await post(`documents`, data, token);
 
-export const getVersions = async (documentId: string, token: string) => await getJSON(`documents/${documentId}`, token) as DocumentVersion[];
+export const getVersions = async (documentId: string, token: string) => await getJSON(`documents/${documentId}/versions`, token) as DocumentVersion[];
 export const createVersion = async (documentId: string, data: CreateVersion, token: string) => await post(`documents/${documentId}`, data, token, false);
 export const getVersionContent = async (documentId: string, versionId: string, token: string) => await getString(`documents/${documentId}/${versionId}`, token) as string;
 
-export const getFiles = async (documentId: string, versionId: string) => await getString(`documents/${documentId}/${versionId}`) as string;
+export const getFiles = async (documentId: string, versionId: string) => await getJSON(`documents/${documentId}/${versionId}/files`);
+export const postFiles = async (documentId: string, versionId: string, token:string,  data:FormData) => await post(`documents/${documentId}/${versionId}/files`, data, token);

@@ -1,14 +1,16 @@
 import { Button, Nav, Navbar, Container } from 'react-bootstrap';
 import { Link, Outlet } from 'react-router-dom';
+import ApiClient from './api/ApiClient';
 import { LoginState } from './App';
 import './App.css';
 
 type RoutingRootProps = {
   loginState: LoginState;
+  apiClient: ApiClient;
 };
 
-function RoutingRoot({ loginState }: RoutingRootProps) {
-  const logout = () => loginState.setToken(undefined);
+function RoutingRoot({ loginState, apiClient }: RoutingRootProps) {
+  const logout = async () => await apiClient.logout();
 
   const loggedInLinks = (<>
     <Nav.Link as={Link} to="/">Home</Nav.Link>

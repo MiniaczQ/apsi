@@ -13,7 +13,7 @@ docker compose --profile all up -d
 to start the database, file storage and backend server, then run
 ```sh
 cd frontend
-npm start
+npm run start
 ```
 
 ## Closing
@@ -36,7 +36,7 @@ instead
 
 ```sh
 cd frontend
-npm watch
+npm run start
 ```
 
 ## Backend

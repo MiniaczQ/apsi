@@ -2,23 +2,22 @@ import { Button, Container, Table } from 'react-bootstrap';
 import './App.css';
 import { useNavigate } from 'react-router';
 import { FunctionComponent, useState, useEffect } from "react";
-import { getDocuments } from './ApiCommunication';
-import { LoginState } from './App';
 import { Document } from './models/Document';
+import ApiClient from './api/ApiClient';
 
 type DocumentsProps = {
-  loginState: LoginState
+  apiClient: ApiClient
 };
 
-export const Documents: FunctionComponent<DocumentsProps> = ({ loginState }) => {
+export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
   const navigate = useNavigate();
   const [docs, setDocs] = useState<Document[]>([])
 
   useEffect(() => {
-    getDocuments(loginState.token!).then(response => {setDocs(response)});
-  }, [loginState.token]);
+    apiClient.getDocuments().then(response => { setDocs(response) });
+  }, [apiClient]);
 
-  const go_to_ver = (id: string, name: string) => navigate("/Versions", {state:{ doc_id : id, doc_name: name}});
+  const go_to_ver = (id: string, name: string) => navigate("/Versions", { state: { doc_id: id, doc_name: name } });
 
   const navigateToDocumentCreator = () => navigate('/Versions/new');
 
@@ -52,7 +51,7 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ loginState }) => 
             <th >
               Name
             </th>
-          
+
             <th >
               Options
             </th>
@@ -61,7 +60,7 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ loginState }) => 
 
         <tbody>
           {docs.map((doc: Document, id: number) => print_doc_row(doc.documentName, doc.documentId, id))}
-      </tbody>
+        </tbody>
 
       </Table>
 

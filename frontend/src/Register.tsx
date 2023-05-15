@@ -1,14 +1,13 @@
 import { useState, MouseEventHandler } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
+import ApiClient from './api/ApiClient';
 import './App.css';
-import { LoginState } from './App';
-import { register } from './ApiCommunication';
 
 type RegisterProps = {
-  loginState: LoginState;
+  apiClient: ApiClient;
 };
 
-function Register({ loginState }: RegisterProps) {
+function Register({ apiClient }: RegisterProps) {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [password2, setPassword2] = useState<string>('');
@@ -21,7 +20,7 @@ function Register({ loginState }: RegisterProps) {
     try {
       setError('');
       setSuccess('');
-      await register(username, password);
+      await apiClient.register(username, password);
       setSuccess('Registered successfully. Try logging in now.');
     } catch (e) {
       setError(e?.toString() ?? '');

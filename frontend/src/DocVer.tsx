@@ -4,31 +4,30 @@ import { Button, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import styles from './docVer.module.css';
-import { LoginState } from './App';
-import { getVersionContent, getVersions } from './ApiCommunication';
 import DocumentVersion from "./models/DocumentVersion";
+import ApiClient from "./api/ApiClient";
 
 type DocVerProps = {
-  loginState: LoginState
+  apiClient: ApiClient
 };
 
 interface DocumentVersionWithContent {
   dv: DocumentVersion,
   content: string
-} 
+}
 
-export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
-    const location = useLocation();
-    const navigate = useNavigate();
+export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [doc_ver, setVersions] = useState<DocumentVersionWithContent>();
 
-    useEffect(() => {
-      getVersionContent(location.state.ver.documentId, location.state.ver.versionId, loginState.token!)
-        .then(response => setVersions({ dv: location.state.ver, content: response}))
-    }, [location.state.ver]);
+  useEffect(() => {
+    apiClient.getVersion(location.state.ver.documentId, location.state.ver.versionId)
+      .then(response => setVersions({ dv: location.state.ver, content: response.content }))
+  }, [location.state.ver, apiClient]);
 
-    return (
+  return (
     <Container>
       <Tabs
         defaultActiveKey="details"
@@ -36,7 +35,6 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
         className="mb-3"
         fill
         justify
-
       >
         <Tab eventKey="details" title="Details">
           <h4 className={styles.pblue}>
@@ -70,7 +68,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
         </Tab>
       </Tabs>
     </Container>
-    )
+  )
 }
 
 export default DocVer;

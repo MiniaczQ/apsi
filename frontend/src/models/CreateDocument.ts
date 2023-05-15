@@ -1,5 +1,5 @@
 export type CreateDocument = {
-    documentName: string
+    documentName: string,
 };
 
 export default CreateDocument;

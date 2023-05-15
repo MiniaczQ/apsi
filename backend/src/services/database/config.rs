@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 use serde::Deserialize;
 
@@ -9,6 +9,7 @@ pub struct PostgresConfig {
     dbname: String,
     host: String,
     port: u16,
+    pub seed_folder: PathBuf,
 }
 
 impl From<&PostgresConfig> for tokio_postgres::Config {

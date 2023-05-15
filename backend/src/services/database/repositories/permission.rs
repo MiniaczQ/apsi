@@ -171,6 +171,25 @@ impl PermissionRepository {
             .collect::<Result<Vec<_>, _>>()?;
         Ok(users)
     }
+
+    pub async fn does_user_have_document_version_roles(
+        &self,
+        user_id: Uuid,
+        document_id: Uuid,
+        version_id: Uuid,
+        roles: &[DocumentVersionRole],
+    ) -> Result<bool, Box<dyn Error>> {
+        let roles: Vec<i16> = roles.iter().map(|r| i16::from(*r)).collect();
+        let row = self
+            .database
+            .query_one(
+                "SELECT count(*) FROM user_document_version_roles WHERE user_id = $1 AND document_id = $2 AND version_id = $3 AND document_version_role_id IN $4",
+                &[&user_id, &document_id, &version_id,  &roles],
+            )
+            .await?;
+        let count: i64 = row.try_get(0)?;
+        Ok(count >= 1)
+    }
 }
 
 #[async_trait]

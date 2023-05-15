@@ -211,14 +211,14 @@ async fn patch_file_attachment(
         error!("Content type not found");
         return Err(StatusCode::BAD_REQUEST);
     };
-    let content_type = content_type.parse::<Mime>().map_err(|e| {
+    let mime_type = content_type.parse::<Mime>().map_err(|e| {
         error!("{}", e);
         StatusCode::BAD_REQUEST
     })?;
-    if content_type.type_() != APPLICATION {
+    if mime_type.type_() != APPLICATION {
         error!(
             "Content type is {} when it should be {}",
-            content_type.type_(),
+            mime_type.type_(),
             APPLICATION
         );
         return Err(StatusCode::BAD_REQUEST);
@@ -242,7 +242,7 @@ async fn patch_file_attachment(
     };
 
     let file = files_repository
-        .try_upload_file(file_name, &content)
+        .try_upload_file(file_name, mime_type.to_string(), &content)
         .await
         .map_err(|e| {
             error!("{}", e);

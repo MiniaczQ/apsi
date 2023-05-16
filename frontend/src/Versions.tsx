@@ -22,6 +22,16 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
 
 
+  function format_state(state: string): string {
+    const stateLUT: {[index: string]: string} = {
+      'inProgress': 'In Progress',
+      'readyForReview': 'Ready For Review',
+      'Reviewed': 'Reviewed',
+      'Published': 'Published',
+    };
+    return stateLUT[state]
+  }
+
   useEffect(() => {
     if (documentId === undefined)
       return;
@@ -31,13 +41,16 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
       .then(response => { setVersions(response) });
   }, [apiClient, documentId]);
 
-  const versionRows = versions?.map(({ documentId, versionId, versionName }: DocumentVersion, index: number) =>
+  const versionRows = versions?.map(({ documentId, versionId, versionName, versionState }: DocumentVersion, index: number) =>
     <tr key={versionId}>
       <td>
         {index + 1}
       </td>
       <td align="center">
         {versionName}
+      </td>
+      <td align="center">
+        {format_state(versionState)}
       </td>
       <td align="center">
         <Button variant="outline-secondary"
@@ -63,6 +76,9 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
             </th>
             <th>
               Version
+            </th>
+            <th>
+              State
             </th>
             <th>
               Options

@@ -4,6 +4,7 @@ export type DocumentVersion = {
     versionName: string,
     createdAt: string,
     content: string,
+    versionState: string,
     parents: string[],
     children: string[],
 };

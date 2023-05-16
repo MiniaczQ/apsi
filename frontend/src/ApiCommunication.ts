@@ -31,6 +31,23 @@ const addCredentialsToRequestOptions = (options: RequestInit, token: string) => 
   },
 });
 
+
+const addPatchFileTORequestOptions = (options: RequestInit, data: FormData) => ({
+
+  method: 'PATCH',
+  body: data,
+});
+
+const sendFile = async (relPath: string, data: File, token: string | undefined = undefined, returnBody = true) => {
+  let form = new FormData();
+  form.append('asdd', data)
+  const postReqOptions = addPatchFileTORequestOptions(baseRequestOptions, form);
+  const finalReqOptions = token ? addCredentialsToRequestOptions(postReqOptions, token) : postReqOptions;
+  const response = await fetch(new URL(relPath, apiBaseUrl), finalReqOptions);
+  if (returnBody)
+    return await response.json();
+};
+
 const post = async (relPath: string, data: any, token: string | undefined = undefined, returnBody = true) => {
   const postReqOptions = addPostDataToRequestOptions(baseRequestOptions, data);
   const finalReqOptions = token ? addCredentialsToRequestOptions(postReqOptions, token) : postReqOptions;
@@ -70,4 +87,4 @@ export const createVersion = async (documentId: string, data: CreateVersion, tok
 export const getVersionContent = async (documentId: string, versionId: string, token: string) => await getString(`documents/${documentId}/${versionId}`, token) as string;
 
 export const getFiles = async (documentId: string, versionId: string, token:string) => await getJSON(`documents/${documentId}/${versionId}/files`, token) as DocFile[];
-export const postFiles = async (documentId: string, versionId: string, token:string,  data:FormData) => await post(`documents/${documentId}/${versionId}/files`, data, token);
+export const postFiles = async (documentId: string, versionId: string, token:string,  data:File) => await sendFile(`documents/${documentId}/${versionId}/files`, data, token);

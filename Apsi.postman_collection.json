@@ -143,7 +143,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"admin\",\r\n    \"password\": \"admin\"\r\n}",
+							"raw": "{\r\n    \"username\": \"admin2\",\r\n    \"password\": \"admin2\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -522,7 +522,7 @@
 								{
 									"key": "",
 									"type": "file",
-									"src": "/C:/Users/Jakub Motyka/Downloads/Screenshot_20230415_235938_TikTok.jpg"
+									"src": "/C:/Users/Jakub Motyka/Downloads/watercooling.mp4"
 								}
 							]
 						},
@@ -854,7 +854,7 @@
 				{
 					"name": "Grant Role",
 					"request": {
-						"method": "PUT",
+						"method": "POST",
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/grant/:userId/:role",
@@ -881,11 +881,11 @@
 								},
 								{
 									"key": "userId",
-									"value": "de097a36-0add-4c02-a535-d44dc6e539db"
+									"value": "325bfa6a-082b-43f1-93fd-67f8e8b560a0"
 								},
 								{
 									"key": "role",
-									"value": "owner"
+									"value": "editor"
 								}
 							]
 						}
@@ -895,7 +895,7 @@
 				{
 					"name": "Revoke Role",
 					"request": {
-						"method": "PUT",
+						"method": "POST",
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/revoke/:userId/:role",
@@ -1011,21 +1011,21 @@
 		},
 		{
 			"key": "jwtToken",
-			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODEzMzU0MzksIm5iZiI6MTY4MTI0OTAzOSwiaWF0IjoxNjgxMjQ5MDM5LCJ1c2VySWQiOiJkZWFkNDRlMC0yODkyLTRlZGQtYjU5ZC01OGQyNWE2MGU4OTMiLCJ1c2VybmFtZSI6ImFkbWluIn0.L-qy_SoNE2TXthJP9AKy36vfuzjUFqSLOps6oaSSVYJPujrdQ1o7xvRWddmXXuhyOeU5vp4rtluoc2JvJ5D9naLb3yEPwXTIDeaJvjboE4QK1yi93mGsHlrZmi0TA5qtYLPCpbcFjYxiWdgk97R8V4sri6xB3QHfbQ-Q_rQ4yGSLzmK7m3Ag_gYkBIlBhsxxKPfxe1I1VWwBWGiqe7-1mVPjL5bICUdYCXorDYvTVKGDPQet7nrf44iYQZgdt-kOerLbHJslsRZjZRjJaGzaD7j7vrNSN327VfXxzMsPkkajcTVA_DVRx38PZdmiXUvS6g79Mjud6g3haMg0T0zExA"
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODQzNDcyMDYsIm5iZiI6MTY4NDI2MDgwNiwiaWF0IjoxNjg0MjYwODA2LCJ1c2VySWQiOiI4MTcyMTIxNy04ZjE5LTRjM2ItOGIyNS1hMmFmNjg4NzUwMTgiLCJ1c2VybmFtZSI6ImFkbWluIn0.I2EnFpoeOpfnNNUGWGf-b7DN6G3m3jr0d6cNkssSQj7By_8uCgG2IH5AbuT6Ponrrfk9PONcEzBl8kIkPeD6wA4Ev0RWhf0vrOpZItQkpw01mXQCjXGuH2gnL7JGkgoSiExrIO8_rjZscpHsa1jFlEeUI2ppoHjF-JDvPK6I1MNuOdNzwNhvBEVNIr_w7mf28RRdhIKKsS3alyvZV7r7Ma75WLZMzy21Ou_ET7BkKdwh6R176doNfW7SFLQ1JpJM1HOPNj8tvRAvvSrm2TiQZqDrvqGP_grcp7zyEzlOcmSBbkklTWKIU1MuEEpdlmz3zloMfsqLiiiTVo_c6Auf_w"
 		},
 		{
 			"key": "documentId",
-			"value": "00666051-8cc9-492c-b3bc-f87f5161d60c",
+			"value": "7d67282f-6bff-4f95-bd45-6b739e1b3e69",
 			"type": "string"
 		},
 		{
 			"key": "versionId",
-			"value": "e8f82ef3-deb8-44ce-b916-04e5bb6abc78",
+			"value": "1a0bf1fd-0694-4e1f-81ed-606dafecc1bb",
 			"type": "string"
 		},
 		{
 			"key": "fileId",
-			"value": "1fdcec2b-7f59-4cf4-9c9d-f6fdcb0b26a4",
+			"value": "1655fa26-3d3a-484d-8c24-6f19639c7c0e",
 			"type": "string"
 		}
 	]

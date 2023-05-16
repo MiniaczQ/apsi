@@ -1,8 +1,8 @@
 use axum::{http::StatusCode, Json};
 
-use crate::services::{
-    auth::claims::Claims,
-    database::repositories::{permission::PermissionRepository, users::PublicUser},
+use crate::{
+    models::user::PublicUser,
+    services::{auth::claims::Claims, database::repositories::permission::PermissionRepository},
 };
 
 use tracing::error;

@@ -1,92 +1,23 @@
-use std::{convert::Infallible, error::Error};
+use std::error::Error;
 
 use axum::{
     async_trait,
     extract::{FromRef, FromRequestParts},
     http::{request::Parts, StatusCode},
 };
-use serde::{Deserialize, Serialize};
-use tokio_postgres::Row;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::services::database::{DbConn, DbPool};
-
-use super::users::PublicUser;
+use crate::{
+    models::{
+        role::{DocumentVersionRole, Role},
+        user::{PublicUser, PublicUserWithRoles},
+    },
+    services::database::{DbConn, DbPool},
+};
 
 pub struct PermissionRepository {
     database: DbConn,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[repr(i16)]
-pub enum Role {
-    Admin = 0,
-}
-
-impl From<Role> for i16 {
-    fn from(value: Role) -> Self {
-        value as i16
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[repr(i16)]
-pub enum DocumentVersionRole {
-    Owner = 0,
-    Viewer = 1,
-    Editor = 2,
-    Reviewer = 3,
-}
-
-// TODO: handle a very unlikely case of invalid value properly
-impl TryFrom<i16> for DocumentVersionRole {
-    type Error = Infallible;
-
-    fn try_from(value: i16) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Self::Owner),
-            1 => Ok(Self::Viewer),
-            2 => Ok(Self::Editor),
-            3 => Ok(Self::Reviewer),
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl From<DocumentVersionRole> for i16 {
-    fn from(value: DocumentVersionRole) -> Self {
-        value as i16
-    }
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PublicUserWithRoles {
-    #[serde(flatten)]
-    pub user: PublicUser,
-    pub roles: Vec<DocumentVersionRole>,
-}
-
-impl TryFrom<Row> for PublicUserWithRoles {
-    type Error = tokio_postgres::Error;
-
-    fn try_from(value: Row) -> Result<Self, Self::Error> {
-        let user_id: Uuid = value.try_get(0)?;
-        let username: String = value.try_get(1)?;
-        let roles: Vec<i16> = value.try_get(2)?;
-        let roles: Vec<DocumentVersionRole> = roles
-            .into_iter()
-            .map(|v| DocumentVersionRole::try_from(v).unwrap())
-            .collect();
-
-        Ok(Self {
-            user: PublicUser { user_id, username },
-            roles,
-        })
-    }
 }
 
 impl PermissionRepository {
@@ -170,6 +101,31 @@ impl PermissionRepository {
             .map(PublicUserWithRoles::try_from)
             .collect::<Result<Vec<_>, _>>()?;
         Ok(users)
+    }
+
+    pub async fn get_document_version_user(
+        &self,
+        user_id: Uuid,
+        document_id: Uuid,
+        version_id: Uuid,
+    ) -> Result<PublicUserWithRoles, Box<dyn Error>> {
+        let row = self
+            .database
+            .query_one(
+                "
+                SELECT u.user_id, u.username, array_agg(r.role_id)
+                FROM user_document_version_roles r
+                JOIN users u ON r.user_id = u.user_id
+                WHERE r.user_id = $1
+                AND r.document_id = $2
+                AND r.version_id = $3
+                GROUP BY (u.user_id, u.username)
+                ",
+                &[&user_id, &document_id, &version_id],
+            )
+            .await?;
+        let user = PublicUserWithRoles::try_from(row)?;
+        Ok(user)
     }
 
     #[allow(dead_code)]

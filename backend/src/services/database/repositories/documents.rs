@@ -1,119 +1,54 @@
-use std::{convert::Infallible, error::Error};
+use std::{error::Error, fmt::Display};
 
 use axum::{
     async_trait,
     extract::{FromRef, FromRequestParts},
     http::{request::Parts, StatusCode},
 };
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use tokio_postgres::{Row, Transaction};
+use chrono::Utc;
+use tokio_postgres::Transaction;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::services::database::{DbConn, DbPool};
-
-use super::{files::File, permission::DocumentVersionRole};
+use crate::{
+    models::{
+        attachment::File,
+        document::{Document, DocumentWithInitialVersion},
+        role::DocumentVersionRole,
+        version::DocumentVersion,
+        version_state::DocumentVersionState,
+    },
+    services::database::{DbConn, DbPool},
+};
 
 pub struct DocumentsRepository {
     database: DbConn,
 }
 
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Document {
-    pub document_id: Uuid,
-    pub document_name: String,
+#[derive(Debug)]
+pub enum RepoError {
+    Forbidden,
+    Database(Box<dyn Error>),
+    Unreachable,
 }
 
-impl TryFrom<Row> for Document {
-    type Error = tokio_postgres::Error;
-
-    fn try_from(value: Row) -> Result<Self, Self::Error> {
-        let document_id: Uuid = value.try_get(0)?;
-        let document_name: String = value.try_get(1)?;
-        Ok(Self {
-            document_id,
-            document_name,
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DocumentVersion {
-    pub document_id: Uuid,
-    pub version_id: Uuid,
-    pub version_name: String,
-    pub created_at: DateTime<Utc>,
-    pub content: String,
-    pub version_state: DocumentVersionState,
-    pub children: Vec<Uuid>,
-    pub parents: Vec<Uuid>,
-}
-
-impl TryFrom<Row> for DocumentVersion {
-    type Error = tokio_postgres::Error;
-
-    fn try_from(value: Row) -> Result<Self, Self::Error> {
-        let document_id: Uuid = value.try_get(0)?;
-        let version_id: Uuid = value.try_get(1)?;
-        let version_name: String = value.try_get(2)?;
-        let created_at: DateTime<Utc> = value.try_get(3)?;
-        let content: String = value.try_get(4)?;
-        let version_state: i16 = value.try_get(5)?;
-        let version_state = DocumentVersionState::try_from(version_state).unwrap();
-        let children: Vec<Uuid> = value.try_get(6)?;
-        let parents: Vec<Uuid> = value.try_get(7)?;
-
-        Ok(Self {
-            document_id,
-            version_id,
-            version_name,
-            created_at,
-            content,
-            version_state,
-            children,
-            parents,
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DocumentWithInitialVersion {
-    document: Document,
-    initial_version: DocumentVersion,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[repr(i16)]
-pub enum DocumentVersionState {
-    InProgress = 0,
-    ReadyForReview = 1,
-    Reviewed = 2,
-    Published = 3,
-}
-
-// TODO: handle a very unlikely case of invalid value properly
-impl TryFrom<i16> for DocumentVersionState {
-    type Error = Infallible;
-
-    fn try_from(value: i16) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Self::InProgress),
-            1 => Ok(Self::ReadyForReview),
-            2 => Ok(Self::Reviewed),
-            3 => Ok(Self::Published),
-            _ => unreachable!(),
+impl Display for RepoError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RepoError::Forbidden => f.write_str("Unauthorized"),
+            RepoError::Database(error) => error.fmt(f),
+            RepoError::Unreachable => {
+                f.write_str("Why isn't it possible? It's just not. Why not, you stupid bastard?")
+            }
         }
     }
 }
 
-impl From<DocumentVersionState> for i16 {
-    fn from(value: DocumentVersionState) -> Self {
-        value as i16
+impl Error for RepoError {}
+
+impl From<tokio_postgres::Error> for RepoError {
+    fn from(value: tokio_postgres::Error) -> Self {
+        Self::Database(Box::new(value))
     }
 }
 
@@ -146,14 +81,20 @@ impl DocumentsRepository {
         for parent_id in parent_ids {
             transaction
                 .execute(
-                    "INSERT INTO documents_dependencies (document_id, parent_version_id, child_version_id) VALUES ($1, $2, $3)",
+                    "
+                    INSERT INTO documents_dependencies (document_id, parent_version_id, child_version_id)
+                    VALUES ($1, $2, $3)
+                    ",
                     &[&document_id, &parent_id, &version_id],
                 )
                 .await?;
         }
         transaction
             .execute(
-                "INSERT INTO user_document_version_roles VALUES ($1, $2, $3, $4)",
+                "
+                INSERT INTO user_document_version_roles (user_id, document_id, version_id, role_id)
+                VALUES ($1, $2, $3, $4)
+                ",
                 &[
                     &user_id,
                     &document_id,
@@ -191,7 +132,10 @@ impl DocumentsRepository {
         let transaction = self.database.transaction().await?;
         transaction
             .execute(
-                "INSERT INTO documents VALUES ($1, $2)",
+                "
+                INSERT INTO documents (document_id, document_name)
+                VALUES ($1, $2)
+                ",
                 &[&document_id, &document_name],
             )
             .await?;
@@ -215,20 +159,55 @@ impl DocumentsRepository {
         })
     }
 
-    pub async fn get_document(&self, document_id: Uuid) -> Result<Document, Box<dyn Error>> {
-        let document = self
+    pub async fn get_document(
+        &self,
+        user_id: Uuid,
+        document_id: Uuid,
+    ) -> Result<Document, RepoError> {
+        let documents = self
             .database
-            .query_one(
-                "SELECT * FROM documents WHERE document_id = $1",
-                &[&document_id],
+            .query(
+                "
+                SELECT d.document_id, d.document_name
+                FROM documents d
+                WHERE d.document_id = $1
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $2
+                    AND r.document_id = d.document_id
+                )
+                ",
+                &[&document_id, &user_id],
             )
             .await?;
-        let document = Document::try_from(document)?;
-        Ok(document)
+        match documents.len() {
+            0 => Err(RepoError::Forbidden),
+            1 => {
+                let document = Document::try_from(documents.into_iter().next().unwrap())?;
+                Ok(document)
+            }
+            _ => Err(RepoError::Unreachable),
+        }
     }
 
-    pub async fn get_documents(&self) -> Result<Vec<Document>, Box<dyn Error>> {
-        let documents = self.database.query("SELECT * FROM documents", &[]).await?;
+    pub async fn get_documents(&self, user_id: Uuid) -> Result<Vec<Document>, Box<dyn Error>> {
+        let documents = self
+            .database
+            .query(
+                "
+                SELECT d.document_id, d.document_name
+                FROM documents d
+                WHERE EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $1
+                    AND r.document_id = d.document_id
+                )
+                ",
+                &[&user_id],
+            )
+            .await?;
         let documents = documents
             .into_iter()
             .map(Document::try_from)
@@ -244,7 +223,11 @@ impl DocumentsRepository {
         let updated = self
             .database
             .execute(
-                "UPDATE documents SET document_name = $2 WHERE document_id = $1",
+                "
+                UPDATE documents
+                SET document_name = $2
+                WHERE document_id = $1
+                ",
                 &[&document_id, &document_name],
             )
             .await?;
@@ -255,7 +238,10 @@ impl DocumentsRepository {
         let deleted = self
             .database
             .execute(
-                "DELETE FROM documents WHERE document_id = $1",
+                "
+                DELETE FROM documents
+                WHERE document_id = $1
+                ",
                 &[&document_id],
             )
             .await?;
@@ -286,12 +272,13 @@ impl DocumentsRepository {
 
     pub async fn get_version(
         &self,
+        user_id: Uuid,
         document_id: Uuid,
         version_id: Uuid,
-    ) -> Result<DocumentVersion, Box<dyn Error>> {
-        let version = self
+    ) -> Result<DocumentVersion, RepoError> {
+        let versions = self
             .database
-            .query_one(
+            .query(
                 "
                 SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,
                     array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
@@ -299,17 +286,31 @@ impl DocumentsRepository {
                 FROM document_versions v
                 WHERE v.document_id = $1
                 AND v.version_id = $2
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $3
+                    AND r.document_id = v.document_id
+                    AND r.version_id = v.version_id
+                )
                 GROUP BY (v.document_id, v.version_id)
                 ",
-                &[&document_id, &version_id],
+                &[&document_id, &version_id, &user_id],
             )
             .await?;
-        let version = DocumentVersion::try_from(version)?;
-        Ok(version)
+        match versions.len() {
+            0 => Err(RepoError::Forbidden),
+            1 => {
+                let version = DocumentVersion::try_from(versions.into_iter().next().unwrap())?;
+                Ok(version)
+            }
+            _ => Err(RepoError::Unreachable),
+        }
     }
 
     pub async fn get_versions(
         &self,
+        user_id: Uuid,
         document_id: Uuid,
     ) -> Result<Vec<DocumentVersion>, Box<dyn Error>> {
         let versions = self
@@ -321,9 +322,16 @@ impl DocumentsRepository {
                     array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
                 FROM document_versions v
                 WHERE v.document_id = $1
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $2
+                    AND r.document_id = v.document_id
+                    AND r.version_id = v.version_id
+                )
                 GROUP BY (v.document_id, v.version_id)
                 ",
-                &[&document_id],
+                &[&document_id, &user_id],
             )
             .await?;
         let versions = versions
@@ -343,7 +351,11 @@ impl DocumentsRepository {
         let updated = self
             .database
             .execute(
-                "UPDATE document_versions SET version_name = $3, content = $4 WHERE document_id = $1 AND version_id = $2",
+                "
+                UPDATE document_versions
+                SET version_name = $3, content = $4
+                WHERE document_id = $1
+                AND version_id = $2",
                 &[&document_id, &version_id, &version_name, &content],
             )
             .await?;
@@ -358,7 +370,11 @@ impl DocumentsRepository {
         let deleted = self
             .database
             .execute(
-                "DELETE FROM document_versions WHERE document_id = $1 AND version_id = $2",
+                "
+                DELETE FROM document_versions
+                WHERE document_id = $1
+                AND version_id = $2
+                ",
                 &[&document_id, &version_id],
             )
             .await?;
@@ -367,14 +383,28 @@ impl DocumentsRepository {
 
     pub async fn get_file_attachments(
         &self,
+        user_id: Uuid,
         document_id: Uuid,
         version_id: Uuid,
     ) -> Result<Vec<File>, Box<dyn Error>> {
         let attached_files = self
             .database
             .query(
-                "SELECT f.* FROM file_attachments fa JOIN files f ON fa.file_id = f.file_id WHERE document_id = $1 AND version_id = $2",
-                &[&document_id, &version_id],
+                "
+                SELECT f.file_id, f.file_name, f.file_mime_type, f.file_hash
+                FROM file_attachments a
+                JOIN files f ON a.file_id = f.file_id
+                WHERE a.document_id = $1
+                AND a.version_id = $2
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $3
+                    AND r.document_id = a.document_id
+                    AND r.version_id = a.version_id
+                )
+                ",
+                &[&document_id, &version_id, &user_id],
             )
             .await?;
         let attached_files = attached_files
@@ -386,19 +416,40 @@ impl DocumentsRepository {
 
     pub async fn get_file_attachment(
         &self,
+        user_id: Uuid,
         document_id: Uuid,
         version_id: Uuid,
         file_id: Uuid,
-    ) -> Result<File, Box<dyn Error>> {
-        let attached_file = self
+    ) -> Result<File, RepoError> {
+        let attached_files = self
             .database
-            .query_one(
-                "SELECT f.* FROM file_attachments fa JOIN files f ON fa.file_id = f.file_id WHERE document_id = $1 AND version_id = $2 AND file_id = $3",
-                &[&document_id, &version_id, &file_id],
+            .query(
+                "
+                SELECT f.file_id, f.file_name, f.file_mime_type, f.file_hash
+                FROM file_attachments a
+                JOIN files f ON a.file_id = f.file_id
+                WHERE a.document_id = $1
+                AND a.version_id = $2
+                AND a.file_id = $3
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $4
+                    AND r.document_id = a.document_id
+                    AND r.version_id = a.version_id
+                )
+                ",
+                &[&document_id, &version_id, &file_id, &user_id],
             )
             .await?;
-        let attached_file = File::try_from(attached_file)?;
-        Ok(attached_file)
+        match attached_files.len() {
+            0 => Err(RepoError::Forbidden),
+            1 => {
+                let attached_file = File::try_from(attached_files.into_iter().next().unwrap())?;
+                Ok(attached_file)
+            }
+            _ => Err(RepoError::Unreachable),
+        }
     }
 
     pub async fn attach_file(
@@ -410,7 +461,10 @@ impl DocumentsRepository {
         let attached = self
             .database
             .execute(
-                "INSERT INTO file_attachments VALUES ($1, $2, $3)",
+                "
+                INSERT INTO file_attachments (document_id, version_id, file_id)
+                VALUES ($1, $2, $3)
+                ",
                 &[&document_id, &version_id, &file_id],
             )
             .await?;
@@ -426,7 +480,12 @@ impl DocumentsRepository {
         let deleted = self
             .database
             .execute(
-                "DELETE FROM file_attachments WHERE document_id = $1 AND version_id = $2 AND file_id = $3",
+                "
+                DELETE FROM file_attachments
+                WHERE document_id = $1
+                AND version_id = $2
+                AND file_id = $3
+                ",
                 &[&document_id, &version_id, &file_id],
             )
             .await?;
@@ -453,7 +512,13 @@ impl DocumentsRepository {
         let modified = self
             .database
             .execute(
-                "UPDATE document_versions SET version_state = $1 WHERE document_id = $2 AND version_id = $3 AND version_state = ANY($4)",
+                "
+                UPDATE document_versions
+                SET version_state = $1
+                WHERE document_id = $2
+                AND version_id = $3
+                AND version_state = ANY($4)
+                ",
                 &[
                     &i16::from(new_state),
                     &document_id,

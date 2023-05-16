@@ -74,7 +74,7 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
 
   return (
     <Container>
-      <div className="container" style={{ width: "80%" }}>
+      <div className="container" style={{ width: "60%" }}>
         <div className="row">
           <div className="col-8">
             <label className="btn btn-default p-0">
@@ -97,13 +97,17 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
         )}
         <div className="card mt-3">
           <div className="card-header">List of Files</div>
-          <ul className="list-group list-group-flush">
-            {filesInfos?.map((docfile, index) => (
-              <li className="list-group-item" key={index}>
-                  <p>{docfile.fileName}</p>
 
-                  <Button onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
-                  <Button onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
+          <ul className="list-group list-group-flush">
+
+
+            {filesInfos?.map((docfile, index) => (
+              <li className="list-group-item" key={index} >
+                  <text>{docfile.fileName}</text>
+                  <div style={{ float: "right"}}>
+                    <Button variant="outline-primary" style={{margin:5}} onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
+                    <Button variant="danger" style={{margin:5}} onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
+                  </div>
               </li>
             ))}
           </ul>

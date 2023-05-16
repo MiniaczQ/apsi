@@ -30,14 +30,14 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
     const stateNameLUT: {[index: string]: string} = {
       'inProgress': 'In Progress',
       'readyForReview': 'Ready For Review',
-      'Reviewed': 'Reviewed',
-      'Published': 'Published',
+      'reviewed': 'Reviewed',
+      'published': 'Published',
     };
     const stateStyleLUT: {[index: string]: string} = {
       'inProgress': 'primary',
       'readyForReview': 'danger',
-      'Reviewed': 'warning',
-      'Published': 'success',
+      'reviewed': 'warning',
+      'published': 'success',
     };
     return <Badge pill bg={stateStyleLUT[state]} style={{marginLeft: "1em"}}>
       {stateNameLUT[state]}

@@ -26,30 +26,62 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
   const [version, setVersion] = useState<DocumentVersion>();
 
 
-  const changeState: MouseEventHandler<HTMLButtonElement> = async () => {
+  const changeStateForward: MouseEventHandler<HTMLButtonElement> = async () => {
     if (version === undefined) {
       return
     }
-    const stateLUT: {[index: string]: string} = {
+    const stateProgressionLUT: {[index: string]: string} = {
       'inProgress': 'readyForReview',
-      'readyForReview': 'Reviewed',
-      'Reviewed': 'Published',
-      'Published': 'Published'
+      'readyForReview': 'reviewed',
+      'reviewed': 'published',
+      'published': 'published'
     };
-    setVersion({...version, versionState: stateLUT[version?.versionState]})
+    const newState = stateProgressionLUT[version?.versionState];
+    apiClient.setVersionState(documentId!, versionId!, newState)
+      .then(() => setVersion({...version, versionState: newState}));
+  }
+
+  const changeStateBackward: MouseEventHandler<HTMLButtonElement> = async () => {
+    if (version === undefined) {
+      return
+    }
+    const stateProgressionLUT: {[index: string]: string} = {
+      'inProgress': 'inProgress',
+      'readyForReview': 'inProgress',
+      'reviewed': 'readyForReview',
+      'published': 'published'
+    };
+    const newState = stateProgressionLUT[version?.versionState];
+    apiClient.setVersionState(documentId!, versionId!, newState)
+      .then(() => setVersion({...version, versionState: newState}));
   }
 
   function getNextStateActionButton(state: string|undefined) {
-    if (state === undefined || state == 'Published') {
+    if (state === undefined || state === 'published') {
       return <></>
     }
     const stateLUT: {[index: string]: string} = {
       'inProgress': 'Mark as Ready for Review',
-      'readyForReview': 'Review',
-      'Reviewed': 'Publish',
-      'Published': ''
+      'readyForReview': 'Review (Accept)',
+      'reviewed': 'Publish',
+      'published': ''
     };
-    return <Button variant="outline-danger" onClick={changeState}>
+    return <Button variant="outline-success" onClick={changeStateForward} style={{ marginLeft: "1em"}}>
+      {stateLUT[state]}
+    </Button>
+  }
+
+  function getPreviousStateActionButton(state: string|undefined) {
+    if (state === undefined || state === 'inProgress' || state === 'published') {
+      return <></>
+    }
+    const stateLUT: {[index: string]: string} = {
+      'inProgress': '',
+      'readyForReview': 'Review (Decline)',
+      'reviewed': 'Mark as Needing Review',
+      'published': ''
+    };
+    return <Button variant="outline-danger" onClick={changeStateBackward} style={{ marginLeft: "1em"}}>
       {stateLUT[state]}
     </Button>
   }
@@ -61,14 +93,14 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
     const stateNameLUT: {[index: string]: string} = {
       'inProgress': 'In Progress',
       'readyForReview': 'Ready For Review',
-      'Reviewed': 'Reviewed',
-      'Published': 'Published',
+      'reviewed': 'Reviewed',
+      'published': 'Published',
     };
     const stateStyleLUT: {[index: string]: string} = {
       'inProgress': 'primary',
       'readyForReview': 'danger',
-      'Reviewed': 'warning',
-      'Published': 'success',
+      'reviewed': 'warning',
+      'published': 'success',
     };
     return <Badge pill bg={stateStyleLUT[state]} style={{marginLeft: "1em"}}>
       {stateNameLUT[state]}
@@ -130,6 +162,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
               Create New Document Version
             </Button>
             {getNextStateActionButton(version?.versionState)}
+            {getPreviousStateActionButton(version?.versionState)}
           </div>
         </Tab>
         <Tab eventKey="comments" title="Comments">

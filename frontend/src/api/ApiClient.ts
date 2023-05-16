@@ -22,6 +22,7 @@ interface ApiClient {
     getVersion: (documentId: string, versionId: string) => Promise<DocumentVersion>;
     updateVersion: (documentId: string, versionId: string, data: UpdateVersion) => Promise<void>;
     deleteVersion: (documentId: string, versionId: string) => Promise<void>;
+    setVersionState: (documentId: string, versionId: string, state: string) => Promise<void>;
 
     getFiles: (documentId: string, versionId: string) => Promise<DocFile[]>;
     uploadFile: (documentId: string, versionId: string, data: File) => Promise<void>;

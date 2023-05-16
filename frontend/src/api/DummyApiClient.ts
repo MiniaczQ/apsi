@@ -27,6 +27,9 @@ class DummyApiClient implements ApiClient {
   updateVersion = (documentId: string, versionId: string, data: UpdateVersion) => { throw new Error('Not implemented') };
   deleteVersion = (documentId: string, versionId: string) => { throw new Error('Not implemented') };
 
+  getFiles = (documentId: string, versionId: string) => { throw new Error('Not implemented') };
+  postFiles = (documentId: string, versionId: string, data: File) => { throw new Error('Not implemented') };
+
   constructor(loginState: LoginState) {
     this.loginState = loginState;
   }

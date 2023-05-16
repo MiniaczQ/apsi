@@ -5,6 +5,7 @@ import { Button, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 
+import Attachments from "./Attachments";
 import styles from './docVer.module.css';
 import ApiClient from './api/ApiClient';
 import Document from './models/Document';
@@ -34,6 +35,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
       .then(response => setVersion(response))
   }, [apiClient, documentId, versionId]);
 
+  const showDate = (dateString: string) => new Date(dateString).toDateString();
+  const navigateToVersionCreator = (documentId: string, versionId: string) =>
+    navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`);
 
   return (documentId !== undefined && versionId !== undefined) ? (
     <Container>
@@ -60,18 +64,27 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
           </p>
 
           <h5 className={styles.pblue}>
+            Creation date
+          </h5>
+          <p className={styles.textblack}>
+            {showDate(version?.createdAt!)}
+          </p>
+
+          <h5 className={styles.pblue}>
             Content
           </h5>
           <div className={styles.textblack} style={{ whiteSpace: 'pre' }}>
             {version?.content}
           </div>
           <Button variant="outline-primary"
-            onClick={() => navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`)}
+            onClick={() => navigateToVersionCreator(documentId, versionId)}
           >
-            Create New Document Version
+            Create new document version
           </Button>
         </Tab>
-
+        <Tab eventKey="files" title="File Attachments">
+          <Attachments apiClient={apiClient} documentId={documentId} versionId={versionId} />
+        </Tab>
         <Tab eventKey="past" title="Past Versions" disabled>
         </Tab>
         <Tab eventKey="future" title="Derived Versions" disabled>

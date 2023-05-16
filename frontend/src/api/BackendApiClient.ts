@@ -7,6 +7,7 @@ import { LoginState } from "../App";
 import UpdateVersion from "../models/UpdateVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import AuthResponse from "../models/AuthResponse";
+import DocFile from "../models/DocFile";
 
 
 class BackendApiClient implements ApiClient {
@@ -17,9 +18,6 @@ class BackendApiClient implements ApiClient {
     mode: 'cors',
     cache: 'no-cache',
     credentials: 'same-origin',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     redirect: 'follow',
     referrerPolicy: 'no-referrer',
   };
@@ -32,6 +30,15 @@ class BackendApiClient implements ApiClient {
   private addJsonBodyToRequestOptions = (options: RequestInit, data: any) => ({
     ...options,
     body: JSON.stringify(data),
+    headers: {
+      ...options.headers,
+      'Content-Type': 'application/json',
+    },
+  }) as RequestInit;
+
+  private addFormBodyToRequestOptions = (options: RequestInit, data: FormData) => ({
+    ...options,
+    body: data,
   }) as RequestInit;
 
   private addCredentialsToRequestOptions = (options: RequestInit, authenticated: boolean) => {
@@ -53,6 +60,17 @@ class BackendApiClient implements ApiClient {
     postReqOptions = this.addJsonBodyToRequestOptions(postReqOptions, data);
     postReqOptions = this.addCredentialsToRequestOptions(postReqOptions, authenticated);
     const response = await fetch(new URL(relPath, this.apiBaseUrl), postReqOptions);
+    if (returnBody)
+      return await response.json();
+  };
+
+  private sendFile = async (relPath: string, data: File, authenticated = true, returnBody = true) => {
+    let form = new FormData();
+    form.append('file', data)
+    let reqOptions = this.addMethodToRequestOptions(this.baseRequestOptions, 'PATCH');
+    reqOptions = this.addFormBodyToRequestOptions(reqOptions, form);
+    reqOptions = this.addCredentialsToRequestOptions(reqOptions, authenticated);
+    const response = await fetch(new URL(relPath, this.apiBaseUrl), reqOptions);
     if (returnBody)
       return await response.json();
   };
@@ -133,6 +151,14 @@ class BackendApiClient implements ApiClient {
   );
   deleteVersion = async (documentId: string, versionId: string) => await this.delete(
     `documents/${documentId}/${versionId}`
+  );
+
+  getFiles = async (documentId: string, versionId: string) => await this.get(
+    `documents/${documentId}/${versionId}/files`,
+  ) as DocFile[];
+  postFiles = async (documentId: string, versionId: string, data: File) => await this.sendFile(
+    `documents/${documentId}/${versionId}/files`,
+    data,
   );
 
   constructor(url: string, loginState: LoginState) {

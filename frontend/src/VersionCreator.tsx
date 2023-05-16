@@ -7,7 +7,6 @@ import { LoginState } from './App';
 import ApiClient from './api/ApiClient';
 import CreateDocument from './models/CreateDocument';
 import CreateVersion from './models/CreateVersion';
-import Document from './models/Document';
 import DocumentVersion from './models/DocumentVersion';
 
 
@@ -41,20 +40,20 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     if (documentId === undefined)
       return;
     let documentPromise = apiClient.getDocument(documentId)
-      .then(response => setCreatedDocument({ ...createdDocument, documentName: response.documentName }));
+      .then(response => setCreatedDocument(doc => ({ ...doc, documentName: response.documentName })));
     let versionsPromise = apiClient.getVersions(documentId)
       .then(response => {
         setVersions(response);
-        setCreatedVersion({
-          ...createdVersion,
+        setCreatedVersion(ver => ({
+          ...ver,
           versionName: (Number(parentVersion?.versionName ?? 0) + 1).toString(),
           parents: parentVersion !== undefined ? [parentVersion.versionId] : [],
           content: parentVersion?.content ?? ''
-        });
+        }));
       });
     Promise.all([documentPromise, versionsPromise])
       .then(() => setIsLoading(false));
-  }, [apiClient, documentId, parentVersionId]);
+  }, [apiClient, documentId, parentVersionId, parentVersion]);
 
   const parentVersionField = parentVersion !== undefined ? (
     <Form.Group className="mb-3" controlId="parentVersionName">

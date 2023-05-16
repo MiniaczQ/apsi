@@ -23,24 +23,25 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
 
 
-  function formatState(state: string): string {
-    const stateLUT: {[index: string]: string} = {
+  function getStateBadge(state: string|undefined) {
+    if (state === undefined) {
+      return <></>
+    }
+    const stateNameLUT: {[index: string]: string} = {
       'inProgress': 'In Progress',
       'readyForReview': 'Ready For Review',
       'Reviewed': 'Reviewed',
       'Published': 'Published',
     };
-    return stateLUT[state]
-  }
-
-  function getStateStyle(state: string): string {
-    const stateLUT: {[index: string]: string} = {
+    const stateStyleLUT: {[index: string]: string} = {
       'inProgress': 'primary',
       'readyForReview': 'danger',
       'Reviewed': 'warning',
       'Published': 'success',
     };
-    return stateLUT[state]
+    return <Badge pill bg={stateStyleLUT[state]} style={{marginLeft: "1em"}}>
+      {stateNameLUT[state]}
+    </Badge>
   }
 
   useEffect(() => {
@@ -56,9 +57,7 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
     <tr key={versionId}>
       <td>
         {versionName}
-        <Badge pill bg={getStateStyle(versionState)} style={{marginLeft: "1em"}}>
-          {formatState(versionState)}
-        </Badge>
+        {getStateBadge(versionState)}
       </td>
       <td>
         <Button variant="outline-secondary"

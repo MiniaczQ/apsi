@@ -1,7 +1,7 @@
-import { FunctionComponent, useState, useEffect } from 'react';
+import { FunctionComponent, MouseEventHandler, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Container } from 'react-bootstrap';
+import { Button, Badge, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 
@@ -25,6 +25,55 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
 
+
+  const changeState: MouseEventHandler<HTMLButtonElement> = async () => {
+    if (version === undefined) {
+      return
+    }
+    const stateLUT: {[index: string]: string} = {
+      'inProgress': 'readyForReview',
+      'readyForReview': 'Reviewed',
+      'Reviewed': 'Published',
+      'Published': 'Published'
+    };
+    setVersion({...version, versionState: stateLUT[version?.versionState]})
+  }
+
+  function getNextStateActionButton(state: string|undefined) {
+    if (state === undefined || state == 'Published') {
+      return <></>
+    }
+    const stateLUT: {[index: string]: string} = {
+      'inProgress': 'Mark as Ready for Review',
+      'readyForReview': 'Review',
+      'Reviewed': 'Publish',
+      'Published': ''
+    };
+    return <Button variant="outline-danger" onClick={changeState}>
+      {stateLUT[state]}
+    </Button>
+  }
+
+  function getStateBadge(state: string|undefined) {
+    if (state === undefined) {
+      return <></>
+    }
+    const stateNameLUT: {[index: string]: string} = {
+      'inProgress': 'In Progress',
+      'readyForReview': 'Ready For Review',
+      'Reviewed': 'Reviewed',
+      'Published': 'Published',
+    };
+    const stateStyleLUT: {[index: string]: string} = {
+      'inProgress': 'primary',
+      'readyForReview': 'danger',
+      'Reviewed': 'warning',
+      'Published': 'success',
+    };
+    return <Badge pill bg={stateStyleLUT[state]} style={{marginLeft: "1em"}}>
+      {stateNameLUT[state]}
+    </Badge>
+  }
 
   useEffect(() => {
     if (documentId === undefined || versionId === undefined)
@@ -61,9 +110,10 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
             </h5>
             <p className={styles.textblack}>
               {version?.versionName}
+              {getStateBadge(version?.versionState)}
             </p>
             <h5 className={styles.pblue}>
-              Creation date
+                Creation date
             </h5>
             <p className={styles.textblack}>
               {showDate(version?.createdAt ?? '')}
@@ -75,10 +125,11 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
               {version?.content}
             </div>
             <Button variant="outline-primary"
-              onClick={() => navigateToVersionCreator(documentId, versionId)}
+                onClick={() => navigateToVersionCreator(documentId, versionId)}
             >
               Create New Document Version
             </Button>
+            {getNextStateActionButton(version?.versionState)}
           </div>
         </Tab>
         <Tab eventKey="comments" title="Comments">

@@ -7,7 +7,7 @@ import './App.css';
 import './TableStyle.css';
 import ApiClient from './api/ApiClient';
 import Document from './models/Document';
-import DocumentVersion from './models/DocumentVersion';
+import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
 
 
 type VersionsProps = {
@@ -23,17 +23,17 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
 
 
-  function getStateBadge(state: string|undefined) {
+  function getStateBadge(state: DocumentVersionState|undefined) {
     if (state === undefined) {
       return <></>
     }
-    const stateNameLUT: {[index: string]: string} = {
+    const stateNameLUT: DocumentVersionStateMap<string> = {
       'inProgress': 'In Progress',
       'readyForReview': 'Ready For Review',
       'reviewed': 'Reviewed',
       'published': 'Published',
     };
-    const stateStyleLUT: {[index: string]: string} = {
+    const stateStyleLUT: DocumentVersionStateMap<string> = {
       'inProgress': 'primary',
       'readyForReview': 'danger',
       'reviewed': 'warning',

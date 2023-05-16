@@ -9,7 +9,7 @@ import Attachments from "./Attachments";
 import styles from './docVer.module.css';
 import ApiClient from './api/ApiClient';
 import Document from './models/Document';
-import DocumentVersion from './models/DocumentVersion';
+import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
 
 
 type DocVerProps = {
@@ -30,7 +30,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
     if (version === undefined) {
       return
     }
-    const stateProgressionLUT: {[index: string]: string} = {
+    const stateProgressionLUT: DocumentVersionStateMap<DocumentVersionState> = {
       'inProgress': 'readyForReview',
       'readyForReview': 'reviewed',
       'reviewed': 'published',
@@ -45,7 +45,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
     if (version === undefined) {
       return
     }
-    const stateProgressionLUT: {[index: string]: string} = {
+    const stateProgressionLUT: DocumentVersionStateMap<DocumentVersionState> = {
       'inProgress': 'inProgress',
       'readyForReview': 'inProgress',
       'reviewed': 'readyForReview',
@@ -56,11 +56,11 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
       .then(() => setVersion({...version, versionState: newState}));
   }
 
-  function getNextStateActionButton(state: string|undefined) {
+  function getNextStateActionButton(state: DocumentVersionState|undefined) {
     if (state === undefined || state === 'published') {
       return <></>
     }
-    const stateLUT: {[index: string]: string} = {
+    const stateLUT: DocumentVersionStateMap<string> = {
       'inProgress': 'Mark as Ready for Review',
       'readyForReview': 'Review (Accept)',
       'reviewed': 'Publish',
@@ -71,11 +71,11 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
     </Button>
   }
 
-  function getPreviousStateActionButton(state: string|undefined) {
+  function getPreviousStateActionButton(state: DocumentVersionState|undefined) {
     if (state === undefined || state === 'inProgress' || state === 'published') {
       return <></>
     }
-    const stateLUT: {[index: string]: string} = {
+    const stateLUT: DocumentVersionStateMap<string> = {
       'inProgress': '',
       'readyForReview': 'Review (Decline)',
       'reviewed': 'Mark as Needing Review',
@@ -86,17 +86,17 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
     </Button>
   }
 
-  function getStateBadge(state: string|undefined) {
+  function getStateBadge(state: DocumentVersionState|undefined) {
     if (state === undefined) {
       return <></>
     }
-    const stateNameLUT: {[index: string]: string} = {
+    const stateNameLUT: DocumentVersionStateMap<string> = {
       'inProgress': 'In Progress',
       'readyForReview': 'Ready For Review',
       'reviewed': 'Reviewed',
       'published': 'Published',
     };
-    const stateStyleLUT: {[index: string]: string} = {
+    const stateStyleLUT: DocumentVersionStateMap<string> = {
       'inProgress': 'primary',
       'readyForReview': 'danger',
       'reviewed': 'warning',

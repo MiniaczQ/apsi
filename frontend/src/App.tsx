@@ -90,7 +90,7 @@ function App() {
     createRoutesFromElements(
       isLoggedIn ? (
         <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
-          <Route index path="/DocVer" element={<DocVer apiClient={apiClient} />} />
+          <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
           <Route index path="/*" element={<Documents apiClient={apiClient} />} />

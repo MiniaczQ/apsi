@@ -23,6 +23,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   const documentId = searchParams.get('documentId') ?? undefined;
   const parentVersionId = searchParams.get('parentVersionId') ?? undefined;
 
+
   const [, setIsLoading] = useState(true);
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -63,18 +64,43 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   useEffect(() => {
     setCreatedVersion(ver => ({
       ...ver,
-      versionName: (Number(parentVersion?.versionName ?? 0) + 1).toString(),
+      versionName: (Number(parentVersion?.versionName ?? 0) +1).toString(),
       parents: parentVersion !== undefined ? [parentVersion.versionId] : [],
       content: parentVersion?.content ?? ''
     }));
   }, [parentVersion]);
 
+
+  const onChangeValue = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setCreatedVersion({ ...createdVersion, versionName: event.target.value });
+  }
+
+  const nextVersion = (version:string) =>{
+    let index = version.lastIndexOf('.');
+    if (index === -1) {
+      return String(Number(version) + 1)
+    }
+    else{
+      let end = Number(version.substring(index+1)) + 1
+      return version.substring(0,index+1) + String(end)
+    }
+  }
+
+  const subVersion = (version:string) =>{
+    return version + '.1'
+  }
+
   const parentVersionField = parentVersion !== undefined ? (
     <Form.Group className="mb-3" controlId="parentVersionName">
       <Form.Label>Parent version</Form.Label>
       <Form.Control disabled type="text" value={parentVersion.versionName} />
+      <div style={{marginTop:10}} onChange={onChangeValue} >
+        <input  type="radio" value={nextVersion(parentVersion.versionName)} name="version" /> Next version: {nextVersion(parentVersion.versionName)}
+        <input style={{marginLeft:20}} type="radio" value={subVersion(parentVersion.versionName)} name="version" /> Subversion: {subVersion(parentVersion.versionName)} 
+      </div>
     </Form.Group>
   ) : undefined;
+
 
   const updateParents = (versionId: string, checked: boolean) => {
     if (checked)

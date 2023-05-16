@@ -4,7 +4,7 @@ import { Container } from 'react-bootstrap';
 import './App.css';
 import ApiClient from './api/ApiClient';
 import DocFile from './models/DocFile';
-
+import {Button} from 'react-bootstrap';
 
 type AttachmentsProps = {
   apiClient: ApiClient,
@@ -44,6 +44,34 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
     })
   };
 
+  const downloadFile = (fileId: string, fileName: string) => {
+    apiClient.getFile(documentId, versionId, fileId)
+    .then((response) =>{
+    // Create blob link to download
+    const url = window.URL.createObjectURL(
+      response
+    );
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute(
+      'download',
+      fileName,
+    );
+    // Append to html link element page
+    document.body.appendChild(link);
+    // Start download
+    link.click();
+    // Clean up and remove the link
+    link.parentNode!.removeChild(link);
+    });
+  }
+
+  const deleteRefresh = (fileId: string) => {
+    console.log(apiClient)
+    apiClient.deleteFile(documentId, versionId, fileId)
+    .then(() => {loadFilesList(documentId, versionId)});
+  }
+
   return (
     <Container>
       <div className="container" style={{ width: "80%" }}>
@@ -72,7 +100,10 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
           <ul className="list-group list-group-flush">
             {filesInfos?.map((docfile, index) => (
               <li className="list-group-item" key={index}>
-                <a href={docfile.fileId}>{docfile.fileName}</a>
+                  <p>{docfile.fileName}</p>
+
+                  <Button onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
+                  <Button onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
               </li>
             ))}
           </ul>

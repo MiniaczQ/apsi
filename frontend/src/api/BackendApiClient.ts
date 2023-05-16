@@ -97,6 +97,8 @@ class BackendApiClient implements ApiClient {
     const response = await fetch(new URL(relPath, this.apiBaseUrl), getReqOptions);
     if (returnBody)
       return await response.json();
+    else
+      return await response.blob();
   };
 
   register = async (username: string, password: string) => await this.post(
@@ -159,6 +161,16 @@ class BackendApiClient implements ApiClient {
   postFiles = async (documentId: string, versionId: string, data: File) => await this.sendFile(
     `documents/${documentId}/${versionId}/files`,
     data,
+  );
+  getFile = async (documentId: string, versionId: string, fileId: string) => await this.get(
+    `documents/${documentId}/${versionId}/files/${fileId}/content`,
+    true,
+    false
+  ) as Blob;
+  deleteFile = async (documentId: string, versionId: string, fileId: string) => await this.delete(
+    `documents/${documentId}/${versionId}/files/${fileId}`,
+    true,
+    false
   );
 
   constructor(url: string, loginState: LoginState) {

@@ -25,6 +25,8 @@ interface ApiClient {
 
     getFiles: (documentId: string, versionId: string) => Promise<DocFile[]>;
     postFiles: (documentId: string, versionId: string, data: File) => Promise<void>;
+    getFile: (documentId: string, versionId: string, fileId: string) => Promise<Blob>;
+    deleteFile: (documentId: string, versionId: string, fileId: string) => Promise<void>;
 };
 
 export default ApiClient;

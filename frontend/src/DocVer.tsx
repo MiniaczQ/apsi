@@ -24,7 +24,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
 
-  function format_datetime(datetime: string|undefined): string|undefined {
+  function formatDatetime(datetime: string|undefined): string|undefined {
     // YYYY-MM-DDTHH:mm:ss.uuuuuZ into HH:mm:ss, DD-MM-YYYY
     if (datetime === undefined) {
       return undefined
@@ -73,7 +73,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
             Creation time
           </h5>
           <p className={styles.textblack}>
-            {format_datetime(version?.createdAt)}
+            {formatDatetime(version?.createdAt)}
           </p>
 
           <h5 className={styles.pblue}>

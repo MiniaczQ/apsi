@@ -85,7 +85,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     </>
 
     return <>
-      {userRoles.includes('owner') ? newVersionButton : <></>}
+      {userRoles.length > 0 ? newVersionButton : <></>}
       {userRoles.find(role => getRolesForState(version?.versionState).includes(role)) ? stateButtons : <></>}
     </>
   }

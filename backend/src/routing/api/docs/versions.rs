@@ -8,10 +8,16 @@ use s3::Bucket;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::{services::{
-    auth::{auth_keys::AuthKeys, claims::Claims},
-    database::{repositories::documents::DocumentsRepository, DbPool}, util::JsonOrError,
-}, models::version::{CreateVersionWithParentsRequest, DocumentVersion, CreateInitialOrUpdateVersionRequest}};
+use crate::{
+    models::version::{
+        CreateInitialOrUpdateVersionRequest, CreateVersionWithParentsRequest, DocumentVersion,
+    },
+    services::{
+        auth::{auth_keys::AuthKeys, claims::Claims},
+        database::{repositories::documents::DocumentsRepository, DbPool},
+        util::JsonOrError,
+    },
+};
 
 async fn create_version(
     mut documents_repository: DocumentsRepository,
@@ -19,7 +25,7 @@ async fn create_version(
     Path(document_id): Path<Uuid>,
     Json(data): Json<CreateVersionWithParentsRequest>,
 ) -> JsonOrError<DocumentVersion> {
-    if data.parents.len() < 1 {
+    if data.parents.is_empty() {
         return JsonOrError::ErrMsg((
             StatusCode::BAD_REQUEST,
             "Version has to have at least 1 parent",

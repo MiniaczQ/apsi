@@ -1,6 +1,6 @@
+pub mod models;
 mod routing;
 mod services;
-pub mod models;
 
 use ::tracing::info;
 

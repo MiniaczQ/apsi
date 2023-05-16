@@ -35,11 +35,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
       .then(response => setVersion(response))
   }, [apiClient, documentId, versionId]);
 
-
-  function show_date(date_string: string) {
-    let date = new Date(date_string)
-    return date.toDateString()
-  }
+  const showDate = (dateString: string) => new Date(dateString).toDateString();
+  const navigateToVersionCreator = (documentId: string, versionId: string) =>
+    navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`);
 
   return (documentId !== undefined && versionId !== undefined) ? (
     <Container>
@@ -58,21 +56,18 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
             <p className={styles.textblack}>
               {document?.documentName}
             </p>
-
             <h5 className={styles.pblue}>
               Version
             </h5>
             <p className={styles.textblack}>
               {version?.versionName}
             </p>
-
             <h5 className={styles.pblue}>
               Creation date
             </h5>
             <p className={styles.textblack}>
-              {show_date(version?.createdAt ?? '')}
+              {showDate(version?.createdAt ?? '')}
             </p>
-
             <h5 className={styles.pblue}>
               Content
             </h5>
@@ -80,17 +75,16 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
               {version?.content}
             </div>
             <Button variant="outline-primary"
-              onClick={() => navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`)}
+              onClick={() => navigateToVersionCreator(documentId, versionId)}
             >
               Create New Document Version
             </Button>
           </div>
         </Tab>
-
         <Tab eventKey="comments" title="Comments">
         </Tab>
         <Tab eventKey="files" title="File Attachments">
-          <Attachments loginState={loginState} />
+          <Attachments apiClient={apiClient} documentId={documentId} versionId={versionId} />
         </Tab>
         <Tab eventKey="past" title="Past Versions" disabled>
         </Tab>

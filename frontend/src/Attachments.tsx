@@ -1,61 +1,58 @@
-import './App.css';
-import { FunctionComponent, useEffect, useState } from 'react';
-import { LoginState } from './App';
+import { FunctionComponent, useEffect, useRef, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import { getFiles, postFiles } from './ApiCommunication';
-import { useRef } from 'react';
 
-import { useNavigate, useLocation } from 'react-router';
+import './App.css';
+import ApiClient from './api/ApiClient';
 import DocFile from './models/DocFile';
 
+
 type AttachmentsProps = {
-  loginState: LoginState
+  apiClient: ApiClient,
+  documentId: string,
+  versionId: string,
 };
 
+export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, documentId, versionId }) => {
+  const [currentFile, setCurrentFile] = useState<File>();
+  const [message, setMessage] = useState<string>("");
+  const [filesInfos, setFileInfos] = useState<DocFile[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-export const Attachments:FunctionComponent<AttachmentsProps> = ({ loginState }) => {
-    const location = useLocation();
-    const [currentFile, setCurrentFile] = useState<File>();
-    const [message, setMessage] = useState<string>("");
-    const [filesInfos, setFileInfos] = useState<Array<DocFile>>([]);
-    const inputRef = useRef<any>(null);
+  const loadFilesList = (documentId: string, versionId: string) => {
+    apiClient.getFiles(documentId, versionId)
+      .then(response => setFileInfos(response));
+  };
 
-    useEffect(() => {
-      loadFilesList()
-    }, []);
-  
+  useEffect(
+    () => loadFilesList(documentId, versionId),
+    [apiClient, documentId, versionId]
+  );
 
-    const loadFilesList = () => {
-      getFiles(location.state.ver.documentId, location.state.ver.versionId, loginState.token! ).then((response) => {
-        setFileInfos(response)})
-    };
+  const selectFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = event.target.files as FileList;
+    setCurrentFile(selectedFiles?.[0]);
+  };
 
-    const selectFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { files } = event.target;
-        const selectedFiles = files as FileList;
-        setCurrentFile(selectedFiles?.[0]);
-      };
+  const upload = () => {
+    if (!currentFile) return;
+    apiClient.postFiles(documentId, versionId, currentFile).then(() => {
+      loadFilesList(documentId, versionId);
+      setCurrentFile(undefined);
+      if (inputRef.current != null) {
+        inputRef.current.value = '';
+      }
+    })
+  };
 
-    const upload = () => {
-      if (!currentFile) return;
-      postFiles(location.state.ver.documentId, location.state.ver.versionId, loginState.token!, currentFile).then((response) =>{
-        loadFilesList();
-        setCurrentFile(undefined);
-        if (inputRef.current != null) {
-          inputRef.current.value = null;
-        }
-      })
-    };
-
-    return(
+  return (
     <Container>
-        <div className="container" style={{ width: "80%" }}>
-          <div className="row">
-            <div className="col-8">
-              <label className="btn btn-default p-0">
-                <input ref={inputRef} type="file" onChange={selectFile} />
-              </label>
-            </div>
+      <div className="container" style={{ width: "80%" }}>
+        <div className="row">
+          <div className="col-8">
+            <label className="btn btn-default p-0">
+              <input ref={inputRef} type="file" onChange={selectFile} />
+            </label>
+          </div>
           <div className="col-4">
             <button
               className="btn btn-success btn-sm"
@@ -65,25 +62,22 @@ export const Attachments:FunctionComponent<AttachmentsProps> = ({ loginState }) 
             </button>
           </div>
         </div>
-
-
         {message && (
           <div className="alert alert-secondary mt-3" role="alert">
             {message}
           </div>
         )}
-          <div className="card mt-3">
-            <div className="card-header">List of Files</div>
-            <ul className="list-group list-group-flush">
-              {filesInfos &&
-                filesInfos.map((docfile, index) => (
-                  <li className="list-group-item" key={index}>
-                    <a href={docfile.fileId}>{docfile.fileName}</a>
-                  </li>
-                ))}
-            </ul>
-          </div>
+        <div className="card mt-3">
+          <div className="card-header">List of Files</div>
+          <ul className="list-group list-group-flush">
+            {filesInfos?.map((docfile, index) => (
+              <li className="list-group-item" key={index}>
+                <a href={docfile.fileId}>{docfile.fileName}</a>
+              </li>
+            ))}
+          </ul>
         </div>
+      </div>
     </Container>
   );
 }

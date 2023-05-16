@@ -1,12 +1,15 @@
 import { FunctionComponent, useEffect, useState } from 'react';
 import { Button, Col, Form, ListGroup, Row, Tab } from 'react-bootstrap';
-import { useSearchParams } from 'react-router-dom';
 import { useNavigate } from 'react-router';
+import { useSearchParams } from 'react-router-dom';
+
 import { LoginState } from './App';
+import ApiClient from './api/ApiClient';
 import CreateDocument from './models/CreateDocument';
 import CreateVersion from './models/CreateVersion';
-import ApiClient from './api/ApiClient';
+import Document from './models/Document';
 import DocumentVersion from './models/DocumentVersion';
+
 
 type VersionCreatorProps = {
   loginState: LoginState,
@@ -15,97 +18,101 @@ type VersionCreatorProps = {
 
 export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginState, apiClient }) => {
   const navigate = useNavigate();
-  const [_, setIsLoading] = useState(true);
-  const [versionText, setVersionText] = useState('');
-  const [documentName, setDocumentName] = useState('');
-  const [versionName, setVersionName] = useState('1');
-
   const searchParams = useSearchParams()[0];
-  const documentId = searchParams.get('document') ?? undefined;
-  const parentId = searchParams.get('parentVersion') ?? undefined;
-  const documentNameOld = searchParams.get('documentName') ?? undefined;
+  const documentId = searchParams.get('documentId') ?? undefined;
+  const parentVersionId = searchParams.get('parentVersionId') ?? undefined;
 
+  const [_, setIsLoading] = useState(true);
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
-  const [parentName, setParentName] = useState<string>('');
-  const [parents, setParents] = useState<string[]>([]);
+  const [createdDocument, setCreatedDocument] = useState<CreateDocument>({
+    documentName: '',
+  });
+  const [createdVersion, setCreatedVersion] = useState<CreateVersion>({
+    versionName: '1',
+    content: '',
+    parents: [],
+  });
+
+  const parentVersion = versions?.filter(version => version.versionId === parentVersionId)?.at(0);
+  const versionsMinusParent = versions?.filter(({ versionId }) => versionId !== parentVersionId);
+
 
   useEffect(() => {
     if (documentId === undefined)
       return;
-    apiClient.getVersions(documentId)
+    let documentPromise = apiClient.getDocument(documentId)
+      .then(response => setCreatedDocument({ ...createdDocument, documentName: response.documentName }));
+    let versionsPromise = apiClient.getVersions(documentId)
       .then(response => {
         setVersions(response);
-        setParentName(response.filter(version => version.versionId === parentId)[0].versionName)
+        setCreatedVersion({
+          ...createdVersion,
+          versionName: (Number(parentVersion?.versionName ?? 0) + 1).toString(),
+          parents: parentVersion !== undefined ? [parentVersion.versionId] : [],
+          content: parentVersion?.content ?? ''
+        });
       });
-  }, [documentId, apiClient, parentId]);
+    Promise.all([documentPromise, versionsPromise])
+      .then(() => setIsLoading(false));
+  }, [apiClient, documentId, parentVersionId]);
 
-  const _createVersion = async () => {
-    let cd: CreateDocument = { documentName: documentName };
-    let cv: CreateVersion = { versionName: versionName, content: versionText, parents: parents };
-    if (parentId !== undefined) {
-      cv.parents = [...parents, parentId]
-    }
-    if (documentId === undefined) {
-      apiClient.createDocument(cd)
-        .then(response => apiClient.createVersion(response.documentId, cv))
-        .then(() => navigate('./Documents'));
-    } else {
-      apiClient.createVersion(documentId!, cv)
-        .then(() => navigate('./Documents'));
-    }
-  };
-
-  useEffect(() => {
-    if (parentId !== undefined) {
-      (async () => {
-        setVersionText((await apiClient.getVersion(documentId!, parentId)).content);
-        setDocumentName(documentNameOld!);
-        setVersionName((+(parentName!) + 1).toString());
-        setIsLoading(false);
-      })();
-    } else {
-      setIsLoading(false);
-    }
-  }, [apiClient, documentId, documentNameOld, parentId, parentName]);
-
-  const parentVersionField = parentId !== undefined ? (
+  const parentVersionField = parentVersion !== undefined ? (
     <Form.Group className="mb-3" controlId="parentVersionName">
       <Form.Label>Parent version</Form.Label>
-      <Form.Control disabled type="text" value={parentName} />
+      <Form.Control disabled type="text" value={parentVersion.versionName} />
     </Form.Group>
   ) : undefined;
 
   const updateParents = (versionId: string, checked: boolean) => {
     if (checked)
-      setParents([...parents, versionId]);
+      setCreatedVersion({ ...createdVersion, parents: [...createdVersion.parents, versionId] });
     else
-      setParents(parents.filter(id => id !== versionId));
+      setCreatedVersion({ ...createdVersion, parents: createdVersion.parents.filter(id => id !== versionId) });
+  };
+  const isParentChecked = (versionId: string) => createdVersion.parents.indexOf(versionId) >= 0;
+
+  const setDocumentName = (documentName: string) => setCreatedDocument({ ...createdDocument, documentName });
+  const setVersionContent = (content: string) => setCreatedVersion({ ...createdVersion, content });
+
+  const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
+    (evt.target as HTMLButtonElement).disabled = true;
+    if (documentId === undefined) {
+      apiClient.createDocument(createdDocument)
+        .then(response => apiClient.createVersion(response.documentId, createdVersion))
+        .then(() => navigate('./Documents'));
+    } else {
+      apiClient.createVersion(documentId, createdVersion)
+        .then(() => navigate('./Documents'));
+    }
   };
 
-  const mergedVersionsField = parentId !== undefined ? (
+  const mergedVersionsField = parentVersionId !== undefined ? (
     <Form.Group className="mb-3" controlId="merged">
       <Form.Label>Merge versions</Form.Label>
       <Tab.Container id="list-group-tabs-example">
         <Row>
           <Col sm={2}>
             <ListGroup>
-              {versions?.filter(version => version.versionId !== parentId)?.map(version => (
-                <ListGroup.Item key={version.versionId}
-                  disabled={version.versionId === parentId}
-                  action href={'#version-' + version.versionId}
-                  variant={parents.indexOf(version.versionId) >= 0 ? 'primary' : 'secondary'}>
-                  <Form.Check checked={parents.indexOf(version.versionId) >= 0} onChange={evt => updateParents(version.versionId, evt.target.checked)} label={version.versionName} />
+              {versionsMinusParent?.map(({ versionId, versionName }) => (
+                <ListGroup.Item key={versionId}
+                  disabled={versionId === parentVersionId}
+                  action href={'#version-' + versionId}
+                  variant={isParentChecked(versionId) ? 'primary' : 'secondary'}>
+                  <Form.Check checked={isParentChecked(versionId)}
+                    onChange={evt => updateParents(versionId, evt.target.checked)}
+                    label={versionName}
+                  />
                 </ListGroup.Item>
               ))}
             </ListGroup>
           </Col>
           <Col sm={8}>
             <Tab.Content>
-              {versions?.filter(version => version.versionId !== parentId)?.map(version => (
-                <Tab.Pane key={version.versionId} eventKey={'#version-' + version.versionId}>
-                  <Form.Label>Content</Form.Label>
+              {versionsMinusParent?.map(({ versionId, content }) => (
+                <Tab.Pane key={versionId} eventKey={'#version-' + versionId}>
+                  <Form.Label>Version content preview</Form.Label>
                   <div style={{ whiteSpace: 'pre' }}>
-                    {version.content}
+                    {content}
                   </div>
                 </Tab.Pane>
               ))}
@@ -116,11 +123,17 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     </Form.Group>
   ) : undefined;
 
+
   return (
     <>
       <Form.Group className="mb-3" controlId="documentName">
         <Form.Label>Document name</Form.Label>
-        <Form.Control disabled={parentId !== undefined} type="text" value={documentName} onChange={evt => setDocumentName(evt.target.value)} placeholder="Enter document name" />
+        <Form.Control disabled={parentVersionId !== undefined}
+          type="text"
+          value={createdDocument.documentName}
+          onChange={evt => setDocumentName(evt.target.value)}
+          placeholder="Enter document name"
+        />
       </Form.Group>
       <Form.Group className="mb-3" controlId="author">
         <Form.Label>Version owner</Form.Label>
@@ -130,9 +143,13 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
       {mergedVersionsField}
       <Form.Group className="mb-3" controlId="content">
         <Form.Label>Content</Form.Label>
-        <Form.Control as="textarea" rows={5} value={versionText} onChange={evt => setVersionText(evt.target.value)} />
+        <Form.Control as="textarea"
+          rows={5}
+          value={createdVersion.content}
+          onChange={evt => setVersionContent(evt.target.value)}
+        />
       </Form.Group>
-      <Button onClick={_createVersion}>Create</Button>
+      <Button onClick={createVersion}>Create</Button>
     </>
   );
 }

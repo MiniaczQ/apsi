@@ -16,6 +16,10 @@ tracing = "0.1.37"
 tracing-appender = "0.2.2"
 mime = "0.3.17"
 
+[dependencies.postgres-types]
+version = "0.2.5"
+features = ["derive"]
+
 [dependencies.axum]
 version = "0.6.12"
 features = ["headers", "macros", "multipart"]

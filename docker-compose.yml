@@ -20,6 +20,8 @@ services:
         condition: service_healthy
       s3storage-create-bucket:
         condition: service_completed_successfully
+    volumes:
+      - ./backend/seeding:/app/seeding
 
   database:
     container_name: database

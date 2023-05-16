@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{convert::Infallible, error::Error};
 
 use axum::{
     async_trait,
@@ -6,7 +6,7 @@ use axum::{
     http::{request::Parts, StatusCode},
 };
 use chrono::{DateTime, Utc};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tokio_postgres::{Row, Transaction};
 use tracing::error;
 use uuid::Uuid;
@@ -47,6 +47,7 @@ pub struct DocumentVersion {
     pub version_name: String,
     pub created_at: DateTime<Utc>,
     pub content: String,
+    pub version_state: DocumentVersionState,
     pub children: Vec<Uuid>,
     pub parents: Vec<Uuid>,
 }
@@ -60,8 +61,10 @@ impl TryFrom<Row> for DocumentVersion {
         let version_name: String = value.try_get(2)?;
         let created_at: DateTime<Utc> = value.try_get(3)?;
         let content: String = value.try_get(4)?;
-        let children: Vec<Uuid> = value.try_get(5)?;
-        let parents: Vec<Uuid> = value.try_get(6)?;
+        let version_state: i16 = value.try_get(5)?;
+        let version_state = DocumentVersionState::try_from(version_state).unwrap();
+        let children: Vec<Uuid> = value.try_get(6)?;
+        let parents: Vec<Uuid> = value.try_get(7)?;
 
         Ok(Self {
             document_id,
@@ -69,6 +72,7 @@ impl TryFrom<Row> for DocumentVersion {
             version_name,
             created_at,
             content,
+            version_state,
             children,
             parents,
         })
@@ -80,6 +84,37 @@ impl TryFrom<Row> for DocumentVersion {
 pub struct DocumentWithInitialVersion {
     document: Document,
     initial_version: DocumentVersion,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[repr(i16)]
+pub enum DocumentVersionState {
+    InProgress = 0,
+    ReadyForReview = 1,
+    Reviewed = 2,
+    Published = 3,
+}
+
+// TODO: handle a very unlikely case of invalid value properly
+impl TryFrom<i16> for DocumentVersionState {
+    type Error = Infallible;
+
+    fn try_from(value: i16) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::InProgress),
+            1 => Ok(Self::ReadyForReview),
+            2 => Ok(Self::Reviewed),
+            3 => Ok(Self::Published),
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl From<DocumentVersionState> for i16 {
+    fn from(value: DocumentVersionState) -> Self {
+        value as i16
+    }
 }
 
 impl DocumentsRepository {
@@ -95,7 +130,10 @@ impl DocumentsRepository {
         let created_at = Utc::now();
         transaction
             .execute(
-                "INSERT INTO document_versions VALUES ($1, $2, $3, $4, $5)",
+                "
+                INSERT INTO document_versions (document_id, version_id, version_name, created_at, content)
+                VALUES ($1, $2, $3, $4, $5)
+                ",
                 &[
                     &document_id,
                     &version_id,
@@ -127,7 +165,7 @@ impl DocumentsRepository {
         let document_version = transaction
             .query_one(
                 "
-                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content,
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,
                     array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
                     array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
                 FROM document_versions v
@@ -255,7 +293,7 @@ impl DocumentsRepository {
             .database
             .query_one(
                 "
-                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content,
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,
                     array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
                     array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
                 FROM document_versions v
@@ -278,7 +316,7 @@ impl DocumentsRepository {
             .database
             .query(
                 "
-                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content,
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,
                     array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
                     array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
                 FROM document_versions v
@@ -393,6 +431,38 @@ impl DocumentsRepository {
             )
             .await?;
         Ok(deleted == 1)
+    }
+
+    pub async fn change_state(
+        &self,
+        document_id: Uuid,
+        version_id: Uuid,
+        new_state: DocumentVersionState,
+    ) -> Result<bool, Box<dyn Error + Send + Sync>> {
+        let allowed_states: Vec<i16> = match new_state {
+            DocumentVersionState::InProgress => vec![
+                i16::from(DocumentVersionState::ReadyForReview),
+                i16::from(DocumentVersionState::Reviewed),
+            ],
+            DocumentVersionState::ReadyForReview => {
+                vec![i16::from(DocumentVersionState::InProgress)]
+            }
+            DocumentVersionState::Reviewed => vec![i16::from(DocumentVersionState::ReadyForReview)],
+            DocumentVersionState::Published => vec![i16::from(DocumentVersionState::Reviewed)],
+        };
+        let modified = self
+            .database
+            .execute(
+                "UPDATE document_versions SET version_state = $1 WHERE document_id = $2 AND version_id = $3 AND version_state = ANY($4)",
+                &[
+                    &i16::from(new_state),
+                    &document_id,
+                    &version_id,
+                    &allowed_states,
+                ],
+            )
+            .await?;
+        Ok(modified == 1)
     }
 }
 

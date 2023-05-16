@@ -176,7 +176,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"piąty massdsddaja\",\r\n    \"content\": \"dobro wssdsdpólnie\",\r\n    \"parents\": [\"054dd38b-36a7-4d1e-a6ea-7d73b17aa16f\"]\r\n}",
+							"raw": "{\r\n    \"versionName\": \"piąty masdsdsddaja\",\r\n    \"content\": \"dobro wssdsdpólnie\",\r\n    \"parents\": [\"e8f82ef3-deb8-44ce-b916-04e5bb6abc78\"]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -197,6 +197,51 @@
 								{
 									"key": "documentId",
 									"value": "{{documentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set State",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"versionName\": \"piąty masdsdsddaja\",\r\n    \"content\": \"dobro wssdsdpólnie\",\r\n    \"parents\": [\"e8f82ef3-deb8-44ce-b916-04e5bb6abc78\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:document_id/:version_id/change-state/:state",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":document_id",
+								":version_id",
+								"change-state",
+								":state"
+							],
+							"variable": [
+								{
+									"key": "document_id",
+									"value": "{{documentId}}"
+								},
+								{
+									"key": "version_id",
+									"value": "{{versionId}}"
+								},
+								{
+									"key": "state",
+									"value": "inProgress"
 								}
 							]
 						}
@@ -475,9 +520,9 @@
 							"mode": "formdata",
 							"formdata": [
 								{
-									"key": "asdd",
+									"key": "",
 									"type": "file",
-									"src": "/C:/Users/Jakub Motyka/Downloads/5FC6024E-1934-4A8F-98A1-2C5F92C705F8.jpg"
+									"src": "/C:/Users/Jakub Motyka/Downloads/Screenshot_20230415_235938_TikTok.jpg"
 								}
 							]
 						},
@@ -970,12 +1015,12 @@
 		},
 		{
 			"key": "documentId",
-			"value": "b03ee9b1-3462-4166-8975-51628c24bc6f",
+			"value": "00666051-8cc9-492c-b3bc-f87f5161d60c",
 			"type": "string"
 		},
 		{
 			"key": "versionId",
-			"value": "054dd38b-36a7-4d1e-a6ea-7d73b17aa16f",
+			"value": "e8f82ef3-deb8-44ce-b916-04e5bb6abc78",
 			"type": "string"
 		},
 		{

@@ -24,6 +24,16 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
 
+  function format_datetime(datetime: string|undefined): string|undefined {
+    // YYYY-MM-DDTHH:mm:ss.uuuuuZ into HH:mm:ss, DD-MM-YYYY
+    if (datetime === undefined) {
+      return undefined
+    }
+    let [date, time] = datetime.split('T')
+    time = time.split('.')[0]
+    date = date.split('-').reverse().join('.')
+    return [time, date].join(', ')
+  }
 
   useEffect(() => {
     if (documentId === undefined || versionId === undefined)
@@ -57,6 +67,13 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
           </h5>
           <p className={styles.textblack}>
             {version?.versionName}
+          </p>
+
+          <h5 className={styles.pblue}>
+            Creation time
+          </h5>
+          <p className={styles.textblack}>
+            {format_datetime(version?.createdAt)}
           </p>
 
           <h5 className={styles.pblue}>

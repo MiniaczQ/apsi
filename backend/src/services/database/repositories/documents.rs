@@ -1,120 +1,28 @@
-use std::{convert::Infallible, error::Error};
+use std::error::Error;
 
 use axum::{
     async_trait,
     extract::{FromRef, FromRequestParts},
     http::{request::Parts, StatusCode},
 };
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use tokio_postgres::{Row, Transaction};
+use chrono::Utc;
+use tokio_postgres::Transaction;
 use tracing::error;
 use uuid::Uuid;
 
-use crate::services::database::{DbConn, DbPool};
-
-use super::{files::File, permission::DocumentVersionRole};
+use crate::{
+    models::{
+        attachment::File,
+        document::{Document, DocumentWithInitialVersion},
+        role::DocumentVersionRole,
+        version::DocumentVersion,
+        version_state::DocumentVersionState,
+    },
+    services::database::{DbConn, DbPool},
+};
 
 pub struct DocumentsRepository {
     database: DbConn,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Document {
-    pub document_id: Uuid,
-    pub document_name: String,
-}
-
-impl TryFrom<Row> for Document {
-    type Error = tokio_postgres::Error;
-
-    fn try_from(value: Row) -> Result<Self, Self::Error> {
-        let document_id: Uuid = value.try_get(0)?;
-        let document_name: String = value.try_get(1)?;
-        Ok(Self {
-            document_id,
-            document_name,
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DocumentVersion {
-    pub document_id: Uuid,
-    pub version_id: Uuid,
-    pub version_name: String,
-    pub created_at: DateTime<Utc>,
-    pub content: String,
-    pub version_state: DocumentVersionState,
-    pub children: Vec<Uuid>,
-    pub parents: Vec<Uuid>,
-}
-
-impl TryFrom<Row> for DocumentVersion {
-    type Error = tokio_postgres::Error;
-
-    fn try_from(value: Row) -> Result<Self, Self::Error> {
-        let document_id: Uuid = value.try_get(0)?;
-        let version_id: Uuid = value.try_get(1)?;
-        let version_name: String = value.try_get(2)?;
-        let created_at: DateTime<Utc> = value.try_get(3)?;
-        let content: String = value.try_get(4)?;
-        let version_state: i16 = value.try_get(5)?;
-        let version_state = DocumentVersionState::try_from(version_state).unwrap();
-        let children: Vec<Uuid> = value.try_get(6)?;
-        let parents: Vec<Uuid> = value.try_get(7)?;
-
-        Ok(Self {
-            document_id,
-            version_id,
-            version_name,
-            created_at,
-            content,
-            version_state,
-            children,
-            parents,
-        })
-    }
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DocumentWithInitialVersion {
-    document: Document,
-    initial_version: DocumentVersion,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[repr(i16)]
-pub enum DocumentVersionState {
-    InProgress = 0,
-    ReadyForReview = 1,
-    Reviewed = 2,
-    Published = 3,
-}
-
-// TODO: handle a very unlikely case of invalid value properly
-impl TryFrom<i16> for DocumentVersionState {
-    type Error = Infallible;
-
-    fn try_from(value: i16) -> Result<Self, Self::Error> {
-        match value {
-            0 => Ok(Self::InProgress),
-            1 => Ok(Self::ReadyForReview),
-            2 => Ok(Self::Reviewed),
-            3 => Ok(Self::Published),
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl From<DocumentVersionState> for i16 {
-    fn from(value: DocumentVersionState) -> Self {
-        value as i16
-    }
 }
 
 impl DocumentsRepository {

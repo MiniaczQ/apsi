@@ -4,6 +4,7 @@ import DocFile from "../models/DocFile";
 import Document from "../models/Document";
 import DocumentVersion from "../models/DocumentVersion";
 import DocumentVersionMember, { DocumentVersionMemberRole } from "../models/DocumentVersionMember";
+import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import UpdateVersion from "../models/UpdateVersion";
 import User from "../models/User";
@@ -15,7 +16,7 @@ interface ApiClient {
     getUsers: () => Promise<User[]>;
 
     getDocuments: () => Promise<Document[]>;
-    createDocument: (data: CreateDocument) => Promise<Document>;
+    createDocument: (data: CreateDocument) => Promise<DocumentWithInitialVersion>;
     getDocument: (documentId: string) => Promise<Document>;
     updateDocument: (documentId: string, data: UpdateDocument) => Promise<void>;
     deleteDocument: (documentId: string) => Promise<void>;

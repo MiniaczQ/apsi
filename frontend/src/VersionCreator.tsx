@@ -36,6 +36,9 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     content: '',
     parents: [],
   });
+  const [viewers, setViewers] = useState<string[]>([]);
+  const [editors, setEditors] = useState<string[]>([]);
+  const [reviewers, setReviewers] = useState<string[]>([]);
 
   const parentVersion = versions?.filter(version => version.versionId === parentVersionId)?.[0];
   const versionsMinusParent = versions?.filter(({ versionId }) => versionId !== parentVersionId);
@@ -86,15 +89,22 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
 
   const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
     (evt.target as HTMLButtonElement).disabled = true;
+    let creationPromise;
     if (documentId === undefined) {
       let doc = createdDocument
       doc.initialVersion.content = createdVersion.content
-      apiClient.createDocument(doc)
-        .then(() => navigate('./Documents'));
+      creationPromise = apiClient.createDocument(doc)
+        .then(response => response.initialVersion);
     } else {
-      apiClient.createVersion(documentId, createdVersion)
-        .then(() => navigate('./Documents'));
+      creationPromise = apiClient.createVersion(documentId, createdVersion);
     }
+    creationPromise.then(version => {
+      console.log(version);
+      viewers?.forEach(viewer => apiClient.grantRole(version.documentId, version.versionId, viewer, 'viewer'));
+      editors?.forEach(editor => apiClient.grantRole(version.documentId, version.versionId, editor, 'editor'));
+      reviewers?.forEach(reviewer => apiClient.grantRole(version.documentId, version.versionId, reviewer, 'reviewer'));
+      navigate(`./Versions?documentId=${version.documentId}`);
+    });
   };
 
   const mergedVersionsField = parentVersionId !== undefined ? (
@@ -151,11 +161,11 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
         <Form.Label>Version owner</Form.Label>
         <p>{loginState.username}</p>
         <Form.Label>Viewers</Form.Label>
-        <Select isMulti options={userOptions} />
+        <Select isMulti options={userOptions} onChange={newValue => setViewers(newValue.map(x => x.value))} />
         <Form.Label>Editors</Form.Label>
-        <Select isMulti options={userOptions} />
+        <Select isMulti options={userOptions} onChange={newValue => setEditors(newValue.map(x => x.value))} />
         <Form.Label>Reviewers</Form.Label>
-        <Select isMulti options={userOptions} />
+        <Select isMulti options={userOptions} onChange={newValue => setReviewers(newValue.map(x => x.value))} />
       </Form.Group>
       {parentVersionField}
       {mergedVersionsField}

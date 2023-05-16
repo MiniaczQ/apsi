@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, fmt::Display};
 
 use axum::{
     async_trait,
@@ -23,6 +23,33 @@ use crate::{
 
 pub struct DocumentsRepository {
     database: DbConn,
+}
+
+#[derive(Debug)]
+pub enum RepoError {
+    Forbidden,
+    Database(Box<dyn Error>),
+    Unreachable,
+}
+
+impl Display for RepoError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RepoError::Forbidden => f.write_str("Unauthorized"),
+            RepoError::Database(error) => error.fmt(f),
+            RepoError::Unreachable => {
+                f.write_str("Why isn't it possible? It's just not. Why not, you stupid bastard?")
+            }
+        }
+    }
+}
+
+impl Error for RepoError {}
+
+impl From<tokio_postgres::Error> for RepoError {
+    fn from(value: tokio_postgres::Error) -> Self {
+        Self::Database(Box::new(value))
+    }
 }
 
 impl DocumentsRepository {
@@ -132,31 +159,53 @@ impl DocumentsRepository {
         })
     }
 
-    pub async fn get_document(&self, document_id: Uuid) -> Result<Document, Box<dyn Error>> {
-        let document = self
-            .database
-            .query_one(
-                "
-                SELECT document_id, document_name
-                FROM documents
-                WHERE document_id = $1
-                ",
-                &[&document_id],
-            )
-            .await?;
-        let document = Document::try_from(document)?;
-        Ok(document)
-    }
-
-    pub async fn get_documents(&self) -> Result<Vec<Document>, Box<dyn Error>> {
+    pub async fn get_document(
+        &self,
+        user_id: Uuid,
+        document_id: Uuid,
+    ) -> Result<Document, RepoError> {
         let documents = self
             .database
             .query(
                 "
-                SELECT document_id, document_name
-                FROM documents
+                SELECT d.document_id, d.document_name
+                FROM documents d
+                WHERE d.document_id = $1
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $2
+                    AND r.document_id = d.document_id
+                )
                 ",
-                &[],
+                &[&document_id, &user_id],
+            )
+            .await?;
+        match documents.len() {
+            0 => Err(RepoError::Forbidden),
+            1 => {
+                let document = Document::try_from(documents.into_iter().next().unwrap())?;
+                Ok(document)
+            }
+            _ => Err(RepoError::Unreachable),
+        }
+    }
+
+    pub async fn get_documents(&self, user_id: Uuid) -> Result<Vec<Document>, Box<dyn Error>> {
+        let documents = self
+            .database
+            .query(
+                "
+                SELECT d.document_id, d.document_name
+                FROM documents d
+                WHERE EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $1
+                    AND r.document_id = d.document_id
+                )
+                ",
+                &[&user_id],
             )
             .await?;
         let documents = documents
@@ -223,12 +272,13 @@ impl DocumentsRepository {
 
     pub async fn get_version(
         &self,
+        user_id: Uuid,
         document_id: Uuid,
         version_id: Uuid,
-    ) -> Result<DocumentVersion, Box<dyn Error>> {
-        let version = self
+    ) -> Result<DocumentVersion, RepoError> {
+        let versions = self
             .database
-            .query_one(
+            .query(
                 "
                 SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,
                     array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
@@ -236,17 +286,31 @@ impl DocumentsRepository {
                 FROM document_versions v
                 WHERE v.document_id = $1
                 AND v.version_id = $2
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $3
+                    AND r.document_id = v.document_id
+                    AND r.version_id = v.version_id
+                )
                 GROUP BY (v.document_id, v.version_id)
                 ",
-                &[&document_id, &version_id],
+                &[&document_id, &version_id, &user_id],
             )
             .await?;
-        let version = DocumentVersion::try_from(version)?;
-        Ok(version)
+        match versions.len() {
+            0 => Err(RepoError::Forbidden),
+            1 => {
+                let version = DocumentVersion::try_from(versions.into_iter().next().unwrap())?;
+                Ok(version)
+            }
+            _ => Err(RepoError::Unreachable),
+        }
     }
 
     pub async fn get_versions(
         &self,
+        user_id: Uuid,
         document_id: Uuid,
     ) -> Result<Vec<DocumentVersion>, Box<dyn Error>> {
         let versions = self
@@ -258,9 +322,16 @@ impl DocumentsRepository {
                     array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
                 FROM document_versions v
                 WHERE v.document_id = $1
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $2
+                    AND r.document_id = v.document_id
+                    AND r.version_id = v.version_id
+                )
                 GROUP BY (v.document_id, v.version_id)
                 ",
-                &[&document_id],
+                &[&document_id, &user_id],
             )
             .await?;
         let versions = versions
@@ -312,6 +383,7 @@ impl DocumentsRepository {
 
     pub async fn get_file_attachments(
         &self,
+        user_id: Uuid,
         document_id: Uuid,
         version_id: Uuid,
     ) -> Result<Vec<File>, Box<dyn Error>> {
@@ -320,12 +392,19 @@ impl DocumentsRepository {
             .query(
                 "
                 SELECT f.file_id, f.file_name, f.file_mime_type, f.file_hash
-                FROM file_attachments fa
-                JOIN files f ON fa.file_id = f.file_id
-                WHERE document_id = $1
-                AND version_id = $2
+                FROM file_attachments a
+                JOIN files f ON a.file_id = f.file_id
+                WHERE a.document_id = $1
+                AND a.version_id = $2
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $3
+                    AND r.document_id = a.document_id
+                    AND r.version_id = a.version_id
+                )
                 ",
-                &[&document_id, &version_id],
+                &[&document_id, &version_id, &user_id],
             )
             .await?;
         let attached_files = attached_files
@@ -337,26 +416,40 @@ impl DocumentsRepository {
 
     pub async fn get_file_attachment(
         &self,
+        user_id: Uuid,
         document_id: Uuid,
         version_id: Uuid,
         file_id: Uuid,
-    ) -> Result<File, Box<dyn Error>> {
-        let attached_file = self
+    ) -> Result<File, RepoError> {
+        let attached_files = self
             .database
-            .query_one(
+            .query(
                 "
                 SELECT f.file_id, f.file_name, f.file_mime_type, f.file_hash
-                FROM file_attachments fa
-                JOIN files f ON fa.file_id = f.file_id
-                WHERE document_id = $1
-                AND version_id = $2
-                AND file_id = $3
+                FROM file_attachments a
+                JOIN files f ON a.file_id = f.file_id
+                WHERE a.document_id = $1
+                AND a.version_id = $2
+                AND a.file_id = $3
+                AND EXISTS (
+                    SELECT *
+                    FROM user_document_version_roles r
+                    WHERE r.user_id = $4
+                    AND r.document_id = a.document_id
+                    AND r.version_id = a.version_id
+                )
                 ",
-                &[&document_id, &version_id, &file_id],
+                &[&document_id, &version_id, &file_id, &user_id],
             )
             .await?;
-        let attached_file = File::try_from(attached_file)?;
-        Ok(attached_file)
+        match attached_files.len() {
+            0 => Err(RepoError::Forbidden),
+            1 => {
+                let attached_file = File::try_from(attached_files.into_iter().next().unwrap())?;
+                Ok(attached_file)
+            }
+            _ => Err(RepoError::Unreachable),
+        }
     }
 
     pub async fn attach_file(

@@ -14,7 +14,10 @@ use crate::{
     },
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
-        database::{repositories::documents::DocumentsRepository, DbPool},
+        database::{
+            repositories::documents::{DocumentsRepository, RepoError},
+            DbPool,
+        },
         util::Res3,
     },
 };
@@ -51,32 +54,37 @@ async fn create_version(
 
 async fn get_version(
     documents_repository: DocumentsRepository,
-    _: Claims,
+    claims: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
 ) -> Result<Json<DocumentVersion>, StatusCode> {
-    let versions = documents_repository
-        .get_version(document_id, version_id)
+    match documents_repository
+        .get_version(claims.user_id, document_id, version_id)
         .await
-        .map_err(|e| {
-            error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
-    Ok(Json(versions))
+    {
+        Ok(versions) => Ok(Json(versions)),
+        Err(RepoError::Forbidden) => Err(StatusCode::FORBIDDEN),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn get_versions(
     documents_repository: DocumentsRepository,
-    _: Claims,
+    claims: Claims,
     Path(document_id): Path<Uuid>,
 ) -> Result<Json<Vec<DocumentVersion>>, StatusCode> {
-    let versions = documents_repository
-        .get_versions(document_id)
+    match documents_repository
+        .get_versions(claims.user_id, document_id)
         .await
-        .map_err(|e| {
-            error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
-    Ok(Json(versions))
+    {
+        Ok(versions) => Ok(Json(versions)),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn update_version(

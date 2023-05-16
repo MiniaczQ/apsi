@@ -14,7 +14,10 @@ use crate::{
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
-            repositories::{documents::DocumentsRepository, files::FilesRepository},
+            repositories::{
+                documents::{DocumentsRepository, RepoError},
+                files::FilesRepository,
+            },
             DbPool,
         },
     },
@@ -83,32 +86,37 @@ async fn patch_file_attachment(
 
 async fn get_file_attachments(
     documents_repository: DocumentsRepository,
-    _: Claims,
+    claims: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
 ) -> Result<Json<Vec<File>>, StatusCode> {
-    let file_attachments = documents_repository
-        .get_file_attachments(document_id, version_id)
+    match documents_repository
+        .get_file_attachments(claims.user_id, document_id, version_id)
         .await
-        .map_err(|e| {
-            error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
-    Ok(Json(file_attachments))
+    {
+        Ok(file_attachments) => Ok(Json(file_attachments)),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn get_file_attachment(
     documents_repository: DocumentsRepository,
-    _: Claims,
+    claims: Claims,
     Path((document_id, version_id, file_id)): Path<(Uuid, Uuid, Uuid)>,
 ) -> Result<Json<File>, StatusCode> {
-    let file_attachment = documents_repository
-        .get_file_attachment(document_id, version_id, file_id)
+    match documents_repository
+        .get_file_attachment(claims.user_id, document_id, version_id, file_id)
         .await
-        .map_err(|e| {
-            error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
-    Ok(Json(file_attachment))
+    {
+        Ok(file_attachment) => Ok(Json(file_attachment)),
+        Err(RepoError::Forbidden) => Err(StatusCode::FORBIDDEN),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn get_file_attachment_content(

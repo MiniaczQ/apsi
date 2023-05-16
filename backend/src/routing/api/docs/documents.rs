@@ -14,7 +14,10 @@ use crate::{
     },
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
-        database::{repositories::documents::DocumentsRepository, DbPool},
+        database::{
+            repositories::documents::{DocumentsRepository, RepoError},
+            DbPool,
+        },
     },
 };
 
@@ -40,28 +43,33 @@ async fn create_document(
 
 async fn get_document(
     documents_repository: DocumentsRepository,
-    _: Claims,
+    claims: Claims,
     Path(document_id): Path<Uuid>,
 ) -> Result<Json<Document>, StatusCode> {
-    let documents = documents_repository
-        .get_document(document_id)
+    match documents_repository
+        .get_document(claims.user_id, document_id)
         .await
-        .map_err(|e| {
-            error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
-    Ok(Json(documents))
+    {
+        Ok(document) => Ok(Json(document)),
+        Err(RepoError::Forbidden) => Err(StatusCode::FORBIDDEN),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn get_documents(
     documents_repository: DocumentsRepository,
-    _: Claims,
+    claims: Claims,
 ) -> Result<Json<Vec<Document>>, StatusCode> {
-    let documents = documents_repository.get_documents().await.map_err(|e| {
-        error!("{}", e);
-        StatusCode::BAD_REQUEST
-    })?;
-    Ok(Json(documents))
+    match documents_repository.get_documents(claims.user_id).await {
+        Ok(documents) => Ok(Json(documents)),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn update_document(

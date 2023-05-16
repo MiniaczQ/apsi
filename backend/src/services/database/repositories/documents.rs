@@ -54,14 +54,20 @@ impl DocumentsRepository {
         for parent_id in parent_ids {
             transaction
                 .execute(
-                    "INSERT INTO documents_dependencies (document_id, parent_version_id, child_version_id) VALUES ($1, $2, $3)",
+                    "
+                    INSERT INTO documents_dependencies (document_id, parent_version_id, child_version_id)
+                    VALUES ($1, $2, $3)
+                    ",
                     &[&document_id, &parent_id, &version_id],
                 )
                 .await?;
         }
         transaction
             .execute(
-                "INSERT INTO user_document_version_roles VALUES ($1, $2, $3, $4)",
+                "
+                INSERT INTO user_document_version_roles (user_id, document_id, version_id, role_id)
+                VALUES ($1, $2, $3, $4)
+                ",
                 &[
                     &user_id,
                     &document_id,
@@ -99,7 +105,10 @@ impl DocumentsRepository {
         let transaction = self.database.transaction().await?;
         transaction
             .execute(
-                "INSERT INTO documents VALUES ($1, $2)",
+                "
+                INSERT INTO documents (document_id, document_name)
+                VALUES ($1, $2)
+                ",
                 &[&document_id, &document_name],
             )
             .await?;
@@ -127,7 +136,11 @@ impl DocumentsRepository {
         let document = self
             .database
             .query_one(
-                "SELECT * FROM documents WHERE document_id = $1",
+                "
+                SELECT document_id, document_name
+                FROM documents
+                WHERE document_id = $1
+                ",
                 &[&document_id],
             )
             .await?;
@@ -136,7 +149,16 @@ impl DocumentsRepository {
     }
 
     pub async fn get_documents(&self) -> Result<Vec<Document>, Box<dyn Error>> {
-        let documents = self.database.query("SELECT * FROM documents", &[]).await?;
+        let documents = self
+            .database
+            .query(
+                "
+                SELECT document_id, document_name
+                FROM documents
+                ",
+                &[],
+            )
+            .await?;
         let documents = documents
             .into_iter()
             .map(Document::try_from)
@@ -152,7 +174,11 @@ impl DocumentsRepository {
         let updated = self
             .database
             .execute(
-                "UPDATE documents SET document_name = $2 WHERE document_id = $1",
+                "
+                UPDATE documents
+                SET document_name = $2
+                WHERE document_id = $1
+                ",
                 &[&document_id, &document_name],
             )
             .await?;
@@ -163,7 +189,10 @@ impl DocumentsRepository {
         let deleted = self
             .database
             .execute(
-                "DELETE FROM documents WHERE document_id = $1",
+                "
+                DELETE FROM documents
+                WHERE document_id = $1
+                ",
                 &[&document_id],
             )
             .await?;
@@ -251,7 +280,11 @@ impl DocumentsRepository {
         let updated = self
             .database
             .execute(
-                "UPDATE document_versions SET version_name = $3, content = $4 WHERE document_id = $1 AND version_id = $2",
+                "
+                UPDATE document_versions
+                SET version_name = $3, content = $4
+                WHERE document_id = $1
+                AND version_id = $2",
                 &[&document_id, &version_id, &version_name, &content],
             )
             .await?;
@@ -266,7 +299,11 @@ impl DocumentsRepository {
         let deleted = self
             .database
             .execute(
-                "DELETE FROM document_versions WHERE document_id = $1 AND version_id = $2",
+                "
+                DELETE FROM document_versions
+                WHERE document_id = $1
+                AND version_id = $2
+                ",
                 &[&document_id, &version_id],
             )
             .await?;
@@ -281,7 +318,13 @@ impl DocumentsRepository {
         let attached_files = self
             .database
             .query(
-                "SELECT f.* FROM file_attachments fa JOIN files f ON fa.file_id = f.file_id WHERE document_id = $1 AND version_id = $2",
+                "
+                SELECT f.file_id, f.file_name, f.file_mime_type, f.file_hash
+                FROM file_attachments fa
+                JOIN files f ON fa.file_id = f.file_id
+                WHERE document_id = $1
+                AND version_id = $2
+                ",
                 &[&document_id, &version_id],
             )
             .await?;
@@ -301,7 +344,14 @@ impl DocumentsRepository {
         let attached_file = self
             .database
             .query_one(
-                "SELECT f.* FROM file_attachments fa JOIN files f ON fa.file_id = f.file_id WHERE document_id = $1 AND version_id = $2 AND file_id = $3",
+                "
+                SELECT f.file_id, f.file_name, f.file_mime_type, f.file_hash
+                FROM file_attachments fa
+                JOIN files f ON fa.file_id = f.file_id
+                WHERE document_id = $1
+                AND version_id = $2
+                AND file_id = $3
+                ",
                 &[&document_id, &version_id, &file_id],
             )
             .await?;
@@ -318,7 +368,10 @@ impl DocumentsRepository {
         let attached = self
             .database
             .execute(
-                "INSERT INTO file_attachments VALUES ($1, $2, $3)",
+                "
+                INSERT INTO file_attachments (document_id, version_id, file_id)
+                VALUES ($1, $2, $3)
+                ",
                 &[&document_id, &version_id, &file_id],
             )
             .await?;
@@ -334,7 +387,12 @@ impl DocumentsRepository {
         let deleted = self
             .database
             .execute(
-                "DELETE FROM file_attachments WHERE document_id = $1 AND version_id = $2 AND file_id = $3",
+                "
+                DELETE FROM file_attachments
+                WHERE document_id = $1
+                AND version_id = $2
+                AND file_id = $3
+                ",
                 &[&document_id, &version_id, &file_id],
             )
             .await?;
@@ -361,7 +419,13 @@ impl DocumentsRepository {
         let modified = self
             .database
             .execute(
-                "UPDATE document_versions SET version_state = $1 WHERE document_id = $2 AND version_id = $3 AND version_state = ANY($4)",
+                "
+                UPDATE document_versions
+                SET version_state = $1
+                WHERE document_id = $2
+                AND version_id = $3
+                AND version_state = ANY($4)
+                ",
                 &[
                     &i16::from(new_state),
                     &document_id,

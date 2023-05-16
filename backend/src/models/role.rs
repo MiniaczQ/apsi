@@ -2,7 +2,7 @@ use std::convert::Infallible;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[repr(i16)]
 pub enum Role {
@@ -15,7 +15,7 @@ impl From<Role> for i16 {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[repr(i16)]
 pub enum DocumentVersionRole {

@@ -13,6 +13,7 @@ use crate::{
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{repositories::permission::PermissionRepository, DbPool},
+        util::Res2,
     },
 };
 
@@ -27,7 +28,7 @@ async fn get_members(
     {
         Ok(users) => Ok(Json(users)),
         Err(error) => {
-            error!("{}", error);
+            error!({ error = error.to_string() }, "Error when getting members");
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -44,7 +45,7 @@ async fn get_member(
     {
         Ok(user) => Ok(Json(user)),
         Err(error) => {
-            error!("{}", error);
+            error!({ error = error.to_string() }, "Error when getting member");
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
@@ -62,7 +63,10 @@ async fn am_owner(
         Ok(true) => StatusCode::OK,
         Ok(false) => StatusCode::UNAUTHORIZED,
         Err(error) => {
-            error!("{}", error);
+            error!(
+                { error = error.to_string() },
+                "Error when checking if owner"
+            );
             StatusCode::INTERNAL_SERVER_ERROR
         }
     }
@@ -72,14 +76,24 @@ async fn grant_version_role(
     permission_repository: PermissionRepository,
     _: Claims,
     Path((document_id, version_id, user_id, role)): Path<(Uuid, Uuid, Uuid, DocumentVersionRole)>,
-) -> StatusCode {
+) -> Res2 {
+    if role == DocumentVersionRole::Owner {
+        return Res2::Msg((StatusCode::BAD_REQUEST, "Cannot grant this role"));
+    }
+
     match permission_repository
         .grant_document_version_role(user_id, document_id, version_id, role)
         .await
     {
-        Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::BAD_REQUEST,
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        Ok(true) => Res2::NoMsg(StatusCode::OK),
+        Ok(false) => Res2::NoMsg(StatusCode::BAD_REQUEST),
+        Err(error) => {
+            error!(
+                { error = error.to_string() },
+                "Error when granting permission"
+            );
+            Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 
@@ -87,14 +101,24 @@ async fn revoke_version_role(
     permission_repository: PermissionRepository,
     _: Claims,
     Path((document_id, version_id, user_id, role)): Path<(Uuid, Uuid, Uuid, DocumentVersionRole)>,
-) -> StatusCode {
+) -> Res2 {
+    if role == DocumentVersionRole::Owner {
+        return Res2::Msg((StatusCode::BAD_REQUEST, "Cannot revoke this role"));
+    }
+
     match permission_repository
         .revoke_document_version_role(user_id, document_id, version_id, role)
         .await
     {
-        Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::BAD_REQUEST,
-        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        Ok(true) => Res2::NoMsg(StatusCode::OK),
+        Ok(false) => Res2::NoMsg(StatusCode::BAD_REQUEST),
+        Err(error) => {
+            error!(
+                { error = error.to_string() },
+                "Error when revoking permission"
+            );
+            Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 

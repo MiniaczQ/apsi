@@ -15,7 +15,7 @@ use crate::{
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{repositories::documents::DocumentsRepository, DbPool},
-        util::JsonOrError,
+        util::Res3,
     },
 };
 
@@ -24,9 +24,9 @@ async fn create_version(
     claims: Claims,
     Path(document_id): Path<Uuid>,
     Json(data): Json<CreateVersionWithParentsRequest>,
-) -> JsonOrError<DocumentVersion> {
+) -> Res3<DocumentVersion> {
     if data.parents.is_empty() {
-        return JsonOrError::ErrMsg((
+        return Res3::Msg((
             StatusCode::BAD_REQUEST,
             "Version has to have at least 1 parent",
         ));
@@ -41,10 +41,10 @@ async fn create_version(
         )
         .await
     {
-        Ok(version) => JsonOrError::Json(Json(version)),
+        Ok(version) => Res3::Json(Json(version)),
         Err(e) => {
             error!("{}", e);
-            JsonOrError::Err(StatusCode::BAD_REQUEST)
+            Res3::NoMsg(StatusCode::BAD_REQUEST)
         }
     }
 }

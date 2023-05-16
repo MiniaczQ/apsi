@@ -3,14 +3,16 @@ import CreateVersion from "../models/CreateVersion";
 import DocFile from "../models/DocFile";
 import Document from "../models/Document";
 import DocumentVersion from "../models/DocumentVersion";
+import DocumentVersionMember, { DocumentVersionMemberRole } from "../models/DocumentVersionMember";
 import UpdateDocument from "../models/UpdateDocument";
 import UpdateVersion from "../models/UpdateVersion";
-import DocumentVersionMember from "../models/DocumentVersionMember";
+import User from "../models/User";
 
 interface ApiClient {
     register: (username: string, password: string) => Promise<void>,
     login: (username: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    getUsers: () => Promise<User[]>;
 
     getDocuments: () => Promise<Document[]>;
     createDocument: (data: CreateDocument) => Promise<Document>;
@@ -30,6 +32,11 @@ interface ApiClient {
     uploadFile: (documentId: string, versionId: string, data: File) => Promise<void>;
     getFile: (documentId: string, versionId: string, fileId: string) => Promise<Blob>;
     deleteFile: (documentId: string, versionId: string, fileId: string) => Promise<void>;
+
+    grantRole: (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => Promise<void>;
+    revokeRole: (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => Promise<void>;
+    getMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
+    getMember: (documentId: string, versionId: string) => Promise<DocumentVersionMember>;
 };
 
 export default ApiClient;

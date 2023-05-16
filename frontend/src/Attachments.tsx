@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useRef, useState } from 'react';
+import { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
 import { Container, Button} from 'react-bootstrap';
 
 import './App.css';
@@ -16,14 +16,14 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
   const [filesInfos, setFileInfos] = useState<DocFile[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const loadFilesList = (documentId: string, versionId: string) => {
+  const loadFilesList = useCallback((documentId: string, versionId: string) => {
     apiClient.getFiles(documentId, versionId)
       .then(response => setFileInfos(response));
-  };
+  }, [apiClient]);
 
   useEffect(
     () => loadFilesList(documentId, versionId),
-    [apiClient, documentId, versionId]
+    [loadFilesList, documentId, versionId]
   );
 
   const selectFile = (event: React.ChangeEvent<HTMLInputElement>) => {

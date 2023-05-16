@@ -15,7 +15,8 @@ use crate::services::{
     database::{
         repositories::{
             documents::{
-                Document, DocumentVersion, DocumentWithInitialVersion, DocumentsRepository,
+                Document, DocumentVersion, DocumentVersionState, DocumentWithInitialVersion,
+                DocumentsRepository,
             },
             files::{File, FilesRepository},
             permission::{DocumentVersionRole, PermissionRepository, PublicUserWithRoles},
@@ -418,6 +419,24 @@ async fn revoke_version_role(
     }
 }
 
+async fn change_state(
+    documents_repository: DocumentsRepository,
+    _: Claims,
+    Path((document_id, version_id, new_state)): Path<(Uuid, Uuid, DocumentVersionState)>,
+) -> StatusCode {
+    match documents_repository
+        .change_state(document_id, version_id, new_state)
+        .await
+    {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::BAD_REQUEST,
+        Err(error) => {
+            error!({ error = error.to_string() }, "Error when changing state");
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
 pub fn documents_router<T>() -> Router<T>
 where
     AuthKeys: FromRef<T>,
@@ -466,5 +485,10 @@ where
         .route(
             "/:document_id/:version_id/revoke/:user_id/:role",
             post(revoke_version_role),
+        )
+        // State
+        .route(
+            "/:document_id/:version_id/change-state/:state",
+            post(change_state),
         )
 }

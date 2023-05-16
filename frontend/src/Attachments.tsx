@@ -96,11 +96,11 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
 
             {filesInfos?.map((docfile, index) => (
               <li className="list-group-item" key={index} >
-                  <text>{docfile.fileName}</text>
-                  <div style={{ float: "right"}}>
-                    <Button variant="outline-primary" style={{margin:5}} onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
-                    <Button variant="danger" style={{margin:5}} onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
-                  </div>
+                {docfile.fileName}
+                <div style={{ float: "right"}}>
+                  <Button variant="outline-primary" style={{margin:5}} onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
+                  <Button variant="danger" style={{margin:5}} onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
+                </div>
               </li>
             ))}
           </ul>

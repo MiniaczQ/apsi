@@ -100,6 +100,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
                   action href={'#version-' + versionId}
                   variant={isParentChecked(versionId) ? 'primary' : 'secondary'}>
                   <Form.Check checked={isParentChecked(versionId)}
+                    id={'checkbox-' + versionId}
                     onChange={evt => updateParents(versionId, evt.target.checked)}
                     label={versionName}
                   />

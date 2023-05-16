@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useRef, useState } from 'react';
+import { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
 import { Container } from 'react-bootstrap';
 
 import './App.css';
@@ -14,7 +14,6 @@ type AttachmentsProps = {
 
 export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, documentId, versionId }) => {
   const [currentFile, setCurrentFile] = useState<File>();
-  const [message, setMessage] = useState<string>("");
   const [filesInfos, setFileInfos] = useState<DocFile[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,7 +34,7 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
 
   const upload = () => {
     if (!currentFile) return;
-    apiClient.postFiles(documentId, versionId, currentFile).then(() => {
+    apiClient.uploadFiles(documentId, versionId, currentFile).then(() => {
       loadFilesList(documentId, versionId);
       setCurrentFile(undefined);
       if (inputRef.current != null) {
@@ -67,7 +66,6 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
   }
 
   const deleteRefresh = (fileId: string) => {
-    console.log(apiClient)
     apiClient.deleteFile(documentId, versionId, fileId)
     .then(() => {loadFilesList(documentId, versionId)});
   }
@@ -90,11 +88,6 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
             </button>
           </div>
         </div>
-        {message && (
-          <div className="alert alert-secondary mt-3" role="alert">
-            {message}
-          </div>
-        )}
         <div className="card mt-3">
           <div className="card-header">List of Files</div>
 

@@ -84,7 +84,7 @@ class BackendApiClient implements ApiClient {
       return await response.json();
   };
 
-  private delete = async (relPath: string, authenticated = true, returnBody = true) => {
+  private delete = async (relPath: string, authenticated = true, returnBody = false) => {
     let postReqOptions = this.addMethodToRequestOptions(this.baseRequestOptions, 'DELETE');
     postReqOptions = this.addCredentialsToRequestOptions(postReqOptions, authenticated);
     const response = await fetch(new URL(relPath, this.apiBaseUrl), postReqOptions);
@@ -92,12 +92,12 @@ class BackendApiClient implements ApiClient {
       return await response.json();
   };
 
-  private get = async (relPath: string, authenticated = true, returnBody = true) => {
+  private get = async (relPath: string, authenticated = true, returnBody: 'JSON'| 'BLOB' | false = 'JSON') => {
     const getReqOptions = this.addCredentialsToRequestOptions(this.baseRequestOptions, authenticated);
     const response = await fetch(new URL(relPath, this.apiBaseUrl), getReqOptions);
-    if (returnBody)
+    if (returnBody == 'JSON')
       return await response.json();
-    else
+    else if (returnBody == 'BLOB')
       return await response.blob();
   };
 
@@ -158,19 +158,17 @@ class BackendApiClient implements ApiClient {
   getFiles = async (documentId: string, versionId: string) => await this.get(
     `documents/${documentId}/${versionId}/files`,
   ) as DocFile[];
-  postFiles = async (documentId: string, versionId: string, data: File) => await this.sendFile(
+  uploadFiles = async (documentId: string, versionId: string, data: File) => await this.sendFile(
     `documents/${documentId}/${versionId}/files`,
     data,
   );
   getFile = async (documentId: string, versionId: string, fileId: string) => await this.get(
     `documents/${documentId}/${versionId}/files/${fileId}/content`,
     true,
-    false
+    'BLOB'
   ) as Blob;
   deleteFile = async (documentId: string, versionId: string, fileId: string) => await this.delete(
-    `documents/${documentId}/${versionId}/files/${fileId}`,
-    true,
-    false
+    `documents/${documentId}/${versionId}/files/${fileId}`,    
   );
 
   constructor(url: string, loginState: LoginState) {

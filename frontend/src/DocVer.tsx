@@ -1,7 +1,7 @@
-import { FunctionComponent, useState, useEffect } from 'react';
+import { FunctionComponent, MouseEventHandler, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Container } from 'react-bootstrap';
+import { Button, Badge, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 
@@ -9,7 +9,7 @@ import Attachments from "./Attachments";
 import styles from './docVer.module.css';
 import ApiClient from './api/ApiClient';
 import Document from './models/Document';
-import DocumentVersion from './models/DocumentVersion';
+import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
 
 
 type DocVerProps = {
@@ -25,6 +25,87 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
 
+
+  const changeStateForward: MouseEventHandler<HTMLButtonElement> = async () => {
+    if (version === undefined) {
+      return
+    }
+    const stateProgressionLUT: DocumentVersionStateMap<DocumentVersionState> = {
+      'inProgress': 'readyForReview',
+      'readyForReview': 'reviewed',
+      'reviewed': 'published',
+      'published': 'published'
+    };
+    const newState = stateProgressionLUT[version?.versionState];
+    apiClient.setVersionState(documentId!, versionId!, newState)
+      .then(() => setVersion({...version, versionState: newState}));
+  }
+
+  const changeStateBackward: MouseEventHandler<HTMLButtonElement> = async () => {
+    if (version === undefined) {
+      return
+    }
+    const stateProgressionLUT: DocumentVersionStateMap<DocumentVersionState> = {
+      'inProgress': 'inProgress',
+      'readyForReview': 'inProgress',
+      'reviewed': 'readyForReview',
+      'published': 'published'
+    };
+    const newState = stateProgressionLUT[version?.versionState];
+    apiClient.setVersionState(documentId!, versionId!, newState)
+      .then(() => setVersion({...version, versionState: newState}));
+  }
+
+  function getNextStateActionButton(state: DocumentVersionState|undefined) {
+    if (state === undefined || state === 'published') {
+      return <></>
+    }
+    const stateLUT: DocumentVersionStateMap<string> = {
+      'inProgress': 'Mark as Ready for Review',
+      'readyForReview': 'Review (Accept)',
+      'reviewed': 'Publish',
+      'published': ''
+    };
+    return <Button variant="outline-success" onClick={changeStateForward} style={{ marginLeft: "1em"}}>
+      {stateLUT[state]}
+    </Button>
+  }
+
+  function getPreviousStateActionButton(state: DocumentVersionState|undefined) {
+    if (state === undefined || state === 'inProgress' || state === 'published') {
+      return <></>
+    }
+    const stateLUT: DocumentVersionStateMap<string> = {
+      'inProgress': '',
+      'readyForReview': 'Review (Decline)',
+      'reviewed': 'Mark as Needing Review',
+      'published': ''
+    };
+    return <Button variant="outline-danger" onClick={changeStateBackward} style={{ marginLeft: "1em"}}>
+      {stateLUT[state]}
+    </Button>
+  }
+
+  function getStateBadge(state: DocumentVersionState|undefined) {
+    if (state === undefined) {
+      return <></>
+    }
+    const stateNameLUT: DocumentVersionStateMap<string> = {
+      'inProgress': 'In Progress',
+      'readyForReview': 'Ready For Review',
+      'reviewed': 'Reviewed',
+      'published': 'Published',
+    };
+    const stateStyleLUT: DocumentVersionStateMap<string> = {
+      'inProgress': 'primary',
+      'readyForReview': 'danger',
+      'reviewed': 'warning',
+      'published': 'success',
+    };
+    return <Badge pill bg={stateStyleLUT[state]} style={{marginLeft: "1em"}}>
+      {stateNameLUT[state]}
+    </Badge>
+  }
 
   useEffect(() => {
     if (documentId === undefined || versionId === undefined)
@@ -61,9 +142,10 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
             </h5>
             <p className={styles.textblack}>
               {version?.versionName}
+              {getStateBadge(version?.versionState)}
             </p>
             <h5 className={styles.pblue}>
-              Creation date
+                Creation date
             </h5>
             <p className={styles.textblack}>
               {showDate(version?.createdAt ?? '')}
@@ -75,10 +157,12 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
               {version?.content}
             </div>
             <Button variant="outline-primary"
-              onClick={() => navigateToVersionCreator(documentId, versionId)}
+                onClick={() => navigateToVersionCreator(documentId, versionId)}
             >
               Create New Document Version
             </Button>
+            {getNextStateActionButton(version?.versionState)}
+            {getPreviousStateActionButton(version?.versionState)}
           </div>
         </Tab>
         <Tab eventKey="comments" title="Comments">

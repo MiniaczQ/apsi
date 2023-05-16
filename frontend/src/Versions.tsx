@@ -1,12 +1,13 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { Table, Button, Container } from 'react-bootstrap';
+import { Table, Button, Badge, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
 import './App.css';
+import './TableStyle.css';
 import ApiClient from './api/ApiClient';
 import Document from './models/Document';
-import DocumentVersion from './models/DocumentVersion';
+import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
 
 
 type VersionsProps = {
@@ -22,6 +23,27 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
 
 
+  function getStateBadge(state: DocumentVersionState|undefined) {
+    if (state === undefined) {
+      return <></>
+    }
+    const stateNameLUT: DocumentVersionStateMap<string> = {
+      'inProgress': 'In Progress',
+      'readyForReview': 'Ready For Review',
+      'reviewed': 'Reviewed',
+      'published': 'Published',
+    };
+    const stateStyleLUT: DocumentVersionStateMap<string> = {
+      'inProgress': 'primary',
+      'readyForReview': 'danger',
+      'reviewed': 'warning',
+      'published': 'success',
+    };
+    return <Badge pill bg={stateStyleLUT[state]} style={{marginLeft: "1em"}}>
+      {stateNameLUT[state]}
+    </Badge>
+  }
+
   useEffect(() => {
     if (documentId === undefined)
       return;
@@ -31,15 +53,18 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
       .then(response => { setVersions(response) });
   }, [apiClient, documentId]);
 
-  const versionRows = versions?.map(({ documentId, versionId, versionName }: DocumentVersion, index: number) =>
+  function compareVersions(a: DocumentVersion, b: DocumentVersion): number {
+    // MIND THE MINUS, WE WANT THE NEWEST TO APPEAR ON TOP
+    return -String(a.versionName).localeCompare(b.versionName, undefined, { numeric: true, sensitivity: 'base' });
+  }
+
+  const versionRows = versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState }: DocumentVersion) =>
     <tr key={versionId}>
       <td>
-        {index + 1}
-      </td>
-      <td align="center">
         {versionName}
+        {getStateBadge(versionState)}
       </td>
-      <td align="center">
+      <td>
         <Button variant="outline-secondary"
           onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)}
         >
@@ -58,9 +83,6 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
       <Table striped bordered hover size="sm">
         <thead>
           <tr>
-            <th>
-              #
-            </th>
             <th>
               Version
             </th>

@@ -154,6 +154,12 @@ class BackendApiClient implements ApiClient {
   deleteVersion = async (documentId: string, versionId: string) => await this.delete(
     `documents/${documentId}/${versionId}`
   );
+  setVersionState = async (documentId: string, versionId: string, state: string) => await this.post(
+    `documents/${documentId}/${versionId}/change-state/${state}`,
+    '',
+    true,
+    false
+  );
 
   getFiles = async (documentId: string, versionId: string) => await this.get(
     `documents/${documentId}/${versionId}/files`,

@@ -1,16 +1,19 @@
-import { useState, MouseEventHandler } from 'react';
+import { useState, MouseEventHandler, FunctionComponent } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
-import ApiClient from './api/ApiClient';
+
 import './App.css';
+import ApiClient from './api/ApiClient';
+
 
 type LoginProps = {
   apiClient: ApiClient;
 };
 
-function Login({ apiClient }: LoginProps) {
+const Login: FunctionComponent<LoginProps> = ({ apiClient }) => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
+
   const errorElement = error.length > 0 ? <Alert variant="danger">{error}</Alert> : <></>
 
   const loginAndUpdateState: MouseEventHandler<HTMLButtonElement> = async () => {

@@ -1,5 +1,6 @@
 import CreateDocument from "../models/CreateDocument";
 import CreateVersion from "../models/CreateVersion";
+import DocFile from "../models/DocFile";
 import Document from "../models/Document";
 import DocumentVersion from "../models/DocumentVersion";
 import UpdateDocument from "../models/UpdateDocument";
@@ -21,6 +22,11 @@ interface ApiClient {
     getVersion: (documentId: string, versionId: string) => Promise<DocumentVersion>;
     updateVersion: (documentId: string, versionId: string, data: UpdateVersion) => Promise<void>;
     deleteVersion: (documentId: string, versionId: string) => Promise<void>;
+
+    getFiles: (documentId: string, versionId: string) => Promise<DocFile[]>;
+    uploadFile: (documentId: string, versionId: string, data: File) => Promise<void>;
+    getFile: (documentId: string, versionId: string, fileId: string) => Promise<Blob>;
+    deleteFile: (documentId: string, versionId: string, fileId: string) => Promise<void>;
 };
 
 export default ApiClient;

@@ -1,81 +1,76 @@
-import { Table, Button, Container } from 'react-bootstrap';
-import './App.css';
-import { useLocation } from 'react-router';
 import { FunctionComponent, useEffect, useState } from 'react';
+import { Table, Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
-import { LoginState } from './App';
+import { useSearchParams } from 'react-router-dom';
+
+import './App.css';
+import ApiClient from './api/ApiClient';
+import Document from './models/Document';
 import DocumentVersion from './models/DocumentVersion';
-import { getVersions } from './ApiCommunication';
+
 
 type VersionsProps = {
-  loginState: LoginState
+  apiClient: ApiClient
 };
 
-export const Versions: FunctionComponent<VersionsProps> = ({ loginState }) => {
+export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const searchParams = useSearchParams()[0];
+  const documentId = searchParams.get('documentId') ?? undefined;
 
+  const [document, setDocument] = useState<Document>();
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
 
+
   useEffect(() => {
-    getVersions(location.state.doc_id, loginState.token!)
+    if (documentId === undefined)
+      return;
+    apiClient.getDocument(documentId)
+      .then(response => setDocument(response));
+    apiClient.getVersions(documentId)
       .then(response => { setVersions(response) });
-  }, [location.state.doc_id, loginState.token]);
+  }, [apiClient, documentId]);
 
-  function go_to_doc_ver(ver: DocumentVersion)
-  {
-    navigate("/DocVer", { state: { ver: ver, doc_name: location.state.doc_name }})
-  }
+  const versionRows = versions?.map(({ documentId, versionId, versionName }: DocumentVersion, index: number) =>
+    <tr key={versionId}>
+      <td>
+        {index + 1}
+      </td>
+      <td align="center">
+        {versionName}
+      </td>
+      <td align="center">
+        <Button variant="outline-secondary"
+          onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)}
+        >
+          Inspect version
+        </Button>
+      </td>
+    </tr>
+  );
 
-  function returnVersion()
-  {
-    return(
-      <>
-        {
-          versions?.map((ver: DocumentVersion, id: number) =>
-            <tr key={id}>
-              <td> 
-                {id} 
-              </td>
-
-              <td align='center'> 
-                {ver.versionName} 
-              </td>
-
-              <td align='center'>
-                <Button variant = 'outline-secondary' onClick={() => go_to_doc_ver(ver)}>Inspect version</Button>
-              </td>
-            </tr>)
-        }
-      </>
-    )
-  }
 
   return (
     <Container>
       <h3>
-        {location.state.doc_name}
+        {document?.documentName}
       </h3>
-
       <Table striped bordered hover size="sm">
         <thead>
           <tr>
             <th>
               #
             </th>
-
             <th>
               Version
             </th>
-          
             <th>
               Options
             </th>
           </tr>
         </thead>
-
         <tbody>
-          {returnVersion()}
+          {versionRows}
         </tbody>
       </Table>
     </Container>

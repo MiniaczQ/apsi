@@ -1,34 +1,41 @@
-import { FunctionComponent, useState, useEffect } from "react";
-import { useNavigate, useLocation } from 'react-router';
+import { FunctionComponent, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { useSearchParams } from 'react-router-dom';
 import { Button, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
+
 import styles from './docVer.module.css';
-import { LoginState } from './App';
-import { getVersionContent, getVersions } from './ApiCommunication';
-import DocumentVersion from "./models/DocumentVersion";
+import ApiClient from './api/ApiClient';
+import Document from './models/Document';
+import DocumentVersion from './models/DocumentVersion';
+
 
 type DocVerProps = {
-  loginState: LoginState
+  apiClient: ApiClient
 };
 
-interface DocumentVersionWithContent {
-  dv: DocumentVersion,
-  content: string
-} 
+export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
+  const navigate = useNavigate();
+  const searchParams = useSearchParams()[0];
+  const documentId = searchParams.get('documentId') ?? undefined;
+  const versionId = searchParams.get('versionId') ?? undefined;
 
-export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
-    const location = useLocation();
-    const navigate = useNavigate();
+  const [document, setDocument] = useState<Document>();
+  const [version, setVersion] = useState<DocumentVersion>();
 
-  const [doc_ver, setVersions] = useState<DocumentVersionWithContent>();
 
-    useEffect(() => {
-      getVersionContent(location.state.ver.documentId, location.state.ver.versionId, loginState.token!)
-        .then(response => setVersions({ dv: location.state.ver, content: response}))
-    }, [location.state.ver]);
+  useEffect(() => {
+    if (documentId === undefined || versionId === undefined)
+      return;
+    apiClient.getDocument(documentId)
+      .then(response => setDocument(response));
+    apiClient.getVersion(documentId, versionId)
+      .then(response => setVersion(response))
+  }, [apiClient, documentId, versionId]);
 
-    return (
+
+  return (documentId !== undefined && versionId !== undefined) ? (
     <Container>
       <Tabs
         defaultActiveKey="details"
@@ -36,30 +43,31 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
         className="mb-3"
         fill
         justify
-
       >
         <Tab eventKey="details" title="Details">
           <h4 className={styles.pblue}>
             Document name
           </h4>
           <p className={styles.textblack}>
-            {location.state.doc_name}
+            {document?.documentName}
           </p>
 
           <h5 className={styles.pblue}>
             Version
           </h5>
           <p className={styles.textblack}>
-            {doc_ver?.dv.versionName}
+            {version?.versionName}
           </p>
 
           <h5 className={styles.pblue}>
             Content
           </h5>
-          <div className={styles.textblack}>
-            {doc_ver?.content}
+          <div className={styles.textblack} style={{ whiteSpace: 'pre' }}>
+            {version?.content}
           </div>
-          <Button variant="outline-primary" onClick={() => navigate(`/versions/new?document=${doc_ver?.dv.documentId}&parentVersion=${doc_ver?.dv.versionId}&documentName=${location.state.doc_name}&parentName=${doc_ver?.dv.versionName}`)}>
+          <Button variant="outline-primary"
+            onClick={() => navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`)}
+          >
             Create New Document Version
           </Button>
         </Tab>
@@ -70,7 +78,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState }) => {
         </Tab>
       </Tabs>
     </Container>
-    )
+  ) : <></>;
 }
 
 export default DocVer;

@@ -1,20 +1,26 @@
+import { useEffect, useState } from 'react';
+import { useCookies } from 'react-cookie';
 import {
   createBrowserRouter,
   createRoutesFromElements,
   Route,
   RouterProvider,
 } from 'react-router-dom';
-import RoutingRoot from './RoutingRoot';
-import Documents from './Documents';
-import Versions from './Versions';
-import DocVer from './DocVer';
 
+import './App.css';
+import Documents from './Documents';
+import DocVer from './DocVer';
 import Login from './Login';
 import Register from './Register';
-import './App.css';
-import { useCookies } from 'react-cookie';
+import RoutingRoot from './RoutingRoot';
 import VersionCreator from './VersionCreator';
-import { useEffect, useState } from 'react';
+import Versions from './Versions';
+import ApiClient from './api/ApiClient';
+import BackendApiClient from './api/BackendApiClient';
+
+
+const API_BASE_URL = 'http://localhost:3000/api/'
+
 
 export type LoginData = {
   token: string;
@@ -78,19 +84,21 @@ function App() {
     setToken
   };
 
+  const apiClient: ApiClient = new BackendApiClient(API_BASE_URL, loginState);
+
   const router = createBrowserRouter(
     createRoutesFromElements(
       isLoggedIn ? (
-        <Route element={<RoutingRoot loginState={loginState} />}>
-          <Route index path="/DocVer" element={<DocVer loginState={loginState} />} />
-          <Route index path="/versions/new" element={<VersionCreator loginState={loginState} />} />
-          <Route index path="/versions" element={<Versions loginState={loginState} />} />
-          <Route index path="/*" element={<Documents loginState={loginState} />} />
+        <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
+          <Route index path="/DocVer" element={<DocVer apiClient={apiClient} />} />
+          <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
+          <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
+          <Route index path="/*" element={<Documents apiClient={apiClient} />} />
         </Route>
       ) : (
-        <Route element={<RoutingRoot loginState={loginState} />}>
-          <Route index path="/register" element={<Register loginState={loginState} />} />
-          <Route index path="/*" element={<Login loginState={loginState} />} />
+        <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
+          <Route index path="/register" element={<Register apiClient={apiClient} />} />
+          <Route index path="/*" element={<Login apiClient={apiClient} />} />
         </Route>
       )
     )

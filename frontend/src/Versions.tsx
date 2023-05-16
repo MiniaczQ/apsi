@@ -54,9 +54,8 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   }, [apiClient, documentId]);
 
   function compareVersions(a: DocumentVersion, b: DocumentVersion): number {
-    const aVer = new String(a.versionName);
     // MIND THE MINUS, WE WANT THE NEWEST TO APPEAR ON TOP
-    return -aVer.localeCompare(b.versionName, undefined, { numeric: true, sensitivity: 'base' });
+    return -String(a.versionName).localeCompare(b.versionName, undefined, { numeric: true, sensitivity: 'base' });
   }
 
   const versionRows = versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState }: DocumentVersion) =>

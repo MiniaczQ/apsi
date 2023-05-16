@@ -5,6 +5,7 @@ import Document from "../models/Document";
 import DocumentVersion from "../models/DocumentVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import UpdateVersion from "../models/UpdateVersion";
+import DocumentVersionMember from "../models/DocumentVersionMember";
 
 interface ApiClient {
     register: (username: string, password: string) => Promise<void>,
@@ -23,6 +24,7 @@ interface ApiClient {
     updateVersion: (documentId: string, versionId: string, data: UpdateVersion) => Promise<void>;
     deleteVersion: (documentId: string, versionId: string) => Promise<void>;
     setVersionState: (documentId: string, versionId: string, state: string) => Promise<void>;
+    getVersionMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
 
     getFiles: (documentId: string, versionId: string) => Promise<DocFile[]>;
     uploadFile: (documentId: string, versionId: string, data: File) => Promise<void>;

@@ -8,6 +8,7 @@ import UpdateVersion from "../models/UpdateVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import AuthResponse from "../models/AuthResponse";
 import DocFile from "../models/DocFile";
+import DocumentVersionMember from "../models/DocumentVersionMember";
 
 
 class BackendApiClient implements ApiClient {
@@ -160,6 +161,9 @@ class BackendApiClient implements ApiClient {
     true,
     false
   );
+  getVersionMembers = async (documentId: string, versionId: string) => await this.get(
+    `documents/${documentId}/${versionId}/members`
+  ) as DocumentVersionMember[];
 
   getFiles = async (documentId: string, versionId: string) => await this.get(
     `documents/${documentId}/${versionId}/files`,

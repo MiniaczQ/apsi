@@ -10,13 +10,16 @@ import styles from './docVer.module.css';
 import ApiClient from './api/ApiClient';
 import Document from './models/Document';
 import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
+import { DocumentVersionMemberRole } from './models/DocumentVersionMember';
+import { LoginState } from './App';
 
 
 type DocVerProps = {
+  loginState: LoginState
   apiClient: ApiClient
 };
 
-export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
+export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }) => {
   const navigate = useNavigate();
   const searchParams = useSearchParams()[0];
   const documentId = searchParams.get('documentId') ?? undefined;
@@ -24,6 +27,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
 
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
+  const [userRoles, setUserRoles] = useState<DocumentVersionMemberRole[]>([]);
 
 
   const changeStateForward: MouseEventHandler<HTMLButtonElement> = async () => {
@@ -48,12 +52,42 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
     const stateProgressionLUT: DocumentVersionStateMap<DocumentVersionState> = {
       'inProgress': 'inProgress',
       'readyForReview': 'inProgress',
-      'reviewed': 'readyForReview',
+      'reviewed': 'inProgress',
       'published': 'published'
     };
     const newState = stateProgressionLUT[version?.versionState];
     apiClient.setVersionState(documentId!, versionId!, newState)
       .then(() => setVersion({...version, versionState: newState}));
+  }
+
+  function getRolesForState(state: DocumentVersionState|undefined): DocumentVersionMemberRole[] {
+    if (state === undefined) {
+      return [];
+    }
+    const stateRoleLUT: DocumentVersionStateMap<DocumentVersionMemberRole[]> = {
+      'inProgress': ['owner', 'editor'],
+      'readyForReview': ['reviewer'],
+      'reviewed': ['owner'],
+      'published': []
+    };
+    return stateRoleLUT[state];
+  }
+
+  function getActionButtons() {
+    const newVersionButton = <>
+      <Button variant="outline-primary" onClick={() => navigateToVersionCreator(documentId!, versionId!)}>
+        Create New Document Version
+      </Button>
+    </>
+    const stateButtons = <>
+      {getNextStateActionButton(version?.versionState)}
+      {getPreviousStateActionButton(version?.versionState)}
+    </>
+
+    return <>
+      {userRoles.length > 0 ? newVersionButton : <></>}
+      {userRoles.find(role => getRolesForState(version?.versionState).includes(role)) ? stateButtons : <></>}
+    </>
   }
 
   function getNextStateActionButton(state: DocumentVersionState|undefined) {
@@ -78,7 +112,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
     const stateLUT: DocumentVersionStateMap<string> = {
       'inProgress': '',
       'readyForReview': 'Review (Decline)',
-      'reviewed': 'Mark as Needing Review',
+      'reviewed': 'Decline Publishing',
       'published': ''
     };
     return <Button variant="outline-danger" onClick={changeStateBackward} style={{ marginLeft: "1em"}}>
@@ -113,8 +147,12 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
     apiClient.getDocument(documentId)
       .then(response => setDocument(response));
     apiClient.getVersion(documentId, versionId)
-      .then(response => setVersion(response))
-  }, [apiClient, documentId, versionId]);
+      .then(response => setVersion(response));
+    apiClient.getVersionMembers(documentId, versionId)
+      .then(members => {
+        const member = members.find(member => member.userId === loginState.userId!);
+        setUserRoles(member?.roles ?? [])});
+  }, [apiClient, documentId, versionId, loginState.userId]);
 
   const showDate = (dateString: string) => new Date(dateString).toDateString();
   const navigateToVersionCreator = (documentId: string, versionId: string) =>
@@ -156,13 +194,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ apiClient }) => {
             <div className={styles.textblack} style={{ whiteSpace: 'pre' }}>
               {version?.content}
             </div>
-            <Button variant="outline-primary"
-                onClick={() => navigateToVersionCreator(documentId, versionId)}
-            >
-              Create New Document Version
-            </Button>
-            {getNextStateActionButton(version?.versionState)}
-            {getPreviousStateActionButton(version?.versionState)}
+            {getActionButtons()}
           </div>
         </Tab>
         <Tab eventKey="comments" title="Comments">

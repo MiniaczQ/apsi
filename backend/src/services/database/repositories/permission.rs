@@ -172,6 +172,31 @@ impl PermissionRepository {
         Ok(users)
     }
 
+    pub async fn get_document_version_user(
+        &self,
+        user_id: Uuid,
+        document_id: Uuid,
+        version_id: Uuid,
+    ) -> Result<PublicUserWithRoles, Box<dyn Error>> {
+        let row = self
+            .database
+            .query_one(
+                "
+                SELECT u.user_id, u.username, array_agg(r.role_id)
+                FROM user_document_version_roles r
+                JOIN users u ON r.user_id = u.user_id
+                WHERE r.user_id = $1
+                AND r.document_id = $2
+                AND r.version_id = $3
+                GROUP BY (u.user_id, u.username)
+                ",
+                &[&user_id, &document_id, &version_id],
+            )
+            .await?;
+        let user = PublicUserWithRoles::try_from(row)?;
+        Ok(user)
+    }
+
     #[allow(dead_code)]
     pub async fn does_user_have_document_version_roles(
         &self,

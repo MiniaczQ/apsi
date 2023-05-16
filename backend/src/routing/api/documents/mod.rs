@@ -1,12 +1,13 @@
 use axum::{
     extract::{FromRef, Multipart, Path},
     http::StatusCode,
+    response::IntoResponse,
     routing::{delete, get, patch, post},
     Json, Router,
 };
 use mime::Mime;
 use s3::Bucket;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -133,13 +134,38 @@ struct CreateVersionWithParentsRequest {
     parents: Vec<Uuid>,
 }
 
+enum JsonOrError<T> {
+    Json(Json<T>),
+    ErrMsg((StatusCode, &'static str)),
+    Err(StatusCode),
+}
+
+impl<T> IntoResponse for JsonOrError<T>
+where
+    T: Serialize,
+{
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            JsonOrError::Json(r) => r.into_response(),
+            JsonOrError::ErrMsg(r) => r.into_response(),
+            JsonOrError::Err(r) => r.into_response(),
+        }
+    }
+}
+
 async fn create_version(
     mut documents_repository: DocumentsRepository,
     claims: Claims,
     Path(document_id): Path<Uuid>,
     Json(data): Json<CreateVersionWithParentsRequest>,
-) -> Result<Json<DocumentVersion>, StatusCode> {
-    let version = documents_repository
+) -> JsonOrError<DocumentVersion> {
+    if data.parents.len() < 1 {
+        return JsonOrError::ErrMsg((
+            StatusCode::BAD_REQUEST,
+            "Version has to have at least 1 parent",
+        ));
+    }
+    match documents_repository
         .create_version(
             claims.user_id,
             document_id,
@@ -148,11 +174,13 @@ async fn create_version(
             data.parents,
         )
         .await
-        .map_err(|e| {
+    {
+        Ok(version) => JsonOrError::Json(Json(version)),
+        Err(e) => {
             error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
-    Ok(Json(version))
+            JsonOrError::Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn get_version(
@@ -371,6 +399,23 @@ async fn get_members(
     }
 }
 
+async fn get_member(
+    permission_repository: PermissionRepository,
+    claims: Claims,
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+) -> Result<Json<PublicUserWithRoles>, StatusCode> {
+    match permission_repository
+        .get_document_version_user(claims.user_id, document_id, version_id)
+        .await
+    {
+        Ok(user) => Ok(Json(user)),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
 async fn am_owner(
     permission_repository: PermissionRepository,
     claims: Claims,
@@ -477,6 +522,7 @@ where
         )
         // Permission
         .route("/:document_id/:version_id/members", get(get_members))
+        .route("/:document_id/:version_id/member", get(get_member))
         .route("/:document_id/:version_id/am-owner", get(am_owner))
         .route(
             "/:document_id/:version_id/grant/:user_id/:role",

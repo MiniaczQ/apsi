@@ -3,6 +3,7 @@ import { FunctionComponent, useEffect, useState } from 'react';
 import { LoginState } from './App';
 import { Container } from 'react-bootstrap';
 import { getFiles, postFiles } from './ApiCommunication';
+import { useRef } from 'react';
 
 import { useNavigate, useLocation } from 'react-router';
 import DocFile from './models/DocFile';
@@ -15,30 +16,35 @@ type AttachmentsProps = {
 export const Attachments:FunctionComponent<AttachmentsProps> = ({ loginState }) => {
     const location = useLocation();
     const [currentFile, setCurrentFile] = useState<File>();
-    const [progress, setProgress] = useState<number>(0);
     const [message, setMessage] = useState<string>("");
     const [filesInfos, setFileInfos] = useState<Array<DocFile>>([]);
+    const inputRef = useRef<any>(null);
 
     useEffect(() => {
-      getFiles(location.state.ver.documentId, location.state.ver.versionId, loginState.token! ).then((response) => {
-        setFileInfos(response)
-      });
+      loadFilesList()
     }, []);
   
+
+    const loadFilesList = () => {
+      getFiles(location.state.ver.documentId, location.state.ver.versionId, loginState.token! ).then((response) => {
+        setFileInfos(response)})
+    };
 
     const selectFile = (event: React.ChangeEvent<HTMLInputElement>) => {
         const { files } = event.target;
         const selectedFiles = files as FileList;
         setCurrentFile(selectedFiles?.[0]);
-        setProgress(0);
       };
 
     const upload = () => {
       if (!currentFile) return;
-
-      let formData = new FormData();
-      ///formData.append('asdd', currentFile).then()
-      postFiles(location.state.ver.documentId, location.state.ver.versionId, loginState.token!, formData).then(() =>setCurrentFile(undefined))
+      postFiles(location.state.ver.documentId, location.state.ver.versionId, loginState.token!, currentFile).then((response) =>{
+        loadFilesList();
+        setCurrentFile(undefined);
+        if (inputRef.current != null) {
+          inputRef.current.value = null;
+        }
+      })
     };
 
     return(
@@ -47,7 +53,7 @@ export const Attachments:FunctionComponent<AttachmentsProps> = ({ loginState }) 
           <div className="row">
             <div className="col-8">
               <label className="btn btn-default p-0">
-                <input type="file" onChange={selectFile} />
+                <input ref={inputRef} type="file" onChange={selectFile} />
               </label>
             </div>
           <div className="col-4">
@@ -60,20 +66,6 @@ export const Attachments:FunctionComponent<AttachmentsProps> = ({ loginState }) 
           </div>
         </div>
 
-        {currentFile && (
-          <div className="progress my-3">
-            <div
-              className="progress-bar progress-bar-info"
-              role="progressbar"
-              aria-valuenow={progress}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              style={{ width: progress + "%" }}
-            >
-              {progress}%
-            </div>
-          </div>
-        )}
 
         {message && (
           <div className="alert alert-secondary mt-3" role="alert">

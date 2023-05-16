@@ -21,8 +21,9 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   const documentId = searchParams.get('documentId') ?? undefined;
   const parentVersionId = searchParams.get('parentVersionId') ?? undefined;
 
-  const [_, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
+
   const [createdDocument, setCreatedDocument] = useState<CreateDocument>({
     documentName: '',
   });
@@ -32,7 +33,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     parents: [],
   });
 
-  const parentVersion = versions?.filter(version => version.versionId === parentVersionId)?.at(0);
+  const parentVersion = versions?.filter(version => version.versionId === parentVersionId)?.[0];
   const versionsMinusParent = versions?.filter(({ versionId }) => versionId !== parentVersionId);
 
 
@@ -42,18 +43,19 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     let documentPromise = apiClient.getDocument(documentId)
       .then(response => setCreatedDocument(doc => ({ ...doc, documentName: response.documentName })));
     let versionsPromise = apiClient.getVersions(documentId)
-      .then(response => {
-        setVersions(response);
-        setCreatedVersion(ver => ({
-          ...ver,
-          versionName: (Number(parentVersion?.versionName ?? 0) + 1).toString(),
-          parents: parentVersion !== undefined ? [parentVersion.versionId] : [],
-          content: parentVersion?.content ?? ''
-        }));
-      });
+      .then(response => setVersions(response));
     Promise.all([documentPromise, versionsPromise])
       .then(() => setIsLoading(false));
-  }, [apiClient, documentId, parentVersionId, parentVersion]);
+  }, [apiClient, documentId, parentVersionId]);
+
+  useEffect(() => {
+    setCreatedVersion(ver => ({
+      ...ver,
+      versionName: (Number(parentVersion?.versionName ?? 0) + 1).toString(),
+      parents: parentVersion !== undefined ? [parentVersion.versionId] : [],
+      content: parentVersion?.content ?? ''
+    }));
+  }, [parentVersion]);
 
   const parentVersionField = parentVersion !== undefined ? (
     <Form.Group className="mb-3" controlId="parentVersionName">

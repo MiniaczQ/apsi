@@ -26,6 +26,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
 
   const [createdDocument, setCreatedDocument] = useState<CreateDocument>({
     documentName: '',
+    initialVersion: {versionName: '1', content: ''}
   });
   const [createdVersion, setCreatedVersion] = useState<CreateVersion>({
     versionName: '1',
@@ -78,8 +79,9 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
     (evt.target as HTMLButtonElement).disabled = true;
     if (documentId === undefined) {
-      apiClient.createDocument(createdDocument)
-        .then(response => apiClient.createVersion(response.documentId, createdVersion))
+      let doc = createdDocument
+      doc.initialVersion.content = createdVersion.content
+      apiClient.createDocument(doc)
         .then(() => navigate('./Documents'));
     } else {
       apiClient.createVersion(documentId, createdVersion)

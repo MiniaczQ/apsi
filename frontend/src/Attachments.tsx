@@ -33,7 +33,7 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
 
   const upload = () => {
     if (!currentFile) return;
-    apiClient.uploadFiles(documentId, versionId, currentFile).then(() => {
+    apiClient.uploadFile(documentId, versionId, currentFile).then(() => {
       loadFilesList(documentId, versionId);
       setCurrentFile(undefined);
       if (inputRef.current != null) {

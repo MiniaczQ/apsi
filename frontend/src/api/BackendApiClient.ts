@@ -158,7 +158,7 @@ class BackendApiClient implements ApiClient {
   getFiles = async (documentId: string, versionId: string) => await this.get(
     `documents/${documentId}/${versionId}/files`,
   ) as DocFile[];
-  uploadFiles = async (documentId: string, versionId: string, data: File) => await this.sendFile(
+  uploadFile = async (documentId: string, versionId: string, data: File) => await this.sendFile(
     `documents/${documentId}/${versionId}/files`,
     data,
   );

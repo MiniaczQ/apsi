@@ -6,7 +6,7 @@ import Document from "../models/Document";
 import { LoginState } from "../App";
 import UpdateVersion from "../models/UpdateVersion";
 import UpdateDocument from "../models/UpdateDocument";
-import AuthResponse from "./AuthResponse";
+import AuthResponse from "../models/AuthResponse";
 
 
 class BackendApiClient implements ApiClient {

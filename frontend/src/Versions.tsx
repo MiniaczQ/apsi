@@ -1,9 +1,10 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { Table, Button, Container } from 'react-bootstrap';
+import { Table, Button, Badge, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
 import './App.css';
+import './TableStyle.css';
 import ApiClient from './api/ApiClient';
 import Document from './models/Document';
 import DocumentVersion from './models/DocumentVersion';
@@ -22,12 +23,22 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
 
 
-  function format_state(state: string): string {
+  function formatState(state: string): string {
     const stateLUT: {[index: string]: string} = {
       'inProgress': 'In Progress',
       'readyForReview': 'Ready For Review',
       'Reviewed': 'Reviewed',
       'Published': 'Published',
+    };
+    return stateLUT[state]
+  }
+
+  function getStateStyle(state: string): string {
+    const stateLUT: {[index: string]: string} = {
+      'inProgress': 'primary',
+      'readyForReview': 'danger',
+      'Reviewed': 'warning',
+      'Published': 'success',
     };
     return stateLUT[state]
   }
@@ -41,18 +52,15 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
       .then(response => { setVersions(response) });
   }, [apiClient, documentId]);
 
-  const versionRows = versions?.map(({ documentId, versionId, versionName, versionState }: DocumentVersion, index: number) =>
+  const versionRows = versions?.map(({ documentId, versionId, versionName, versionState }: DocumentVersion) =>
     <tr key={versionId}>
       <td>
-        {index + 1}
-      </td>
-      <td align="center">
         {versionName}
+        <Badge pill bg={getStateStyle(versionState)} style={{marginLeft: "1em"}}>
+          {formatState(versionState)}
+        </Badge>
       </td>
-      <td align="center">
-        {format_state(versionState)}
-      </td>
-      <td align="center">
+      <td>
         <Button variant="outline-secondary"
           onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)}
         >
@@ -72,13 +80,7 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
         <thead>
           <tr>
             <th>
-              #
-            </th>
-            <th>
               Version
-            </th>
-            <th>
-              State
             </th>
             <th>
               Options

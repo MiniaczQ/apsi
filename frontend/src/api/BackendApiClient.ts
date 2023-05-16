@@ -95,9 +95,9 @@ class BackendApiClient implements ApiClient {
   private get = async (relPath: string, authenticated = true, returnBody: 'JSON'| 'BLOB' | false = 'JSON') => {
     const getReqOptions = this.addCredentialsToRequestOptions(this.baseRequestOptions, authenticated);
     const response = await fetch(new URL(relPath, this.apiBaseUrl), getReqOptions);
-    if (returnBody == 'JSON')
+    if (returnBody === 'JSON')
       return await response.json();
-    else if (returnBody == 'BLOB')
+    else if (returnBody === 'BLOB')
       return await response.blob();
   };
 

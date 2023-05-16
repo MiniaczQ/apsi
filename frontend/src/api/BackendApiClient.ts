@@ -1,14 +1,16 @@
 import ApiClient from "./ApiClient";
+import AuthResponse from "../models/AuthResponse";
 import CreateDocument from "../models/CreateDocument";
 import CreateVersion from "../models/CreateVersion";
-import DocumentVersion from "../models/DocumentVersion";
+import DocFile from "../models/DocFile";
 import Document from "../models/Document";
+import DocumentVersion from "../models/DocumentVersion";
+import DocumentVersionMember, { DocumentVersionMemberRole } from "../models/DocumentVersionMember";
 import { LoginState } from "../App";
 import UpdateVersion from "../models/UpdateVersion";
 import UpdateDocument from "../models/UpdateDocument";
-import AuthResponse from "../models/AuthResponse";
-import DocFile from "../models/DocFile";
-import DocumentVersionMember from "../models/DocumentVersionMember";
+import User from "../models/User";
+import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 
 
 class BackendApiClient implements ApiClient {
@@ -117,6 +119,9 @@ class BackendApiClient implements ApiClient {
     this.loginState.setToken(authResponse.token);
   };
   logout = async () => this.loginState.setToken(undefined);
+  getUsers = async () => await this.get(
+    'auth/users'
+  ) as User[];
 
   getDocuments = async () => await this.get(
     'documents/documents'
@@ -124,7 +129,7 @@ class BackendApiClient implements ApiClient {
   createDocument = async (data: CreateDocument) => await this.post(
     `documents`,
     data
-  );
+  ) as DocumentWithInitialVersion;
   getDocument = async (documentId: string) => await this.get(
     `documents/${documentId}`
   ) as Document;
@@ -142,8 +147,6 @@ class BackendApiClient implements ApiClient {
   createVersion = async (documentId: string, data: CreateVersion) => await this.post(
     `documents/${documentId}`,
     data,
-    true,
-    false
   );
   getVersion = async (documentId: string, versionId: string) => await this.get(
     `documents/${documentId}/${versionId}`
@@ -179,6 +182,25 @@ class BackendApiClient implements ApiClient {
   ) as Blob;
   deleteFile = async (documentId: string, versionId: string, fileId: string) => await this.delete(
     `documents/${documentId}/${versionId}/files/${fileId}`,    
+  );
+
+  getMembers = async (documentId: string, versionId: string) => await this.get(
+    `documents/${documentId}/${versionId}/members`,
+  ) as DocumentVersionMember[];
+  getMember = async (documentId: string, versionId: string) => await this.get(
+    `documents/${documentId}/${versionId}/member`,
+  ) as DocumentVersionMember;
+  grantRole = async (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => await this.post(
+    `documents/${documentId}/${versionId}/grant/${userId}/${role}`,
+    undefined,
+    true,
+    false,
+  );
+  revokeRole = async (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => await this.post(
+    `documents/${documentId}/${versionId}/grant/${userId}/${role}`,
+    undefined,
+    true,
+    false,
   );
 
   constructor(url: string, loginState: LoginState) {

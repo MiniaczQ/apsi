@@ -9,8 +9,8 @@ import Attachments from "./Attachments";
 import styles from './docVer.module.css';
 import ApiClient from './api/ApiClient';
 import Document from './models/Document';
-import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
-import { DocumentVersionMemberRole } from './models/DocumentVersionMember';
+import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
+import DocumentVersionMember, { DocumentVersionMemberRole } from './models/DocumentVersionMember';
 import { LoginState } from './App';
 
 
@@ -27,7 +27,13 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
 
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
+  const [authorizedUsers, setAuthorizedUsers] = useState<DocumentVersionMember[]>([]);
   const [userRoles, setUserRoles] = useState<DocumentVersionMemberRole[]>([]);
+
+  const owner = authorizedUsers?.filter(user => user.roles.indexOf('owner') >= 0)?.[0];
+  const viewers = authorizedUsers?.filter(user => user.roles.indexOf('viewer') >= 0);
+  const editors = authorizedUsers?.filter(user => user.roles.indexOf('editor') >= 0);
+  const reviewers = authorizedUsers?.filter(user => user.roles.indexOf('reviewer') >= 0);
 
 
   const changeStateForward: MouseEventHandler<HTMLButtonElement> = async () => {
@@ -42,7 +48,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     };
     const newState = stateProgressionLUT[version?.versionState];
     apiClient.setVersionState(documentId!, versionId!, newState)
-      .then(() => setVersion({...version, versionState: newState}));
+      .then(() => setVersion({ ...version, versionState: newState }));
   }
 
   const changeStateBackward: MouseEventHandler<HTMLButtonElement> = async () => {
@@ -57,10 +63,10 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     };
     const newState = stateProgressionLUT[version?.versionState];
     apiClient.setVersionState(documentId!, versionId!, newState)
-      .then(() => setVersion({...version, versionState: newState}));
+      .then(() => setVersion({ ...version, versionState: newState }));
   }
 
-  function getRolesForState(state: DocumentVersionState|undefined): DocumentVersionMemberRole[] {
+  function getRolesForState(state: DocumentVersionState | undefined): DocumentVersionMemberRole[] {
     if (state === undefined) {
       return [];
     }
@@ -90,7 +96,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     </>
   }
 
-  function getNextStateActionButton(state: DocumentVersionState|undefined) {
+  function getNextStateActionButton(state: DocumentVersionState | undefined) {
     if (state === undefined || state === 'published') {
       return <></>
     }
@@ -100,12 +106,12 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'reviewed': 'Publish',
       'published': ''
     };
-    return <Button variant="outline-success" onClick={changeStateForward} style={{ marginLeft: "1em"}}>
+    return <Button variant="outline-success" onClick={changeStateForward} style={{ marginLeft: "1em" }}>
       {stateLUT[state]}
     </Button>
   }
 
-  function getPreviousStateActionButton(state: DocumentVersionState|undefined) {
+  function getPreviousStateActionButton(state: DocumentVersionState | undefined) {
     if (state === undefined || state === 'inProgress' || state === 'published') {
       return <></>
     }
@@ -115,12 +121,12 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'reviewed': 'Decline Publishing',
       'published': ''
     };
-    return <Button variant="outline-danger" onClick={changeStateBackward} style={{ marginLeft: "1em"}}>
+    return <Button variant="outline-danger" onClick={changeStateBackward} style={{ marginLeft: "1em" }}>
       {stateLUT[state]}
     </Button>
   }
 
-  function getStateBadge(state: DocumentVersionState|undefined) {
+  function getStateBadge(state: DocumentVersionState | undefined) {
     if (state === undefined) {
       return <></>
     }
@@ -136,7 +142,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'reviewed': 'warning',
       'published': 'success',
     };
-    return <Badge pill bg={stateStyleLUT[state]} style={{marginLeft: "1em"}}>
+    return <Badge pill bg={stateStyleLUT[state]} style={{ marginLeft: "1em" }}>
       {stateNameLUT[state]}
     </Badge>
   }
@@ -147,12 +153,15 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     apiClient.getDocument(documentId)
       .then(response => setDocument(response));
     apiClient.getVersion(documentId, versionId)
-      .then(response => setVersion(response));
-    apiClient.getVersionMembers(documentId, versionId)
-      .then(members => {
-        const member = members.find(member => member.userId === loginState.userId!);
-        setUserRoles(member?.roles ?? [])});
-  }, [apiClient, documentId, versionId, loginState.userId]);
+      .then(response => setVersion(response))
+    apiClient.getMembers(documentId, versionId)
+      .then(response => setAuthorizedUsers(response));
+  }, [apiClient, documentId, versionId]);
+
+  useEffect(() => {
+    const member = authorizedUsers.find(member => member.userId === loginState.userId!);
+    setUserRoles(member?.roles ?? []);
+  }, [loginState.userId, authorizedUsers]);
 
   const showDate = (dateString: string) => new Date(dateString).toDateString();
   const navigateToVersionCreator = (documentId: string, versionId: string) =>
@@ -183,11 +192,52 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
               {getStateBadge(version?.versionState)}
             </p>
             <h5 className={styles.pblue}>
-                Creation date
+              Creation date
             </h5>
             <p className={styles.textblack}>
               {showDate(version?.createdAt ?? '')}
             </p>
+            <h5 className={styles.pblue}>
+              Roles
+            </h5>
+            <div>
+              <h6 className={styles.pblue}>
+                Owner
+              </h6>
+              <p className={styles.textblack}>
+                {owner?.username}
+              </p>
+              <h6 className={styles.pblue}>
+                Viewers
+              </h6>
+              <ul className={styles.textblack}>
+                {viewers?.map(viewer => (
+                  <li key={viewer.userId}>
+                    {viewer.username}
+                  </li>
+                ))}
+              </ul>
+              <h6 className={styles.pblue}>
+                Editors
+              </h6>
+              <ul className={styles.textblack}>
+                {editors?.map(editor => (
+                  <li key={editor.userId}>
+                    {editor.username}
+                  </li>
+                ))}
+              </ul>
+              <h6 className={styles.pblue}>
+                Reviewers
+              </h6>
+              <ul className={styles.textblack}>
+                {reviewers?.map(reviewer => (
+                  <li key={reviewer.userId}>
+                    {reviewer.username}
+                  </li>
+                ))}
+              </ul>
+            </div>
             <h5 className={styles.pblue}>
               Content
             </h5>
@@ -195,8 +245,8 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
               {version?.content}
             </div>
             {getActionButtons()}
-          </div>
-        </Tab>
+          </div >
+        </Tab >
         <Tab eventKey="comments" title="Comments">
         </Tab>
         <Tab eventKey="files" title="File Attachments">
@@ -206,8 +256,8 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
         </Tab>
         <Tab eventKey="future" title="Derived Versions" disabled>
         </Tab>
-      </Tabs>
-    </Container>
+      </Tabs >
+    </Container >
   ) : <></>;
 }
 

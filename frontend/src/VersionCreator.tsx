@@ -2,12 +2,14 @@ import { FunctionComponent, useEffect, useState } from 'react';
 import { Button, Col, Form, ListGroup, Row, Tab } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
+import Select from 'react-select';
 
 import { LoginState } from './App';
 import ApiClient from './api/ApiClient';
 import CreateDocument from './models/CreateDocument';
 import CreateVersion from './models/CreateVersion';
 import DocumentVersion from './models/DocumentVersion';
+import User from './models/User';
 
 
 type VersionCreatorProps = {
@@ -23,29 +25,38 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
 
   const [, setIsLoading] = useState(true);
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [createdDocument, setCreatedDocument] = useState<CreateDocument>({
     documentName: '',
-    initialVersion: {versionName: '1', content: ''}
+    initialVersion: { versionName: '1', content: '' }
   });
   const [createdVersion, setCreatedVersion] = useState<CreateVersion>({
     versionName: '1',
     content: '',
     parents: [],
   });
+  const [viewers, setViewers] = useState<string[]>([]);
+  const [editors, setEditors] = useState<string[]>([]);
+  const [reviewers, setReviewers] = useState<string[]>([]);
 
   const parentVersion = versions?.filter(version => version.versionId === parentVersionId)?.[0];
   const versionsMinusParent = versions?.filter(({ versionId }) => versionId !== parentVersionId);
+  const userOptions = users?.map(user => ({ value: user.userId, label: user.username }));
 
 
   useEffect(() => {
-    if (documentId === undefined)
-      return;
-    let documentPromise = apiClient.getDocument(documentId)
-      .then(response => setCreatedDocument(doc => ({ ...doc, documentName: response.documentName })));
-    let versionsPromise = apiClient.getVersions(documentId)
-      .then(response => setVersions(response));
-    Promise.all([documentPromise, versionsPromise])
+    let usersPromise = apiClient.getUsers()
+      .then(response => setUsers(response));
+    let promises = [usersPromise];
+    if (documentId !== undefined) {
+      let documentPromise = apiClient.getDocument(documentId)
+        .then(response => setCreatedDocument(doc => ({ ...doc, documentName: response.documentName })));
+      let versionsPromise = apiClient.getVersions(documentId)
+        .then(response => setVersions(response));
+      promises = [...promises, documentPromise, versionsPromise];
+    }
+    Promise.all(promises)
       .then(() => setIsLoading(false));
   }, [apiClient, documentId, parentVersionId]);
 
@@ -78,15 +89,21 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
 
   const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
     (evt.target as HTMLButtonElement).disabled = true;
+    let creationPromise;
     if (documentId === undefined) {
       let doc = createdDocument
       doc.initialVersion.content = createdVersion.content
-      apiClient.createDocument(doc)
-        .then(() => navigate('./Documents'));
+      creationPromise = apiClient.createDocument(doc)
+        .then(response => response.initialVersion);
     } else {
-      apiClient.createVersion(documentId, createdVersion)
-        .then(() => navigate('./Documents'));
+      creationPromise = apiClient.createVersion(documentId, createdVersion);
     }
+    creationPromise.then(version => {
+      viewers?.forEach(viewer => apiClient.grantRole(version.documentId, version.versionId, viewer, 'viewer'));
+      editors?.forEach(editor => apiClient.grantRole(version.documentId, version.versionId, editor, 'editor'));
+      reviewers?.forEach(reviewer => apiClient.grantRole(version.documentId, version.versionId, reviewer, 'reviewer'));
+      navigate(`./Versions?documentId=${version.documentId}`);
+    });
   };
 
   const mergedVersionsField = parentVersionId !== undefined ? (
@@ -139,9 +156,15 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
           placeholder="Enter document name"
         />
       </Form.Group>
-      <Form.Group className="mb-3" controlId="author">
+      <Form.Group className="mb-3" controlId="roles">
         <Form.Label>Version owner</Form.Label>
-        <Form.Control disabled type="text" value={loginState.username} />
+        <p>{loginState.username}</p>
+        <Form.Label>Viewers</Form.Label>
+        <Select isMulti options={userOptions} onChange={newValue => setViewers(newValue.map(x => x.value))} />
+        <Form.Label>Editors</Form.Label>
+        <Select isMulti options={userOptions} onChange={newValue => setEditors(newValue.map(x => x.value))} />
+        <Form.Label>Reviewers</Form.Label>
+        <Select isMulti options={userOptions} onChange={newValue => setReviewers(newValue.map(x => x.value))} />
       </Form.Group>
       {parentVersionField}
       {mergedVersionsField}

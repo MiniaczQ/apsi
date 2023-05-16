@@ -99,7 +99,6 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
       creationPromise = apiClient.createVersion(documentId, createdVersion);
     }
     creationPromise.then(version => {
-      console.log(version);
       viewers?.forEach(viewer => apiClient.grantRole(version.documentId, version.versionId, viewer, 'viewer'));
       editors?.forEach(editor => apiClient.grantRole(version.documentId, version.versionId, editor, 'editor'));
       reviewers?.forEach(reviewer => apiClient.grantRole(version.documentId, version.versionId, reviewer, 'reviewer'));

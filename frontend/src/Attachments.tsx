@@ -1,10 +1,9 @@
-import { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
-import { Container } from 'react-bootstrap';
+import { FunctionComponent, useEffect, useRef, useState } from 'react';
+import { Container, Button} from 'react-bootstrap';
 
 import './App.css';
 import ApiClient from './api/ApiClient';
 import DocFile from './models/DocFile';
-import {Button} from 'react-bootstrap';
 
 type AttachmentsProps = {
   apiClient: ApiClient,

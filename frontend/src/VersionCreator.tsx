@@ -3,7 +3,6 @@ import { Button, Col, Form, ListGroup, Row, Tab } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 import Select from 'react-select';
-
 import { LoginState } from './App';
 import ApiClient from './api/ApiClient';
 import CreateDocument from './models/CreateDocument';
@@ -90,12 +89,26 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     return version + '.1'
   }
 
+  const returnVersion = (version: string) =>{
+    if(checkReturnFromSubversion(version))
+      return 'None'
+    else{
+      let index = version.lastIndexOf('.');
+      return nextVersion(version.substring(0, index))
+    }
+  }
+
+  const checkReturnFromSubversion = (version: string) =>{
+    return version.lastIndexOf('.') === -1 ? true : false
+  }
+
   const parentVersionField = parentVersion !== undefined ? (
     <Form.Group className="mb-3" controlId="parentVersionName">
       <Form.Label>Parent version</Form.Label>
       <Form.Control disabled type="text" value={parentVersion.versionName} />
       <div style={{marginTop:10}} onChange={onChangeValue} >
-        <input  type="radio" value={nextVersion(parentVersion.versionName)} name="version" /> Next version: {nextVersion(parentVersion.versionName)}
+        {!checkReturnFromSubversion(parentVersion.versionName) ? <><input type="radio" value={returnVersion(parentVersion.versionName)} name="version"/> Return from subversion as: {returnVersion(parentVersion.versionName)}</> : <></>}
+        <input style={{marginLeft:20}} type="radio" value={nextVersion(parentVersion.versionName)} name="version" /> Next version: {nextVersion(parentVersion.versionName)}
         <input style={{marginLeft:20}} type="radio" value={subVersion(parentVersion.versionName)} name="version" /> Subversion: {subVersion(parentVersion.versionName)} 
       </div>
     </Form.Group>

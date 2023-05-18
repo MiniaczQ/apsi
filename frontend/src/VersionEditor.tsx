@@ -109,6 +109,20 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
       });
   };
 
+  const getSelects = () => {
+    console.log('userOptions', userOptions);
+    if ((userOptions?.length ?? 0) === 0 || (originalMembers?.length ?? 0) === 0)
+      return undefined;
+    return (<>
+      <Form.Label>Viewers</Form.Label>
+      <Select isMulti defaultValue={originalViewersOptions} options={userOptions} onChange={newValue => setViewers(newValue.map(x => x.value))} />
+      <Form.Label>Editors</Form.Label>
+      <Select isMulti defaultValue={originalEditorsOptions} options={userOptions} onChange={newValue => setEditors(newValue.map(x => x.value))} />
+      <Form.Label>Reviewers</Form.Label>
+      <Select isMulti defaultValue={originalReviewersOptions} options={userOptions} onChange={newValue => setReviewers(newValue.map(x => x.value))} />
+    </>);
+  };
+
 
   return (
     <>
@@ -120,12 +134,7 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
       <Form.Group className="mb-3" controlId="roles">
         <Form.Label>Version owner</Form.Label>
         <p>{loginState.username}</p>
-        <Form.Label>Viewers</Form.Label>
-        <Select isMulti defaultValue={originalViewersOptions} options={userOptions} onChange={newValue => setViewers(newValue.map(x => x.value))} />
-        <Form.Label>Editors</Form.Label>
-        <Select isMulti defaultValue={originalEditorsOptions} options={userOptions} onChange={newValue => setEditors(newValue.map(x => x.value))} />
-        <Form.Label>Reviewers</Form.Label>
-        <Select isMulti defaultValue={originalReviewersOptions} options={userOptions} onChange={newValue => setReviewers(newValue.map(x => x.value))} />
+        {getSelects()}
       </Form.Group>
       <Form.Group className="mb-3" controlId="content">
         <Form.Label>Content</Form.Label>

@@ -23,7 +23,6 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   const documentId = searchParams.get('documentId') ?? undefined;
   const parentVersionId = searchParams.get('parentVersionId') ?? undefined;
 
-
   const [, setIsLoading] = useState(true);
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
   const [users, setUsers] = useState<User[]>([]);

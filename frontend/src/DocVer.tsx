@@ -27,6 +27,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
 
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
+  const [versions, setVersions] = useState<DocumentVersion[]>([]);
   const [authorizedUsers, setAuthorizedUsers] = useState<DocumentVersionMember[]>([]);
   const [userRoles, setUserRoles] = useState<DocumentVersionMemberRole[]>([]);
 
@@ -165,7 +166,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     apiClient.getDocument(documentId)
       .then(response => setDocument(response));
     apiClient.getVersion(documentId, versionId)
-      .then(response => setVersion(response))
+      .then(response => setVersion(response));
+    apiClient.getVersions(documentId)
+      .then(response => setVersions(response));
     apiClient.getMembers(documentId, versionId)
       .then(response => setAuthorizedUsers(response));
   }, [apiClient, documentId, versionId]);
@@ -260,9 +263,11 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
         <Tab eventKey="files" title="File Attachments">
           <Attachments apiClient={apiClient} documentId={documentId} versionId={versionId} />
         </Tab>
-        <Tab eventKey="past" title="Past Versions" disabled>
+        <Tab eventKey="past" title="Parent Versions">
+          {version?.parents?.map(versionId => <p key={versionId}>{versions?.find(version => version.versionId === versionId)?.versionName}</p>)}
         </Tab>
-        <Tab eventKey="future" title="Derived Versions" disabled>
+        <Tab eventKey="future" title="Descendant Versions">
+          {version?.children?.map(versionId => <p key={versionId}>{versions?.find(version => version.versionId === versionId)?.versionName}</p>)}
         </Tab>
       </Tabs >
     </Container >

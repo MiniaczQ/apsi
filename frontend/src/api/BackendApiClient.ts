@@ -201,7 +201,7 @@ class BackendApiClient implements ApiClient {
     false,
   );
   revokeRole = async (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => await this.post(
-    `documents/${documentId}/${versionId}/grant/${userId}/${role}`,
+    `documents/${documentId}/${versionId}/revoke/${userId}/${role}`,
     undefined,
     true,
     false,

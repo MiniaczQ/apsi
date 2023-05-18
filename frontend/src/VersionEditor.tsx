@@ -50,12 +50,6 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   const originalReviewersOptions = userOptions?.filter(option => originalReviewers.includes(option.value));
 
   useEffect(() => {
-    console.log('viewers', originalViewers, viewers);
-    console.log('editors', originalEditors, editors);
-    console.log('reviewers', originalReviewers, reviewers);
-  }, [originalViewers, originalEditors, originalReviewers, viewers, editors, reviewers]);
-
-  useEffect(() => {
     let usersPromise = apiClient.getUsers()
       .then(response => setUsers(response));
     let documentPromise = apiClient.getDocument(documentId!)
@@ -63,10 +57,7 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
     let versionsPromise = apiClient.getVersions(documentId!)
       .then(response => setVersions(response));
     let membersPromise = apiClient.getMembers(documentId!, versionId!)
-      .then(response => {
-        console.log(response);
-        setOriginalMembers(response);
-      });
+      .then(response => setOriginalMembers(response));
     Promise.all([usersPromise, documentPromise, versionsPromise, membersPromise])
       .then(() => setIsLoading(false));
   }, [apiClient, documentId, versionId]);
@@ -100,8 +91,6 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
         ].forEach(([original, current], index) => {
           const newMembers = current.filter(member => !original.includes(member));
           const removedMembers = original.filter(member => !current.includes(member));
-          console.log('original/current', original, current);
-          console.log('new/removed', newMembers, removedMembers);
           newMembers.forEach(member => apiClient.grantRole(documentId, versionId, member, roles[index]));
           removedMembers.forEach(member => apiClient.revokeRole(documentId, versionId, member, roles[index]));
         });
@@ -110,7 +99,6 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   };
 
   const getSelects = () => {
-    console.log('userOptions', userOptions);
     if ((userOptions?.length ?? 0) === 0 || (originalMembers?.length ?? 0) === 0)
       return undefined;
     return (<>

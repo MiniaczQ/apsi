@@ -213,41 +213,17 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
             </h5>
             <div>
               <h6 className={styles.pblue}>
-                Owner
+                Owner: <span className={styles.textblack}>{owner?.username}</span>
               </h6>
-              <p className={styles.textblack}>
-                {owner?.username}
-              </p>
               <h6 className={styles.pblue}>
-                Viewers
+                Viewers: <span className={styles.textblack}>{viewers?.map(viewer => viewer.username)?.join(', ')}</span>
               </h6>
-              <ul className={styles.textblack}>
-                {viewers?.map(viewer => (
-                  <li key={viewer.userId}>
-                    {viewer.username}
-                  </li>
-                ))}
-              </ul>
               <h6 className={styles.pblue}>
-                Editors
+                Editors: <span className={styles.textblack}>{editors?.map(editor => editor.username)?.join(', ')}</span>
               </h6>
-              <ul className={styles.textblack}>
-                {editors?.map(editor => (
-                  <li key={editor.userId}>
-                    {editor.username}
-                  </li>
-                ))}
-              </ul>
               <h6 className={styles.pblue}>
-                Reviewers
+                Reviewers: <span className={styles.textblack}>{reviewers?.map(reviewer => reviewer.username)?.join(', ')}</span>
               </h6>
-              <ul className={styles.textblack}>
-                {reviewers?.map(reviewer => (
-                  <li key={reviewer.userId}>
-                    {reviewer.username}
-                  </li>
-                ))}
-              </ul>
             </div>
             <h5 className={styles.pblue}>
               Content

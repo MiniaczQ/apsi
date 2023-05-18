@@ -72,12 +72,14 @@ async fn get_documents(
     }
 }
 
+#[allow(unused_variables, unreachable_code)]
 async fn update_document(
     documents_repository: DocumentsRepository,
     _: Claims,
     Path(document_id): Path<Uuid>,
     Json(update): Json<UpdateDocumentRequest>,
 ) -> StatusCode {
+    return StatusCode::IM_A_TEAPOT;
     match documents_repository
         .update_document(document_id, update.document_name)
         .await
@@ -91,11 +93,13 @@ async fn update_document(
     }
 }
 
+#[allow(unused_variables, unreachable_code)]
 async fn delete_document(
     documents_repository: DocumentsRepository,
     _: Claims,
     Path(document_id): Path<Uuid>,
 ) -> StatusCode {
+    return StatusCode::IM_A_TEAPOT;
     match documents_repository.delete_document(document_id).await {
         Ok(true) => StatusCode::OK,
         Ok(false) => StatusCode::NOT_FOUND,

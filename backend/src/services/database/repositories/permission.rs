@@ -128,7 +128,6 @@ impl PermissionRepository {
         Ok(user)
     }
 
-    #[allow(dead_code)]
     pub async fn does_user_have_document_version_roles(
         &self,
         user_id: Uuid,
@@ -140,8 +139,14 @@ impl PermissionRepository {
         let row = self
             .database
             .query_one(
-                "SELECT count(*) FROM user_document_version_roles WHERE user_id = $1 AND document_id = $2 AND version_id = $3 AND document_version_role_id IN $4",
-                &[&user_id, &document_id, &version_id,  &roles],
+                "
+                SELECT count(*)
+                FROM user_document_version_roles
+                WHERE user_id = $1
+                AND document_id = $2
+                AND version_id = $3
+                AND role_id = ANY($4)",
+                &[&user_id, &document_id, &version_id, &roles],
             )
             .await?;
         let count: i64 = row.try_get(0)?;

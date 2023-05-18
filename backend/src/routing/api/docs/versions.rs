@@ -9,16 +9,22 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::version::{
-        CreateInitialOrUpdateVersionRequest, CreateVersionWithParentsRequest, DocumentVersion,
+    models::{
+        role::DocumentVersionRole,
+        version::{
+            CreateInitialOrUpdateVersionRequest, CreateVersionWithParentsRequest, DocumentVersion,
+        },
     },
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
-            repositories::documents::{DocumentsRepository, RepoError},
+            repositories::{
+                documents::{DocumentsRepository, RepoError},
+                permission::PermissionRepository,
+            },
             DbPool,
         },
-        util::Res3,
+        util::{Res2, Res3},
     },
 };
 
@@ -89,28 +95,55 @@ async fn get_versions(
 
 async fn update_version(
     documents_repository: DocumentsRepository,
-    _: Claims,
+    permission_repository: PermissionRepository,
+    claims: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
     Json(data): Json<CreateInitialOrUpdateVersionRequest>,
-) -> StatusCode {
+) -> Res2 {
+    match permission_repository
+        .does_user_have_document_version_roles(
+            claims.user_id,
+            document_id,
+            version_id,
+            &[DocumentVersionRole::Owner, DocumentVersionRole::Editor],
+        )
+        .await
+    {
+        Ok(true) => {}
+        Ok(false) => {
+            return Res2::Msg((
+                StatusCode::FORBIDDEN,
+                "User does not have permission to perform update",
+            ));
+        }
+        Err(error) => {
+            error!(
+                { error = error },
+                "Error during version update permission check"
+            );
+            return Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    }
     match documents_repository
         .update_version(document_id, version_id, data.version_name, data.content)
         .await
     {
-        Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::NOT_FOUND,
-        Err(e) => {
-            error!("{}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
+        Ok(true) => Res2::NoMsg(StatusCode::OK),
+        Ok(false) => Res2::NoMsg(StatusCode::BAD_REQUEST),
+        Err(error) => {
+            error!({ error = error }, "Error during version update");
+            Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
 }
 
+#[allow(unused_variables, unreachable_code)]
 async fn delete_version(
     documents_repository: DocumentsRepository,
     _: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
 ) -> StatusCode {
+    return StatusCode::IM_A_TEAPOT;
     match documents_repository
         .delete_version(document_id, version_id)
         .await

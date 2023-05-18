@@ -23,6 +23,7 @@ pub enum DocumentVersionRole {
     Viewer = 1,
     Editor = 2,
     Reviewer = 3,
+    Publisher = 4,
 }
 
 // TODO: handle a very unlikely case of invalid value properly
@@ -35,6 +36,7 @@ impl TryFrom<i16> for DocumentVersionRole {
             1 => Ok(Self::Viewer),
             2 => Ok(Self::Editor),
             3 => Ok(Self::Reviewer),
+            4 => Ok(Self::Publisher),
             _ => unreachable!(),
         }
     }

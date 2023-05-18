@@ -353,10 +353,17 @@ impl DocumentsRepository {
             .execute(
                 "
                 UPDATE document_versions
-                SET version_name = $3, content = $4
-                WHERE document_id = $1
-                AND version_id = $2",
-                &[&document_id, &version_id, &version_name, &content],
+                SET version_name = $1, content = $2
+                WHERE document_id = $3
+                AND version_id = $4
+                AND version_state = $5",
+                &[
+                    &version_name,
+                    &content,
+                    &document_id,
+                    &version_id,
+                    &i16::from(DocumentVersionState::InProgress),
+                ],
             )
             .await?;
         Ok(updated == 1)

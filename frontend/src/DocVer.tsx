@@ -27,6 +27,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
 
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
+  const [versions, setVersions] = useState<DocumentVersion[]>([]);
   const [authorizedUsers, setAuthorizedUsers] = useState<DocumentVersionMember[]>([]);
   const [userRoles, setUserRoles] = useState<DocumentVersionMemberRole[]>([]);
 
@@ -165,7 +166,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     apiClient.getDocument(documentId)
       .then(response => setDocument(response));
     apiClient.getVersion(documentId, versionId)
-      .then(response => setVersion(response))
+      .then(response => setVersion(response));
+    apiClient.getVersions(documentId)
+      .then(response => setVersions(response));
     apiClient.getMembers(documentId, versionId)
       .then(response => setAuthorizedUsers(response));
   }, [apiClient, documentId, versionId]);
@@ -210,41 +213,17 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
             </h5>
             <div>
               <h6 className={styles.pblue}>
-                Owner
+                Owner: <span className={styles.textblack}>{owner?.username}</span>
               </h6>
-              <p className={styles.textblack}>
-                {owner?.username}
-              </p>
               <h6 className={styles.pblue}>
-                Viewers
+                Viewers: <span className={styles.textblack}>{viewers?.map(viewer => viewer.username)?.join(', ')}</span>
               </h6>
-              <ul className={styles.textblack}>
-                {viewers?.map(viewer => (
-                  <li key={viewer.userId}>
-                    {viewer.username}
-                  </li>
-                ))}
-              </ul>
               <h6 className={styles.pblue}>
-                Editors
+                Editors: <span className={styles.textblack}>{editors?.map(editor => editor.username)?.join(', ')}</span>
               </h6>
-              <ul className={styles.textblack}>
-                {editors?.map(editor => (
-                  <li key={editor.userId}>
-                    {editor.username}
-                  </li>
-                ))}
-              </ul>
               <h6 className={styles.pblue}>
-                Reviewers
+                Reviewers: <span className={styles.textblack}>{reviewers?.map(reviewer => reviewer.username)?.join(', ')}</span>
               </h6>
-              <ul className={styles.textblack}>
-                {reviewers?.map(reviewer => (
-                  <li key={reviewer.userId}>
-                    {reviewer.username}
-                  </li>
-                ))}
-              </ul>
             </div>
             <h5 className={styles.pblue}>
               Content
@@ -260,9 +239,11 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
         <Tab eventKey="files" title="File Attachments">
           <Attachments apiClient={apiClient} documentId={documentId} versionId={versionId} />
         </Tab>
-        <Tab eventKey="past" title="Past Versions" disabled>
+        <Tab eventKey="past" title="Parent Versions">
+          {version?.parents?.map(versionId => <p key={versionId}>{versions?.find(version => version.versionId === versionId)?.versionName}</p>)}
         </Tab>
-        <Tab eventKey="future" title="Derived Versions" disabled>
+        <Tab eventKey="future" title="Descendant Versions">
+          {version?.children?.map(versionId => <p key={versionId}>{versions?.find(version => version.versionId === versionId)?.versionName}</p>)}
         </Tab>
       </Tabs >
     </Container >

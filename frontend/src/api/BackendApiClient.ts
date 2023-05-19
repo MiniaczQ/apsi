@@ -95,7 +95,7 @@ class BackendApiClient implements ApiClient {
       return await response.json();
   };
 
-  private get = async (relPath: string, authenticated = true, returnBody: 'JSON'| 'BLOB' | false = 'JSON') => {
+  private get = async (relPath: string, authenticated = true, returnBody: 'JSON' | 'BLOB' | false = 'JSON') => {
     const getReqOptions = this.addCredentialsToRequestOptions(this.baseRequestOptions, authenticated);
     const response = await fetch(new URL(relPath, this.apiBaseUrl), getReqOptions);
     if (returnBody === 'JSON')
@@ -135,7 +135,9 @@ class BackendApiClient implements ApiClient {
   ) as Document;
   updateDocument = async (documentId: string, data: UpdateDocument) => await this.patch(
     `documents/${documentId}`,
-    data
+    data,
+    true,
+    false
   );
   deleteDocument = async (documentId: string) => await this.delete(
     `documents/${documentId}`
@@ -153,7 +155,9 @@ class BackendApiClient implements ApiClient {
   ) as DocumentVersion;
   updateVersion = async (documentId: string, versionId: string, data: UpdateVersion) => await this.patch(
     `documents/${documentId}/${versionId}`,
-    data
+    data,
+    true,
+    false
   );
   deleteVersion = async (documentId: string, versionId: string) => await this.delete(
     `documents/${documentId}/${versionId}`
@@ -181,7 +185,7 @@ class BackendApiClient implements ApiClient {
     'BLOB'
   ) as Blob;
   deleteFile = async (documentId: string, versionId: string, fileId: string) => await this.delete(
-    `documents/${documentId}/${versionId}/files/${fileId}`,    
+    `documents/${documentId}/${versionId}/files/${fileId}`,
   );
 
   getMembers = async (documentId: string, versionId: string) => await this.get(
@@ -197,7 +201,7 @@ class BackendApiClient implements ApiClient {
     false,
   );
   revokeRole = async (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => await this.post(
-    `documents/${documentId}/${versionId}/grant/${userId}/${role}`,
+    `documents/${documentId}/${versionId}/revoke/${userId}/${role}`,
     undefined,
     true,
     false,

@@ -17,6 +17,7 @@ import VersionCreator from './VersionCreator';
 import Versions from './Versions';
 import ApiClient from './api/ApiClient';
 import BackendApiClient from './api/BackendApiClient';
+import VersionEditor from './VersionEditor';
 
 
 const API_BASE_URL = 'http://localhost:3000/api/'
@@ -92,6 +93,7 @@ function App() {
         <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
           <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
+          <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
           <Route index path="/*" element={<Documents apiClient={apiClient} />} />
         </Route>

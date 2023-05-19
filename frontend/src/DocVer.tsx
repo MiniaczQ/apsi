@@ -79,21 +79,33 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     return stateRoleLUT[state];
   }
 
+  const showDate = (dateString: string) => new Date(dateString).toDateString();
+  const navigateToVersionCreator = (documentId: string, versionId: string) =>
+    navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`);
+  const navigateToVersionEditor = (documentId: string, versionId: string) =>
+    navigate(`/versions/edit?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`);
+
   function getActionButtons() {
-    const newVersionButton = <>
+    const newVersionButton = (
       <Button variant="outline-primary" onClick={() => navigateToVersionCreator(documentId!, versionId!)}>
         Create New Document Version
       </Button>
-    </>
-    const stateButtons = <>
+    );
+    const editVersionButton = (
+      <Button className="ms-2" variant="outline-primary" onClick={() => navigateToVersionEditor(documentId!, versionId!)}>
+        Modify
+      </Button>
+    );
+    const stateButtons = (<>
       {getNextStateActionButton(version?.versionState)}
       {getPreviousStateActionButton(version?.versionState)}
-    </>
+    </>);
 
-    return <>
+    return (<>
       {userRoles.length > 0 ? newVersionButton : <></>}
+      {(userRoles.includes('editor') || userRoles.includes('owner')) ? editVersionButton : <></>}
       {userRoles.find(role => getRolesForState(version?.versionState).includes(role)) ? stateButtons : <></>}
-    </>
+    </>);
   }
 
   function getNextStateActionButton(state: DocumentVersionState | undefined) {
@@ -162,10 +174,6 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     const member = authorizedUsers.find(member => member.userId === loginState.userId!);
     setUserRoles(member?.roles ?? []);
   }, [loginState.userId, authorizedUsers]);
-
-  const showDate = (dateString: string) => new Date(dateString).toDateString();
-  const navigateToVersionCreator = (documentId: string, versionId: string) =>
-    navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`);
 
   return (documentId !== undefined && versionId !== undefined) ? (
     <Container>

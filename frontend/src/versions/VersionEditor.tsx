@@ -4,13 +4,13 @@ import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 import Select from 'react-select';
 
-import { LoginState } from './App';
-import ApiClient from './api/ApiClient';
-import Document from './models/Document';
-import DocumentVersion from './models/DocumentVersion';
-import DocumentVersionMember, { DocumentVersionMemberRole } from './models/DocumentVersionMember';
-import UpdateVersion from './models/UpdateVersion';
-import User from './models/User';
+import { LoginState } from '../App';
+import ApiClient from '../api/ApiClient';
+import Document from '../models/Document';
+import DocumentVersion from '../models/DocumentVersion';
+import DocumentVersionMember, { DocumentVersionMemberRole } from '../models/DocumentVersionMember';
+import UpdateVersion from '../models/UpdateVersion';
+import User from '../models/User';
 
 
 type VersionEditorProps = {

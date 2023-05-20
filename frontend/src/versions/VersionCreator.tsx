@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 import Select from 'react-select';
 
-import { LoginState } from './App';
-import ApiClient from './api/ApiClient';
-import CreateDocument from './models/CreateDocument';
-import CreateVersion from './models/CreateVersion';
-import DocumentVersion from './models/DocumentVersion';
-import User from './models/User';
+import { LoginState } from '../App';
+import ApiClient from '../api/ApiClient';
+import CreateDocument from '../models/CreateDocument';
+import CreateVersion from '../models/CreateVersion';
+import DocumentVersion from '../models/DocumentVersion';
+import User from '../models/User';
 
 
 type VersionCreatorProps = {

@@ -8,16 +8,16 @@ import {
 } from 'react-router-dom';
 
 import './App.css';
-import Documents from './Documents';
-import DocVer from './DocVer';
-import Login from './Login';
-import Register from './Register';
+import Documents from './documents/Documents';
+import DocVer from './versions/DocVer';
+import Login from './accounts/Login';
+import Register from './accounts/Register';
 import RoutingRoot from './RoutingRoot';
-import VersionCreator from './VersionCreator';
-import Versions from './Versions';
+import VersionCreator from './versions/VersionCreator';
+import Versions from './versions/Versions';
 import ApiClient from './api/ApiClient';
 import BackendApiClient from './api/BackendApiClient';
-import VersionEditor from './VersionEditor';
+import VersionEditor from './versions/VersionEditor';
 
 
 const API_BASE_URL = 'http://localhost:3000/api/'

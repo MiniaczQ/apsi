@@ -5,13 +5,13 @@ import { Button, Badge, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 
-import Attachments from "./Attachments";
+import Attachments from "../attachments/Attachments";
 import styles from './docVer.module.css';
-import ApiClient from './api/ApiClient';
-import Document from './models/Document';
-import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
-import DocumentVersionMember, { DocumentVersionMemberRole } from './models/DocumentVersionMember';
-import { LoginState } from './App';
+import ApiClient from '../api/ApiClient';
+import Document from '../models/Document';
+import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
+import DocumentVersionMember, { DocumentVersionMemberRole } from '../models/DocumentVersionMember';
+import { LoginState } from '../App';
 
 
 type DocVerProps = {

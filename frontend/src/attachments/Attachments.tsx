@@ -1,9 +1,9 @@
 import { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
-import { Container, Button} from 'react-bootstrap';
+import { Container, Button } from 'react-bootstrap';
 
-import './App.css';
-import ApiClient from './api/ApiClient';
-import DocFile from './models/DocFile';
+import '../App.css';
+import ApiClient from '../api/ApiClient';
+import DocFile from '../models/DocFile';
 
 type AttachmentsProps = {
   apiClient: ApiClient,
@@ -44,29 +44,29 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
 
   const downloadFile = (fileId: string, fileName: string) => {
     apiClient.getFile(documentId, versionId, fileId)
-    .then((response) =>{
-    // Create blob link to download
-    const url = window.URL.createObjectURL(
-      response
-    );
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute(
-      'download',
-      fileName,
-    );
-    // Append to html link element page
-    document.body.appendChild(link);
-    // Start download
-    link.click();
-    // Clean up and remove the link
-    link.parentNode!.removeChild(link);
-    });
+      .then((response) => {
+        // Create blob link to download
+        const url = window.URL.createObjectURL(
+          response
+        );
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute(
+          'download',
+          fileName,
+        );
+        // Append to html link element page
+        document.body.appendChild(link);
+        // Start download
+        link.click();
+        // Clean up and remove the link
+        link.parentNode!.removeChild(link);
+      });
   }
 
   const deleteRefresh = (fileId: string) => {
     apiClient.deleteFile(documentId, versionId, fileId)
-    .then(() => {loadFilesList(documentId, versionId)});
+      .then(() => { loadFilesList(documentId, versionId) });
   }
 
   return (
@@ -96,9 +96,9 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
             {filesInfos?.map((docfile, index) => (
               <li className="list-group-item" key={index} >
                 {docfile.fileName}
-                <div style={{ float: "right"}}>
-                  <Button variant="outline-primary" style={{margin:5}} onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
-                  <Button variant="danger" style={{margin:5}} onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
+                <div style={{ float: "right" }}>
+                  <Button variant="outline-primary" style={{ margin: 5 }} onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
+                  <Button variant="danger" style={{ margin: 5 }} onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
                 </div>
               </li>
             ))}

@@ -2,9 +2,9 @@ import { FunctionComponent, useState, useEffect } from 'react';
 import { Button, Container, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 
-import './App.css';
-import ApiClient from './api/ApiClient';
-import { Document } from './models/Document';
+import '../App.css';
+import ApiClient from '../api/ApiClient';
+import { Document } from '../models/Document';
 
 
 type DocumentsProps = {

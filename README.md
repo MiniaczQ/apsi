@@ -4,39 +4,68 @@ This is a document versioning application made for a college course.
 
 # Running
 
-Currently backend and frontend are run separately:
+Currently backend and frontend are run separately.
 
-First run
+## Starting
+
+### Backend
+
+Run
+
 ```sh
 docker compose --profile all up -d
 ```
-to start the database, file storage and backend server, then run
+
+to start the database, file storage and backend server.
+
+If there were any changes to project since last run, execute
+
 ```sh
-cd frontend
-npm run start
+docker compose --profile all up -d --build
 ```
 
-## Closing
-Abort the frontend server process with CTRL+C, then run
+instead to rebuild the server image.
+
+### Frontend
+
+Run
+
 ```sh
-cd ..
+npm run --prefix frontend start
+```
+
+to start frontend development server.
+
+## Closing
+
+### Frontend
+
+Quit the frontend server process with Ctrl-C.
+
+### Backend
+
+Run
+
+```sh
 docker compose --profile all down
 ```
 
-If you want to hard reset all data do
+If you want to wipe all project-related storage data (created documents, versions, users, etc.), do
+
 ```sh
-cd ..
 docker compose --profile all down -v
 ```
-instead
+
+instead.
 
 # Development
 
 ## Frontend
 
+The following commands start the development server.
+
 ```sh
-cd frontend
-npm run start
+npm run --prefix frontend start
 ```
 
 ## Backend
@@ -45,26 +74,24 @@ npm run start
 
 ```sh
 docker compose --profile db up -d
-cd backend
 ```
 
 ### Running
 
 ```sh
-cargo run
+cargo run --manifest-path=backend/Cargo.toml
 ```
 
 ### Teardown
 
 ```sh
-cd ..
 docker compose --profile db down -v
 ```
 
 # API documentation
 
-Because Rust webservers are young, there aren't many OpenAPI generators, most of them require boilerplate.
-For that reason Postman is used and kept up to date in the `Apsi.postman_collection.json` file.
+Because Rust webservers are young, there aren't many OpenAPI generators, most of them require boilerplate.  
+For that reason Postman is used and kept up to date in the [`Apsi.postman_collection.json`](./Apsi.postman_collection.json) file.
 
-The simplest usage requires you to register, then login and copy JWT token into collection global variables.
+The simplest usage requires you to register, then login and copy JWT token into collection global variables.  
 Further usage is adequate.

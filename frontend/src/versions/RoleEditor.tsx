@@ -8,7 +8,7 @@ import User from '../models/User';
 
 type RoleEditorProps = {
   options: User[];
-  defaultValue?: Record<DocumentVersionMemberRole, string[]>;
+  defaultValue: Record<DocumentVersionMemberRole, string[]>;
   disabled?: boolean;
   onChange?: (userIdsPerRole: Record<DocumentVersionMemberRole, string[]>) => any;
 };
@@ -19,10 +19,10 @@ type SelectOption = {
 };
 
 export const RoleEditor: FunctionComponent<RoleEditorProps> = ({ options, defaultValue, disabled, onChange }) => {
-  const [members, setMembers] = useState<Record<DocumentVersionMemberRole, string[]> | undefined>(defaultValue);
+  const [members, setMembers] = useState<Record<DocumentVersionMemberRole, string[]>>(defaultValue);
 
   const processedOptions: Options<SelectOption> = options.map(user => ({ label: user.username, value: user.userId }));
-  const processedDefaultValue = defaultValue && Object.fromEntries((Object.entries(defaultValue) as [DocumentVersionMemberRole, string[]][])
+  const processedDefaultValue = Object.fromEntries((Object.entries(defaultValue) as [DocumentVersionMemberRole, string[]][])
     .map(([role, userIds]) => [
       role,
       userIds.map(userId => processedOptions.find(option => option.value === userId))
@@ -40,7 +40,7 @@ export const RoleEditor: FunctionComponent<RoleEditorProps> = ({ options, defaul
   const createSetMembersOfFunction = (role: DocumentVersionMemberRole) =>
     ((options: Options<SelectOption>) => setMembersOf(role, options));
 
-  return (processedDefaultValue && (
+  return (
     <Form.Group className="mb-3" controlId="roles">
       <Form.Label>Version owner</Form.Label>
       <p>{processedDefaultValue['owner'][0].label}</p>
@@ -58,7 +58,7 @@ export const RoleEditor: FunctionComponent<RoleEditorProps> = ({ options, defaul
         />
       </Fragment>))}
     </Form.Group>
-  )) ?? null;
+  );
 }
 
 export default RoleEditor;

@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useState } from 'react';
+import { FunctionComponent, useEffect, useMemo, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
@@ -25,43 +25,33 @@ type VersionCreatorProps = {
 
 export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginState, apiClient }) => {
   const navigate = useNavigate();
+
   const searchParams = useSearchParams()[0];
   const documentId = searchParams.get('documentId') ?? undefined;
   const parentVersionId = searchParams.get('parentVersionId') ?? undefined;
+  const isCreatingNewDocument = documentId === undefined && parentVersionId === undefined;
+  const isCreatingNewVersion = documentId !== undefined && parentVersionId !== undefined;
+  const gotRequiredSearchParams = isCreatingNewDocument || isCreatingNewVersion;
+
+  useEffect(() => {
+    if (gotRequiredSearchParams)
+      return;
+    if (documentId !== undefined)
+      navigate(`/Versions?documentId=${documentId}`);
+    else
+      navigate(`/`);
+  }, [documentId, gotRequiredSearchParams, navigate]);
 
   const [, setIsLoading] = useState(true);
   const [document, setDocument] = useState<Document>();
   const [versions, setVersions] = useState<DocumentVersion[]>();
   const [users, setUsers] = useState<User[]>();
 
-  const [createdDocument, setCreatedDocument] = useState<CreateDocument>({
-    documentName: '',
-    initialVersion: { versionName: '1', content: '' }
-  });
-  const [createdVersion, setCreatedVersion] = useState<CreateVersion>({
-    versionName: '1',
-    content: '',
-    parents: [],
-  });
-
-  const defaultRoles: Record<DocumentVersionMemberRole, string[]> | undefined = loginState.userId !== undefined ? {
-    'owner': [loginState.userId],
-    'viewer': [],
-    'editor': [],
-    'reviewer': [],
-  } : undefined;
-  const [grantedRoles, setGrantedRoles] = useState<Record<DocumentVersionMemberRole, string[]> | undefined>(defaultRoles);
-
-  const creatingNewDocument = documentId === undefined || parentVersionId === undefined;
-  const parentVersion = versions?.find(version => version.versionId === parentVersionId);
-  const versionsMinusParent = versions?.filter(({ versionId }) => versionId !== parentVersionId);
-
-
   useEffect(() => {
     let usersPromise = apiClient.getUsers()
       .then(response => setUsers(response));
     let promises = [usersPromise];
-    if (!creatingNewDocument) {
+    if (isCreatingNewVersion) {
       let documentPromise = apiClient.getDocument(documentId)
         .then(response => setDocument(response));
       let versionsPromise = apiClient.getVersions(documentId)
@@ -70,7 +60,36 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     }
     Promise.all(promises)
       .then(() => setIsLoading(false));
-  }, [apiClient, creatingNewDocument, documentId, parentVersionId]);
+  }, [apiClient, isCreatingNewVersion, documentId, parentVersionId]);
+
+  const parentVersion = versions?.find(version => version.versionId === parentVersionId);
+  const versionsMinusParent = versions?.filter(({ versionId }) => versionId !== parentVersionId);
+
+  const [createdDocument, setCreatedDocument] = useState<CreateDocument>({
+    documentName: '',
+    initialVersion: {
+      versionName: '1',
+      content: '',
+    }
+  });
+  const [createdVersion, setCreatedVersion] = useState<CreateVersion>({
+    versionName: '1',
+    content: '',
+    parents: [],
+  });
+
+  const defaultRoles: Record<DocumentVersionMemberRole, string[]> | undefined = useMemo(() => {
+    if (loginState.userId === undefined)
+      return undefined;
+    return {
+      'owner': [loginState.userId],
+      'viewer': [],
+      'editor': [],
+      'reviewer': [],
+    }
+  }, [loginState]);
+  const [grantedRoles, setGrantedRoles] = useState<Record<DocumentVersionMemberRole, string[]> | undefined>();
+  useEffect(() => setGrantedRoles(defaultRoles), [defaultRoles]);
 
   const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
     (evt.target as HTMLButtonElement).disabled = true;
@@ -96,10 +115,10 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   };
 
 
-  if (users === undefined)
+  if (users === undefined || defaultRoles === undefined)
     return null;
 
-  if (creatingNewDocument)
+  if (isCreatingNewDocument)
     return (<>
       <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
       <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />

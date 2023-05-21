@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useMemo, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { LoginState } from '../App';
 import ApiClient from '../api/ApiClient';
 import Document from '../models/Document';
 import DocumentVersion from '../models/DocumentVersion';
-import DocumentVersionMember, { DocumentVersionMemberRole, editableMemberRoles, memberRoles } from '../models/DocumentVersionMember';
+import DocumentVersionMember, { DocumentVersionMemberRole, editableMemberRoles } from '../models/DocumentVersionMember';
 import UpdateVersion from '../models/UpdateVersion';
 import User from '../models/User';
 import DocumentNameEditor from './DocumentNameEditor';
@@ -69,21 +69,8 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
     });
   }, [baseVersion]);
 
-
-  const originalRoles: Record<DocumentVersionMemberRole, string[]> | undefined = useMemo(() => {
-    if (originalMembers === undefined)
-      return undefined;
-    return Object.fromEntries(
-      memberRoles.map(role => [
-        role,
-        originalMembers
-          .filter(member => member.roles.includes(role))
-          .map(member => member.userId)
-      ])
-    ) as Record<DocumentVersionMemberRole, string[]>;
-  }, [originalMembers]);
   const [grantedRoles, setGrantedRoles] = useState<Record<DocumentVersionMemberRole, string[]>>();
-  useEffect(() => setGrantedRoles(originalRoles), [originalRoles]);
+  const [revokedRoles, setRevokedRoles] = useState<Record<DocumentVersionMemberRole, string[]>>();
 
   const parentVersionField = (
     <Form.Group className="mb-3" controlId="parentVersionName">
@@ -100,26 +87,24 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
     (evt.target as HTMLButtonElement).disabled = true;
     apiClient.updateVersion(documentId, versionId, updatedVersion)
       .then(() => {
-        if (originalRoles === undefined || grantedRoles === undefined)
+        if (grantedRoles === undefined || revokedRoles === undefined)
           return;
         editableMemberRoles.forEach(role => {
-          const newMembers = grantedRoles[role].filter(member => !originalRoles[role].includes(member));
-          const removedMembers = originalRoles[role].filter(member => !grantedRoles[role].includes(member));
-          newMembers.forEach(member => apiClient.grantRole(documentId, versionId, member, role));
-          removedMembers.forEach(member => apiClient.revokeRole(documentId, versionId, member, role));
+          grantedRoles[role].forEach(member => apiClient.grantRole(documentId, versionId, member, role));
+          revokedRoles[role].forEach(member => apiClient.revokeRole(documentId, versionId, member, role));
         });
         navigate(`/Versions?documentId=${documentId}`);
       });
   };
 
-  if (users === undefined || originalRoles === undefined || updatedVersion === undefined)
+  if (users === undefined || originalMembers === undefined || updatedVersion === undefined)
     return null;
 
   return (
     <>
       <DocumentNameEditor disabled defaultValue={baseDocument?.documentName ?? ''} />
       {parentVersionField}
-      <RoleEditor options={users} defaultValue={originalRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
+      <RoleEditor options={users} defaultValue={originalMembers} onChange={(granted, revoked) => { setGrantedRoles(granted); setRevokedRoles(revoked); }} />
       <VersionContentEditor defaultValue={updatedVersion.content} onChange={content => setUpdatedVersion({ ...updatedVersion, content })} />
       <Button onClick={updateVersion}>Modify</Button>
     </>

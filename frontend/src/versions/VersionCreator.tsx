@@ -15,7 +15,7 @@ import VersionNameChooser from './VersionNameChooser';
 import VersionContentEditor from './VersionContentEditor';
 import RoleEditor from './RoleEditor';
 import DocumentNameEditor from './DocumentNameEditor';
-import { DocumentVersionMemberRole } from '../models/DocumentVersionMember';
+import DocumentVersionMember, { DocumentVersionMemberRole, editableMemberRoles } from '../models/DocumentVersionMember';
 
 
 type VersionCreatorProps = {
@@ -78,18 +78,14 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     parents: [],
   });
 
-  const defaultRoles: Record<DocumentVersionMemberRole, string[]> | undefined = useMemo(() => {
-    if (loginState.userId === undefined)
+  const defaultRoles: DocumentVersionMember[] | undefined = useMemo(() => {
+    if (loginState.userId === undefined || loginState.username === undefined)
       return undefined;
-    return {
-      'owner': [loginState.userId],
-      'viewer': [],
-      'editor': [],
-      'reviewer': [],
-    }
+    return [
+      { userId: loginState.userId, username: loginState.username, roles: ['owner'] },
+    ];
   }, [loginState]);
   const [grantedRoles, setGrantedRoles] = useState<Record<DocumentVersionMemberRole, string[]> | undefined>();
-  useEffect(() => setGrantedRoles(defaultRoles), [defaultRoles]);
 
   const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
     (evt.target as HTMLButtonElement).disabled = true;
@@ -105,11 +101,10 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     creationPromise.then(version => {
       if (grantedRoles === undefined)
         return;
-      (['viewer', 'editor', 'reviewer'] as DocumentVersionMemberRole[])
-        .forEach(
-          role => grantedRoles[role]
-            .forEach(member => apiClient.grantRole(version.documentId, version.versionId, member, role))
-        );
+      editableMemberRoles.forEach(
+        role => grantedRoles[role]
+          .forEach(member => apiClient.grantRole(version.documentId, version.versionId, member, role))
+      );
       navigate(`/Versions?documentId=${version.documentId}`);
     });
   };

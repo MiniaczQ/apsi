@@ -85,7 +85,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
       { userId: loginState.userId, username: loginState.username, roles: ['owner'] },
     ];
   }, [loginState]);
-  const [grantedRoles, setGrantedRoles] = useState<Record<DocumentVersionMemberRole, string[]> | undefined>();
+  const [grantedRoles, setGrantedRoles] = useState<Record<DocumentVersionMemberRole, string[]>>();
 
   const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
     (evt.target as HTMLButtonElement).disabled = true;
@@ -100,11 +100,13 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     }
     creationPromise.then(version => {
       if (grantedRoles === undefined)
-        return;
+        return version;
       editableMemberRoles.forEach(
         role => grantedRoles[role]
           .forEach(member => apiClient.grantRole(version.documentId, version.versionId, member, role))
       );
+      return version;
+    }).then(version => {
       navigate(`/Versions?documentId=${version.documentId}`);
     });
   };

@@ -93,6 +93,7 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
           grantedRoles[role].forEach(member => apiClient.grantRole(documentId, versionId, member, role));
           revokedRoles[role].forEach(member => apiClient.revokeRole(documentId, versionId, member, role));
         });
+      }).then(() => {
         navigate(`/Versions?documentId=${documentId}`);
       });
   };

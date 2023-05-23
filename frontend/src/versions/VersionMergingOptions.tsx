@@ -1,6 +1,7 @@
 import { FunctionComponent, useState } from 'react';
 import { Form, Tab, Row, ListGroup, Col } from 'react-bootstrap';
 
+import styles from './docVer.module.css';
 import DocumentVersion from '../models/DocumentVersion';
 
 
@@ -49,7 +50,7 @@ export const VersionMergingOptions: FunctionComponent<VersionMergingOptionsProps
               {versions.map(({ versionId, content }) => (
                 <Tab.Pane key={versionId} eventKey={`#version-${versionId}`}>
                   <Form.Label>Version content preview</Form.Label>
-                  <div style={{ whiteSpace: 'pre' }}>
+                  <div className={[styles.textblack, styles.versionContent].join(' ')}>
                     {content}
                   </div>
                 </Tab.Pane>

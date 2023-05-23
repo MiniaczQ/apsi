@@ -11,3 +11,7 @@
   font-family: Arial;
   text-align: left;
 }
+
+.versionContent {
+  white-space: pre;
+}

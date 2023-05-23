@@ -7,7 +7,6 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 
-import './App.css';
 import Documents from './documents/Documents';
 import DocVer from './versions/DocVer';
 import Login from './accounts/Login';

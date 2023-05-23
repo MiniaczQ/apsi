@@ -3,7 +3,6 @@ import { Table, Button, Badge, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
-import '../App.css';
 import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
 import Document from '../models/Document';
@@ -39,7 +38,7 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
       'reviewed': 'warning',
       'published': 'success',
     };
-    return <Badge pill bg={stateStyleLUT[state]} style={{ marginLeft: "1em" }}>
+    return <Badge pill bg={stateStyleLUT[state]} className="ms-3">
       {stateNameLUT[state]}
     </Badge>
   }

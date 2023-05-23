@@ -1,7 +1,6 @@
 import { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
 import { Container, Button } from 'react-bootstrap';
 
-import '../App.css';
 import ApiClient from '../api/ApiClient';
 import DocFile from '../models/DocFile';
 
@@ -62,7 +61,7 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
 
   return (
     <Container>
-      <div className="container" style={{ width: "60%" }}>
+      <div className="container w-50">
         <div className="row">
           <div className="col-8">
             <label className="btn btn-default p-0">
@@ -80,16 +79,13 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
         </div>
         <div className="card mt-3">
           <div className="card-header">List of Files</div>
-
           <ul className="list-group list-group-flush">
-
-
             {filesInfos?.map((docfile, index) => (
               <li className="list-group-item" key={index} >
                 {docfile.fileName}
-                <div style={{ float: "right" }}>
-                  <Button variant="outline-primary" style={{ margin: 5 }} onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
-                  <Button variant="danger" style={{ margin: 5 }} onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
+                <div className="float-end">
+                  <Button variant="outline-primary" className="m-1 ms-2" onClick={() => downloadFile(docfile.fileId, docfile.fileName)}>Download</Button>
+                  <Button variant="danger" className="m-1 ms-2" onClick={() => deleteRefresh(docfile.fileId)}>Delete</Button>
                 </div>
               </li>
             ))}

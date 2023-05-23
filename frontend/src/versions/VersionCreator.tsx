@@ -67,7 +67,11 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   useEffect(() => {
     if (parentVersion === undefined)
       return;
-    setCreatedVersion(createdVersion => ({ ...createdVersion, parents: [parentVersion.versionId] }))
+    setCreatedVersion(createdVersion => ({
+      ...createdVersion,
+      content: parentVersion.content,
+      parents: [parentVersion.versionId],
+    }));
   }, [parentVersion]);
 
   const [createdDocument, setCreatedDocument] = useState<CreateDocument>({
@@ -142,7 +146,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
       <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
       <VersionNameChooser versions={versions} parentVersion={parentVersion} onChange={changeVersion} />
       <VersionMergingOptions versions={versionsMinusParent} onChange={parents => setCreatedVersion({ ...createdVersion, parents: [parentVersion.versionId, ...parents] })} />
-      <VersionContentEditor defaultValue={parentVersion?.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
+      <VersionContentEditor defaultValue={parentVersion.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
       <Button className="w-100" type="submit" onClick={createVersion}>Create</Button>
     </Form>
   );

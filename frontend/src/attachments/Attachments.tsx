@@ -45,21 +45,12 @@ export const Attachments: FunctionComponent<AttachmentsProps> = ({ apiClient, do
   const downloadFile = (fileId: string, fileName: string) => {
     apiClient.getFile(documentId, versionId, fileId)
       .then((response) => {
-        // Create blob link to download
-        const url = window.URL.createObjectURL(
-          response
-        );
+        const url = window.URL.createObjectURL(response);  // blob URL
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute(
-          'download',
-          fileName,
-        );
-        // Append to html link element page
+        link.setAttribute('download', fileName);
         document.body.appendChild(link);
-        // Start download
         link.click();
-        // Clean up and remove the link
         link.parentNode!.removeChild(link);
       });
   }

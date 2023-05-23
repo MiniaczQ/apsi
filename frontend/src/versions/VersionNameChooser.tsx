@@ -1,4 +1,4 @@
-import { FunctionComponent } from 'react';
+import { FunctionComponent, useCallback, useEffect, useMemo } from 'react';
 import { Form } from 'react-bootstrap';
 import Select from 'react-select';
 
@@ -13,31 +13,48 @@ type VersionNameChooserProps = {
 };
 
 export const VersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({ versions, parentVersion, disabled, onChange }) => {
-  const getNextVersion = (prefix: string) => prefix + (1 + versions
-    .map(version => version.versionName.match(`^${prefix.replaceAll('.', '\\.')}(\\d+)$`)?.[1])
-    .filter(number => number !== undefined)
-    .map(number => Number(number))
-    .reduce((acc, val) => Math.max(acc, val), 0));
+  const getNextVersion = useCallback(
+    (prefix: string) => prefix + (
+      1 + versions
+        .map(version => version.versionName.match(`^${prefix.replaceAll('.', '\\.')}(\\d+)$`)?.[1])
+        .filter(number => number !== undefined)
+        .map(number => Number(number))
+        .reduce((acc, val) => Math.max(acc, val), 0)
+    ),
+    [versions],
+  );
 
-  const getNestedVersionName = (versionName: string) => getNextVersion(versionName + '.');
-  const getSameLevelVersionName = (versionName: string) => {
-    const lastDotIndex = versionName.lastIndexOf('.');
-    const prefix = lastDotIndex === -1 ? '' : versionName.substring(0, lastDotIndex + 1);
-    return getNextVersion(prefix);
-  };
-  const getParentLevelVersionNames = (versionName: string) => {
-    const splittedVersion = versionName.split('.');
-    const parentVersions = [];
-    for (let i = 1; i < splittedVersion.length; i++)
-      parentVersions.push(splittedVersion.slice(0, -i).join('.'));
-    return parentVersions.map(version => getSameLevelVersionName(version));
-  };
+  const getNestedVersionName = useCallback(
+    (versionName: string) => getNextVersion(versionName + '.'),
+    [getNextVersion],
+  );
+  const getSameLevelVersionName = useCallback(
+    (versionName: string) => {
+      const lastDotIndex = versionName.lastIndexOf('.');
+      const prefix = lastDotIndex === -1 ? '' : versionName.substring(0, lastDotIndex + 1);
+      return getNextVersion(prefix);
+    },
+    [getNextVersion],
+  );
+  const getParentLevelVersionNames = useCallback(
+    (versionName: string) => {
+      const splittedVersion = versionName.split('.');
+      const parentVersions = [];
+      for (let i = 1; i < splittedVersion.length; i++)
+        parentVersions.push(splittedVersion.slice(0, -i).join('.'));
+      return parentVersions.map(version => getSameLevelVersionName(version));
+    },
+    [getSameLevelVersionName],
+  );
 
-  const possibleNames = [getNestedVersionName(parentVersion.versionName)]
-    .concat([getSameLevelVersionName(parentVersion.versionName)])
-    .concat(getParentLevelVersionNames(parentVersion.versionName))
-    .map(name => ({ value: name, label: name }));
-
+  const possibleNames = useMemo(
+    () => [getNestedVersionName(parentVersion.versionName)]
+      .concat([getSameLevelVersionName(parentVersion.versionName)])
+      .concat(getParentLevelVersionNames(parentVersion.versionName))
+      .map(name => ({ value: name, label: name })),
+    [parentVersion, getNestedVersionName, getSameLevelVersionName, getParentLevelVersionNames]
+  );
+  useEffect(() => onChange?.(possibleNames[0]?.value), [onChange, possibleNames]);
 
   return (
     <Form.Group className="mb-3" controlId="parentVersionName">
@@ -46,6 +63,7 @@ export const VersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({
       <Form.Label>New version name</Form.Label>
       <Select required
         options={possibleNames}
+        defaultValue={possibleNames[0]}
         isDisabled={disabled}
         onChange={selected => selected?.value && onChange?.(selected.value)}
       />

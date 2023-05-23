@@ -1,7 +1,7 @@
-import { FunctionComponent, useEffect, useMemo, useState } from 'react';
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
-import { useSearchParams } from 'react-router-dom';
+import { Form, useSearchParams } from 'react-router-dom';
 
 import { LoginState } from '../App';
 import ApiClient from '../api/ApiClient';
@@ -64,6 +64,11 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
 
   const parentVersion = versions?.find(version => version.versionId === parentVersionId);
   const versionsMinusParent = versions?.filter(({ versionId }) => versionId !== parentVersionId);
+  useEffect(() => {
+    if (parentVersion === undefined)
+      return;
+    setCreatedVersion(createdVersion => ({ ...createdVersion, parents: [parentVersion.versionId] }))
+  }, [parentVersion]);
 
   const [createdDocument, setCreatedDocument] = useState<CreateDocument>({
     documentName: '',
@@ -111,6 +116,11 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     });
   };
 
+  const changeVersion = useCallback(
+    (versionName: string) => setCreatedVersion(createdVersion => ({ ...createdVersion, versionName })),
+    [],
+  );
+
 
   if (users === undefined || defaultRoles === undefined)
     return null;
@@ -126,14 +136,16 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   if (versions === undefined || versionsMinusParent === undefined || parentVersion === undefined)
     return null;
 
-  return (<>
-    <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
-    <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
-    <VersionNameChooser versions={versions} parentVersion={parentVersion} onChange={versionName => setCreatedVersion({ ...createdVersion, versionName })} />
-    <VersionMergingOptions versions={versionsMinusParent} onChange={parents => setCreatedVersion({ ...createdVersion, parents: [parentVersion.versionId, ...parents] })} />
-    <VersionContentEditor defaultValue={parentVersion?.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
-    <Button onClick={createVersion}>Create</Button>
-  </>);
+  return (
+    <Form>
+      <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
+      <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
+      <VersionNameChooser versions={versions} parentVersion={parentVersion} onChange={changeVersion} />
+      <VersionMergingOptions versions={versionsMinusParent} onChange={parents => setCreatedVersion({ ...createdVersion, parents: [parentVersion.versionId, ...parents] })} />
+      <VersionContentEditor defaultValue={parentVersion?.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
+      <Button className="w-100" type="submit" onClick={createVersion}>Create</Button>
+    </Form>
+  );
 }
 
 export default VersionCreator;

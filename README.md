@@ -2,6 +2,10 @@
 
 This is a document versioning application made for a college course.
 
+# Requirements
+
+Set environmental variable `DOCKER_BUILDKIT=1`
+
 # Running
 
 Currently backend and frontend are run separately:

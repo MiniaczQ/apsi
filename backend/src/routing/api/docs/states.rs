@@ -34,7 +34,9 @@ async fn change_state(
             vec![DocumentVersionRole::Owner, DocumentVersionRole::Editor]
         }
         DocumentVersionState::Reviewed => vec![DocumentVersionRole::Reviewer],
-        DocumentVersionState::Published => vec![DocumentVersionRole::Owner, DocumentVersionRole::Publisher],
+        DocumentVersionState::Published => {
+            vec![DocumentVersionRole::Owner, DocumentVersionRole::Publisher]
+        }
     };
     match permission_repository
         .does_user_have_document_version_roles(

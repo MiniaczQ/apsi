@@ -74,17 +74,19 @@ npm run --prefix frontend start
 
 ```sh
 docker compose --profile db up -d
+cd backend
 ```
 
 ### Running
 
 ```sh
-cargo run --manifest-path=backend/Cargo.toml
+cargo run
 ```
 
 ### Teardown
 
 ```sh
+cd ..
 docker compose --profile db down -v
 ```
 

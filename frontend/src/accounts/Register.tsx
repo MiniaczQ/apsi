@@ -1,8 +1,7 @@
 import { useState, MouseEventHandler, FunctionComponent } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 
-import './App.css';
-import ApiClient from './api/ApiClient';
+import ApiClient from '../api/ApiClient';
 
 
 type RegisterProps = {

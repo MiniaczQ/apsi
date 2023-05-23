@@ -5,13 +5,13 @@ import { Button, Badge, Container } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 
-import Attachments from "./Attachments";
 import styles from './docVer.module.css';
-import ApiClient from './api/ApiClient';
-import Document from './models/Document';
-import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from './models/DocumentVersion';
-import DocumentVersionMember, { DocumentVersionMemberRole } from './models/DocumentVersionMember';
-import { LoginState } from './App';
+import Attachments from "../attachments/Attachments";
+import ApiClient from '../api/ApiClient';
+import Document from '../models/Document';
+import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
+import DocumentVersionMember, { DocumentVersionMemberRole } from '../models/DocumentVersionMember';
+import { LoginState } from '../App';
 
 
 type DocVerProps = {
@@ -93,7 +93,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       </Button>
     );
     const editVersionButton = (
-      <Button className="ms-2" variant="outline-primary" onClick={() => navigateToVersionEditor(documentId!, versionId!)}>
+      <Button className="ms-3" variant="outline-primary" onClick={() => navigateToVersionEditor(documentId!, versionId!)}>
         Modify
       </Button>
     );
@@ -119,7 +119,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'reviewed': 'Publish',
       'published': ''
     };
-    return <Button variant="outline-success" onClick={changeStateForward} style={{ marginLeft: "1em" }}>
+    return <Button className="ms-3" variant="outline-success" onClick={changeStateForward}>
       {stateLUT[state]}
     </Button>
   }
@@ -134,7 +134,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'reviewed': 'Decline Publishing',
       'published': ''
     };
-    return <Button variant="outline-danger" onClick={changeStateBackward} style={{ marginLeft: "1em" }}>
+    return <Button className="ms-3" variant="outline-danger" onClick={changeStateBackward}>
       {stateLUT[state]}
     </Button>
   }
@@ -155,7 +155,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'reviewed': 'warning',
       'published': 'success',
     };
-    return <Badge pill bg={stateStyleLUT[state]} style={{ marginLeft: "1em" }}>
+    return <Badge className="ms-3" pill bg={stateStyleLUT[state]}>
       {stateNameLUT[state]}
     </Badge>
   }
@@ -188,7 +188,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
         justify
       >
         <Tab eventKey="details" title="Details">
-          <div className="container" style={{ width: "80%" }}>
+          <div className="container w-75">
             <h4 className={styles.pblue}>
               Document name
             </h4>
@@ -228,7 +228,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
             <h5 className={styles.pblue}>
               Content
             </h5>
-            <div className={styles.textblack} style={{ whiteSpace: 'pre' }}>
+            <div className={[styles.textblack, styles.versionContent].join(' ')}>
               {version?.content}
             </div>
             {getActionButtons()}

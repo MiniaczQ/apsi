@@ -12,6 +12,7 @@ import Document from '../models/Document';
 import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
 import DocumentVersionMember, { DocumentVersionMemberRole } from '../models/DocumentVersionMember';
 import { LoginState } from '../App';
+import Comments from '../comments/Comments';
 
 
 type DocVerProps = {
@@ -235,6 +236,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
           </div >
         </Tab >
         <Tab eventKey="comments" title="Comments">
+          <Comments loginState={loginState} apiClient={apiClient} documentId={documentId} versionId={versionId} />
         </Tab>
         <Tab eventKey="files" title="File Attachments">
           <Attachments apiClient={apiClient} documentId={documentId} versionId={versionId} />

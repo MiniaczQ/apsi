@@ -207,15 +207,15 @@ class BackendApiClient implements ApiClient {
     false,
   );
 
-  createComment = async (comment: Comment) => await this.post(
-    `comments/create`,
+  createComment = async (comment: Comment,documentId: string, versionId: string) => await this.post(
+    `documents/${documentId}/${versionId}/comment`,
     comment,
     true,
     false,
   );
 
   loadComments = async (documentId: string, versionId: string) => await this.get(
-    `comments/${documentId}/${versionId}`
+    `documents/${documentId}/${versionId}/comments`
   ) as Comment[]
 
   constructor(url: string, loginState: LoginState) {

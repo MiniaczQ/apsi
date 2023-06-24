@@ -1,8 +1,8 @@
-import { FunctionComponent, useCallback, useEffect, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import { Container, Button, Badge } from 'react-bootstrap';
 
 import ApiClient from '../api/ApiClient';
-import { DocumentVersionMemberRole } from '../models/DocumentVersionMember';
+import { DocumentVersionMember, DocumentVersionMemberRole } from '../models/DocumentVersionMember';
 import { LoginState } from '../App';
 import CommentEditor from './CommentEditor';
 import Comment from './Comment';
@@ -44,69 +44,47 @@ const getStateBadge = (state: DocumentVersionMemberRole | undefined) => {
 export const Comments: FunctionComponent<CommentsProps> = ({ loginState, apiClient, documentId, versionId }) => {
   const [comments, setComments] = useState<Comment[]>([])
   const [formComment, setFormComment] = useState<Comment>()
-
+  const [documentVersionMember, setDocumentVersionMember] = useState<DocumentVersionMember[]>([])
   const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
 
-  const createComment = (comment: string) => {
-    const userRoles = comments.find(currentComment => currentComment.userRoles.userId === loginState.userId)
+  const createComment = (comment: string): Comment => {
     return {
-        documentId: documentId,
-        versionId: versionId,
-        userRoles: userRoles?.userRoles!,
+        commentId: '',
+        userId: loginState.userId,
+        username: loginState.username,
         content: comment,
         createdAt: new Date().toISOString()
-    }
+    } as Comment
 
   }
 
   const renderButton = () => {
-    let render = false;
-    comments.forEach(coment => {
-        if(coment.userRoles.userId === loginState.userId){
-            if(coment.userRoles.roles.some(role => ['owner','editor','reviewer'].includes(role))){
-                render = true;
-            }
-        }
-      })
-    if(render){
+    if(documentVersionMember.find(memeber => memeber.userId === loginState.userId)?.roles.some(role => ['owner','editor','reviewer'].includes(role))){
         return (<div><CommentEditor defaultValue={""} disabled={false} onChange={comment => setFormComment(createComment(comment))} />
         <Button className="w-100" type="submit" onClick={event => {
             if(formComment && formComment.content !== "" ){
                 setComments([...comments, formComment!]);
-                //apiClient.createComment(formComment);
+                apiClient.createComment(formComment,documentId, versionId);
             }
     }}>Create</Button></div>);
     }
     return <div/>;
 }
 
-  const loadComments = useCallback((documentId: string, versionId: string) => {
-    setComments([
-        {
-            documentId: "65a45040-f418-11ed-a05b-0242ac120003",
-            versionId: "65a45040-f418-11ed-a05b-0242ac120003",
-            userRoles: {
-                userId: "81721217-8f19-4c3b-8b25-a2af68875018",
-                username: "admin",
-                roles: ["editor"]
-            },
-            content: "string",
-            createdAt: "2023-05-25T17:25:30.210908Z"
-        },
-    ])
-    //  apiClient.loadComments(documentId, versionId)
-    //    .then(response => setComments(response));
-  }, [apiClient]);
-
   useEffect(
-    () => loadComments(documentId, versionId),
-    [loadComments, documentId, versionId]
+    () => {
+      apiClient.loadComments(documentId, versionId)
+      .then(response => setComments(response))
+      apiClient.getVersionMembers(documentId,versionId)
+      .then(response => setDocumentVersionMember(response))
+    },
+    [apiClient, documentId, versionId]
   );
 
   const renderComment = (comment: Comment) => {
     return (<p key={comment.content}>
-        {comment.userRoles.roles.map(role => getStateBadge(role))}
-        <b className="ms-3">{comment.userRoles.username}</b>
+        {documentVersionMember.find(member => member.userId === comment.userId)?.roles.map(role => getStateBadge(role))}
+        <b className="ms-3">{loginState.username}</b>
         <span className="ms-3">{getFormattedDate(comment.createdAt)}</span>
         <br/> 
         <div className="ms-3">{comment.content}</div>

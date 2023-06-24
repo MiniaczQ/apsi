@@ -40,7 +40,7 @@ interface ApiClient {
     getMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
     getMember: (documentId: string, versionId: string) => Promise<DocumentVersionMember>;
 
-    createComment: (comment: Comment) => Promise<void>;
+    createComment: (comment: Comment, documentId: string, versionId: string) => Promise<void>;
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>
 };
 

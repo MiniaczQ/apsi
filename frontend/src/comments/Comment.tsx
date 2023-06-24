@@ -1,9 +1,7 @@
-import DocumentVersionMember from '../models/DocumentVersionMember';
-
 export type Comment = {
-    documentId: string,
-    versionId: string,
-    userRoles: DocumentVersionMember,
+    commentId: string,
+    userId: string,
+    username: string,
     content: string,
     createdAt: string
 }

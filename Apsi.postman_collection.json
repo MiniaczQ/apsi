@@ -143,7 +143,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"admin2\",\r\n    \"password\": \"admin2\"\r\n}",
+							"raw": "{\r\n    \"username\": \"q\",\r\n    \"password\": \"q\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -176,7 +176,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"piąty masdsdsddaja\",\r\n    \"content\": \"dobro wssdsdpólnie\",\r\n    \"parents\": [\"e8f82ef3-deb8-44ce-b916-04e5bb6abc78\"]\r\n}",
+							"raw": "{\r\n    \"versionName\": \"7.k\",\r\n    \"content\": \"abrakdadfdabrfgfgffgfgfga2\",\r\n    \"parents\": [\"65a45040-f418-11ed-a05b-0242ac120003\"]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -241,7 +241,7 @@
 								},
 								{
 									"key": "state",
-									"value": "inProgress"
+									"value": "published"
 								}
 							]
 						}
@@ -311,7 +311,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"trzeci maja\",\r\n    \"content\": \"dobro wspólne\"\r\n}",
+							"raw": "{\r\n    \"versionName\": \"trdsdsd\",\r\n    \"content\": \"dobro wspólne\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -852,6 +852,37 @@
 					"response": []
 				},
 				{
+					"name": "Get Member",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/members",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId",
+								":versionId",
+								"members"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								},
+								{
+									"key": "versionId",
+									"value": "{{versionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Grant Role",
 					"request": {
 						"method": "POST",
@@ -966,6 +997,112 @@
 			]
 		},
 		{
+			"name": "Comments",
+			"item": [
+				{
+					"name": "Add Comment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"content\": \"hello im joe biden\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/comment",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId",
+								":versionId",
+								"comment"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								},
+								{
+									"key": "versionId",
+									"value": "{{versionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Comments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/comments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId",
+								":versionId",
+								"comments"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								},
+								{
+									"key": "versionId",
+									"value": "{{versionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
 			"name": "Health",
 			"request": {
 				"method": "GET",
@@ -1011,16 +1148,16 @@
 		},
 		{
 			"key": "jwtToken",
-			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODQzNDcyMDYsIm5iZiI6MTY4NDI2MDgwNiwiaWF0IjoxNjg0MjYwODA2LCJ1c2VySWQiOiI4MTcyMTIxNy04ZjE5LTRjM2ItOGIyNS1hMmFmNjg4NzUwMTgiLCJ1c2VybmFtZSI6ImFkbWluIn0.I2EnFpoeOpfnNNUGWGf-b7DN6G3m3jr0d6cNkssSQj7By_8uCgG2IH5AbuT6Ponrrfk9PONcEzBl8kIkPeD6wA4Ev0RWhf0vrOpZItQkpw01mXQCjXGuH2gnL7JGkgoSiExrIO8_rjZscpHsa1jFlEeUI2ppoHjF-JDvPK6I1MNuOdNzwNhvBEVNIr_w7mf28RRdhIKKsS3alyvZV7r7Ma75WLZMzy21Ou_ET7BkKdwh6R176doNfW7SFLQ1JpJM1HOPNj8tvRAvvSrm2TiQZqDrvqGP_grcp7zyEzlOcmSBbkklTWKIU1MuEEpdlmz3zloMfsqLiiiTVo_c6Auf_w"
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODc3MTEwMjUsIm5iZiI6MTY4NzYyNDYyNSwiaWF0IjoxNjg3NjI0NjI1LCJ1c2VySWQiOiI2NWE0NTA0MC1mNDE4LTExZWQtYTA1Yi0wMjQyYWMxMjAwMDMiLCJ1c2VybmFtZSI6InEifQ.BOj_2VM8ucE4LHwXAfnwjfL0IxhaNgpZ4XEllKQKnwH68y2KFES6fhi3HWOnYsjaMo9Repe7RvO8P2dNM6yRb9R8rrO_cipIgrBwlEK338t-Uxj7BE4g3JVbsO2DO9mtCQGZYx8-UExVwmmwgpoHId4A64vZMWmUcO9yhYNxjf8tlFQKiB5E3ul_dGT94Dx2N54sIpV0h32pU5ztgrKnDJ4n4CGYTGU4JDsOQtmNK4dQU1JjIiOFPMMvXv56EDn4QTJNo8nNwHZ5ldRpG9_6nBmtA39JlE4NYFxB4n-AZixn9kxnD67GKy5N6b1WNe-KXUsUjFMb85vkliL4nfoOXQ"
 		},
 		{
 			"key": "documentId",
-			"value": "7d67282f-6bff-4f95-bd45-6b739e1b3e69",
+			"value": "65a45040-f418-11ed-a05b-0242ac120003",
 			"type": "string"
 		},
 		{
 			"key": "versionId",
-			"value": "1a0bf1fd-0694-4e1f-81ed-606dafecc1bb",
+			"value": "88c2e4be-f419-11ed-a05b-0242ac120003",
 			"type": "string"
 		},
 		{

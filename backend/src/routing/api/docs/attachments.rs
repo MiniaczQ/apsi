@@ -14,10 +14,7 @@ use crate::{
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
-            repositories::{
-                documents::{DocumentsRepository, RepoError},
-                files::FilesRepository,
-            },
+            repositories::{documents::DocumentsRepository, files::FilesRepository, RepoError},
             DbPool,
         },
     },

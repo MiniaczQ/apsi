@@ -13,7 +13,7 @@ use crate::{
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
-            repositories::documents::{DocumentsRepository, RepoError},
+            repositories::{documents::DocumentsRepository, RepoError},
             DbPool,
         },
         util::ValidatedJson,

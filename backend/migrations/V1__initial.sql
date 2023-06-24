@@ -1,18 +1,18 @@
 CREATE TABLE users (
-    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    salt UUID DEFAULT gen_random_uuid(),
+    user_id UUID PRIMARY KEY,
+    salt UUID NOT NULL,
     username varchar(255) UNIQUE NOT NULL,
     password_hash char(64) NOT NULL
 );
 
 CREATE TABLE documents (
-    document_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID PRIMARY KEY,
     document_name varchar(255) NOT NULL
 );
 
 CREATE TABLE document_versions (
     document_id UUID NOT NULL,
-    version_id UUID DEFAULT gen_random_uuid(),
+    version_id UUID,
     version_name varchar(255) NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     content varchar(2047) DEFAULT '',

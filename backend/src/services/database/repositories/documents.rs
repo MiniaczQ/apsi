@@ -1,4 +1,4 @@
-use std::{error::Error, fmt::Display};
+use std::error::Error;
 
 use axum::{
     async_trait,
@@ -6,7 +6,7 @@ use axum::{
     http::{request::Parts, StatusCode},
 };
 use chrono::Utc;
-use tokio_postgres::Transaction;
+use tokio_postgres::GenericClient;
 use tracing::error;
 use uuid::Uuid;
 
@@ -21,40 +21,15 @@ use crate::{
     services::database::{DbConn, DbPool},
 };
 
+use super::RepoError;
+
 pub struct DocumentsRepository {
     database: DbConn,
 }
 
-#[derive(Debug)]
-pub enum RepoError {
-    Forbidden,
-    Database(Box<dyn Error>),
-    Unreachable,
-}
-
-impl Display for RepoError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RepoError::Forbidden => f.write_str("Unauthorized"),
-            RepoError::Database(error) => error.fmt(f),
-            RepoError::Unreachable => {
-                f.write_str("Why isn't it possible? It's just not. Why not, you stupid bastard?")
-            }
-        }
-    }
-}
-
-impl Error for RepoError {}
-
-impl From<tokio_postgres::Error> for RepoError {
-    fn from(value: tokio_postgres::Error) -> Self {
-        Self::Database(Box::new(value))
-    }
-}
-
 impl DocumentsRepository {
-    async fn create_version_inner<'a>(
-        transaction: &Transaction<'a>,
+    async fn create_version_inner<T: GenericClient>(
+        db: &T,
         user_id: Uuid,
         document_id: Uuid,
         version_name: String,
@@ -63,7 +38,7 @@ impl DocumentsRepository {
     ) -> Result<DocumentVersion, Box<dyn Error>> {
         let version_id = Uuid::new_v4();
         let created_at = Utc::now();
-        transaction
+        db
             .execute(
                 "
                 INSERT INTO document_versions (document_id, version_id, version_name, created_at, content)
@@ -79,7 +54,7 @@ impl DocumentsRepository {
             )
             .await?;
         for parent_id in parent_ids {
-            transaction
+            db
                 .execute(
                     "
                     INSERT INTO documents_dependencies (document_id, parent_version_id, child_version_id)
@@ -89,21 +64,20 @@ impl DocumentsRepository {
                 )
                 .await?;
         }
-        transaction
-            .execute(
-                "
+        db.execute(
+            "
                 INSERT INTO user_document_version_roles (user_id, document_id, version_id, role_id)
                 VALUES ($1, $2, $3, $4)
                 ",
-                &[
-                    &user_id,
-                    &document_id,
-                    &version_id,
-                    &i16::from(DocumentVersionRole::Owner),
-                ],
-            )
-            .await?;
-        let document_version = transaction
+            &[
+                &user_id,
+                &document_id,
+                &version_id,
+                &i16::from(DocumentVersionRole::Owner),
+            ],
+        )
+        .await?;
+        let document_version = db
             .query_one(
                 "
                 SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,

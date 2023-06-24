@@ -10,6 +10,7 @@ use uuid::Uuid;
 
 use crate::{
     models::{
+        comment::{CreateDocumentVersionComment, DocumentVersionComment},
         role::DocumentVersionRole,
         version::{CreateVersionWithParentsRequest, DocumentVersion, UpdateVersionRequest},
     },
@@ -17,8 +18,8 @@ use crate::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
             repositories::{
-                documents::{DocumentsRepository, RepoError},
-                permission::PermissionRepository,
+                comments::CommentsRepository, documents::DocumentsRepository,
+                permission::PermissionRepository, RepoError,
             },
             DbPool,
         },
@@ -135,6 +136,37 @@ async fn update_version(
     }
 }
 
+async fn get_comments(
+    comments_repository: CommentsRepository,
+    claims: Claims,
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+) -> Result<Json<Vec<DocumentVersionComment>>, StatusCode> {
+    let comments = comments_repository
+        .get_comments(claims.user_id, document_id, version_id)
+        .await
+        .map_err(|e| {
+            error!("{}", e);
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(comments))
+}
+
+async fn create_comment(
+    comments_repository: CommentsRepository,
+    claims: Claims,
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+    Json(data): Json<CreateDocumentVersionComment>,
+) -> Result<Json<DocumentVersionComment>, StatusCode> {
+    let comment = comments_repository
+        .create_comment(claims.user_id, document_id, version_id, data.content)
+        .await
+        .map_err(|e| {
+            error!("{}", e);
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(comment))
+}
+
 pub fn versions_router<T>() -> Router<T>
 where
     AuthKeys: FromRef<T>,
@@ -147,4 +179,6 @@ where
         .route("/:document_id/versions", get(get_versions))
         .route("/:document_id/:version_id", get(get_version))
         .route("/:document_id/:version_id", patch(update_version))
+        .route("/:document_id/:version_id/comments", get(get_comments))
+        .route("/:document_id/:version_id/comment", post(create_comment))
 }

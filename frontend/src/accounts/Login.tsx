@@ -49,7 +49,7 @@ const Login: FunctionComponent<LoginProps> = ({ apiClient }) => {
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
     };
-  }, [username, password]);
+  })
  
 
   return (

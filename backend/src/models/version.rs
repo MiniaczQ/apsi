@@ -14,9 +14,15 @@ lazy_static! {
 
 #[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateInitialOrUpdateVersionRequest {
+pub struct CreateInitialVersionRequest {
     #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
+    pub content: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateVersionRequest {
     pub content: String,
 }
 

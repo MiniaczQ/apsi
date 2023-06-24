@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 use uuid::Uuid;
+use validator::Validate;
 
 use super::version::{CreateInitialOrUpdateVersionRequest, DocumentVersion};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateDocumentRequest {
     pub document_name: String,

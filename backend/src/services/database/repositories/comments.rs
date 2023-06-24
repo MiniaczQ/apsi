@@ -72,6 +72,7 @@ impl CommentsRepository {
                     AND r.document_id = c.document_id
                     AND r.version_id = c.version_id
                 )
+                ORDER BY c.created_at DESC
                 ",
                 &[&document_id, &version_id, &user_id],
             )

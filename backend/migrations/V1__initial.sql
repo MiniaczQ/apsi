@@ -7,12 +7,12 @@ CREATE TABLE users (
 
 CREATE TABLE documents (
     document_id UUID PRIMARY KEY,
-    document_name varchar(255) NOT NULL
+    document_name varchar(255) NOT NULL UNIQUE
 );
 
 CREATE TABLE document_versions (
     document_id UUID NOT NULL,
-    version_id UUID,
+    version_id UUID NOT NULL,
     version_name varchar(255) NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     content varchar(2047) DEFAULT '',

@@ -12,7 +12,7 @@ use crate::{
     models::{
         comment::{CreateDocumentVersionComment, DocumentVersionComment},
         role::DocumentVersionRole,
-        version::{CreateVersionWithParentsRequest, DocumentVersion, UpdateVersionRequest},
+        version::{CreateVersionWithParents, DocumentVersion, UpdateVersion},
     },
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
@@ -23,23 +23,17 @@ use crate::{
             },
             DbPool,
         },
-        util::{Res2, Res3, ValidatedJson},
+        util::{Res2, ValidatedJson},
     },
 };
 
 async fn create_version(
-    mut documents_repository: DocumentsRepository,
+    documents_repository: DocumentsRepository,
     claims: Claims,
     Path(document_id): Path<Uuid>,
-    ValidatedJson(data): ValidatedJson<CreateVersionWithParentsRequest>,
-) -> Res3<DocumentVersion> {
-    if data.parents.is_empty() {
-        return Res3::Msg((
-            StatusCode::BAD_REQUEST,
-            "Version has to have at least 1 parent",
-        ));
-    }
-    match documents_repository
+    ValidatedJson(data): ValidatedJson<CreateVersionWithParents>,
+) -> Result<Json<DocumentVersion>, StatusCode> {
+    let version = documents_repository
         .create_version(
             claims.user_id,
             document_id,
@@ -48,13 +42,11 @@ async fn create_version(
             data.parents,
         )
         .await
-    {
-        Ok(version) => Res3::Json(Json(version)),
-        Err(e) => {
+        .map_err(|e| {
             error!("{}", e);
-            Res3::NoMsg(StatusCode::BAD_REQUEST)
-        }
-    }
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(version))
 }
 
 async fn get_version(
@@ -80,16 +72,14 @@ async fn get_versions(
     claims: Claims,
     Path(document_id): Path<Uuid>,
 ) -> Result<Json<Vec<DocumentVersion>>, StatusCode> {
-    match documents_repository
+    let versions = documents_repository
         .get_versions(claims.user_id, document_id)
         .await
-    {
-        Ok(versions) => Ok(Json(versions)),
-        Err(error) => {
-            error!("{}", error);
-            Err(StatusCode::BAD_REQUEST)
-        }
-    }
+        .map_err(|e| {
+            error!("{}", e);
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(versions))
 }
 
 async fn update_version(
@@ -97,7 +87,7 @@ async fn update_version(
     permission_repository: PermissionRepository,
     claims: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
-    Json(data): Json<UpdateVersionRequest>,
+    Json(data): Json<UpdateVersion>,
 ) -> Res2 {
     match permission_repository
         .does_user_have_document_version_roles(

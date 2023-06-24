@@ -8,6 +8,7 @@ import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import UpdateVersion from "../models/UpdateVersion";
 import User from "../models/User";
+import {Notification} from "../models/Notification";
 
 interface ApiClient {
     register: (username: string, password: string) => Promise<void>,
@@ -38,6 +39,9 @@ interface ApiClient {
     revokeRole: (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => Promise<void>;
     getMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
     getMember: (documentId: string, versionId: string) => Promise<DocumentVersionMember>;
+
+    getNotifications: (userId: string) => Promise<Notification[]>;
+    markAsRead: (notificationId: string) => Promise<void>;
 };
 
 export default ApiClient;

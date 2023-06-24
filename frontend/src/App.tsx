@@ -17,6 +17,7 @@ import Versions from './versions/Versions';
 import ApiClient from './api/ApiClient';
 import BackendApiClient from './api/BackendApiClient';
 import VersionEditor from './versions/VersionEditor';
+import Notifications from './events/Notifications';
 
 
 const API_BASE_URL = 'http://localhost:3000/api/'
@@ -50,6 +51,7 @@ function App() {
   const cookieName = 'jwt-token';
   const [cookies, setCookie, removeCookie] = useCookies([cookieName]);
 
+  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
   const [loginData, setLoginData] = useState<LoginData | undefined>();
   const isLoggedIn = loginData !== undefined;
 
@@ -70,6 +72,17 @@ function App() {
     setLoginDataUsingToken(cookies[cookieName]);
   }, [cookies]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const noop = 0 // Without this line interval check is not working
+      if(isLoggedIn){
+        apiClient.getNotifications(loginData.userId)
+        .then(response => setUnreadNotifications(response.filter(notification => !notification.read).length))
+      }
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [])
+
   const setToken: ((token: string | undefined) => void) = token => {
     if (token !== undefined)
       setCookie(cookieName, token);
@@ -89,15 +102,16 @@ function App() {
   const router = createBrowserRouter(
     createRoutesFromElements(
       isLoggedIn ? (
-        <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
+        <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} unreadNotifications={unreadNotifications}/>}>
           <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
           <Route index path="/*" element={<Documents apiClient={apiClient} />} />
+          <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState}/>}/>
         </Route>
       ) : (
-        <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
+        <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} unreadNotifications={unreadNotifications}/>}>
           <Route index path="/register" element={<Register apiClient={apiClient} />} />
           <Route index path="/*" element={<Login apiClient={apiClient} />} />
         </Route>

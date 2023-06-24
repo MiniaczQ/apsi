@@ -11,7 +11,7 @@ import UpdateVersion from "../models/UpdateVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import User from "../models/User";
 import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
-
+import { Notification } from "../models/Notification"
 
 class BackendApiClient implements ApiClient {
   private apiBaseUrl: string;
@@ -206,6 +206,50 @@ class BackendApiClient implements ApiClient {
     true,
     false,
   );
+
+
+  getNotifications = async(userId: string) => await Promise.resolve(
+    [
+      {
+        notificationId: '1',
+        userId: userId,
+        action: 'role removed',
+        version: {
+          documentId: '1',
+          versionId: '1',
+          versionName: 'name',
+          versionState: 'published'
+        } as DocumentVersion,
+        role: 'editor',
+        read: false
+      } as Notification,
+      {
+        notificationId: '2',
+        userId: userId,
+        action: 'new version',
+        version: {
+          documentId: '2',
+          versionId: '2',
+          versionName: 'name-2',
+          versionState: 'inProgress'
+        } as DocumentVersion,
+        role: 'reviewer',
+        read: true
+      } as Notification
+    ]
+  )
+
+// getNotifications = async(userId: string) => await this.get(`notifications/${userId}`) as Notification[];
+
+  markAsRead = async (notificationId: string) => await Promise.resolve()
+  
+  // markAsRead = async (notificationId: string) => await this.post(
+  //   `notifications/mark/${notificationId}`,
+  //   undefined,
+  //   true,
+  //   false)
+
+  
 
   constructor(url: string, loginState: LoginState) {
     if (url[url.length - 1] !== '/')

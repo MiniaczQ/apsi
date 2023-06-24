@@ -1,7 +1,7 @@
 use axum::{
     extract::{FromRef, Path},
     http::StatusCode,
-    routing::{delete, get, patch, post},
+    routing::{get, post},
     Json, Router,
 };
 use s3::Bucket;
@@ -9,22 +9,21 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::document::{
-        CreateDocumentRequest, Document, DocumentWithInitialVersion, UpdateDocumentRequest,
-    },
+    models::document::{CreateDocument, Document, DocumentWithInitialVersion},
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
-            repositories::documents::{DocumentsRepository, RepoError},
+            repositories::{documents::DocumentsRepository, RepoError},
             DbPool,
         },
+        util::ValidatedJson,
     },
 };
 
 async fn create_document(
     mut documents_repository: DocumentsRepository,
     claims: Claims,
-    Json(data): Json<CreateDocumentRequest>,
+    ValidatedJson(data): ValidatedJson<CreateDocument>,
 ) -> Result<Json<DocumentWithInitialVersion>, StatusCode> {
     let document = documents_repository
         .create_document(
@@ -63,51 +62,14 @@ async fn get_documents(
     documents_repository: DocumentsRepository,
     claims: Claims,
 ) -> Result<Json<Vec<Document>>, StatusCode> {
-    match documents_repository.get_documents(claims.user_id).await {
-        Ok(documents) => Ok(Json(documents)),
-        Err(error) => {
-            error!("{}", error);
-            Err(StatusCode::BAD_REQUEST)
-        }
-    }
-}
-
-#[allow(unused_variables, unreachable_code)]
-async fn update_document(
-    documents_repository: DocumentsRepository,
-    _: Claims,
-    Path(document_id): Path<Uuid>,
-    Json(update): Json<UpdateDocumentRequest>,
-) -> StatusCode {
-    return StatusCode::IM_A_TEAPOT;
-    match documents_repository
-        .update_document(document_id, update.document_name)
+    let documents = documents_repository
+        .get_documents(claims.user_id)
         .await
-    {
-        Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::NOT_FOUND,
-        Err(e) => {
+        .map_err(|e| {
             error!("{}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
-}
-
-#[allow(unused_variables, unreachable_code)]
-async fn delete_document(
-    documents_repository: DocumentsRepository,
-    _: Claims,
-    Path(document_id): Path<Uuid>,
-) -> StatusCode {
-    return StatusCode::IM_A_TEAPOT;
-    match documents_repository.delete_document(document_id).await {
-        Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::NOT_FOUND,
-        Err(e) => {
-            error!("{}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(documents))
 }
 
 pub fn documents_router<T>() -> Router<T>
@@ -121,6 +83,4 @@ where
         .route("/", post(create_document))
         .route("/documents", get(get_documents))
         .route("/:document_id", get(get_document))
-        .route("/:document_id", patch(update_document))
-        .route("/:document_id", delete(delete_document))
 }

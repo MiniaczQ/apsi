@@ -18,7 +18,7 @@ CREATE TABLE document_version_roles (
     role_name varchar(255) NOT NULL UNIQUE
 );
 
-INSERT INTO document_version_roles VALUES (0, 'Owner'), (1, 'Viewer'), (2, 'Editor'), (3, 'Reviewer'), (4, 'Publisher');
+INSERT INTO document_version_roles VALUES (0, 'Owner'), (1, 'Viewer'), (2, 'Editor'), (3, 'Reviewer');
 
 CREATE TABLE user_document_version_roles (
     user_id UUID NOT NULL,

@@ -13,6 +13,8 @@ type VersionsProps = {
   apiClient: ApiClient
 };
 
+const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
+
 export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const navigate = useNavigate();
   const searchParams = useSearchParams()[0];
@@ -57,11 +59,14 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
     return -String(a.versionName).localeCompare(b.versionName, undefined, { numeric: true, sensitivity: 'base' });
   }
 
-  const versionRows = versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState }: DocumentVersion) =>
+  const versionRows = versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion) =>
     <tr key={versionId}>
       <td>
         {versionName}
         {getStateBadge(versionState)}
+      </td>
+      <td>
+        {getFormattedDate(createdAt)}
       </td>
       <td>
         <Button variant="outline-secondary"
@@ -84,6 +89,9 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
           <tr>
             <th>
               Version
+            </th>
+            <th >
+              Created
             </th>
             <th>
               Options

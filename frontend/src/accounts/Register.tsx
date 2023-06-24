@@ -1,4 +1,4 @@
-import { useState, MouseEventHandler, FunctionComponent } from 'react';
+import { useState, MouseEventHandler, FunctionComponent, useEffect } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 
 import ApiClient from '../api/ApiClient';
@@ -28,6 +28,39 @@ const Register: FunctionComponent<RegisterProps> = ({ apiClient }) => {
       setError(e?.toString() ?? '');
     }
   };
+
+
+  
+  const registerEnterHandler = async (username: string, password: string) => {   
+    
+    try {
+      setError('');
+      setSuccess('');
+      await apiClient.register(username, password);
+      setSuccess('Registered successfully. Try logging in now.');
+    } catch (e) {
+      setError(e?.toString() ?? '');
+    }
+
+  };
+
+  useEffect(() => {
+    const keyDownHandler = (event: { key: string; preventDefault: () => void; }) => {
+      
+
+      if (event.key === 'Enter') {
+        event.preventDefault(); 
+
+        registerEnterHandler(username, password);
+      }
+    };
+
+    document.addEventListener('keydown', keyDownHandler);
+
+    return () => {
+      document.removeEventListener('keydown', keyDownHandler);
+    };
+  });
 
 
   return (

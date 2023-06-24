@@ -3,29 +3,68 @@ import { Button, Container, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 
 import ApiClient from '../api/ApiClient';
-import { Document } from '../models/Document';
+import DocumentVersion from '../models/DocumentVersion';
 
 
 type DocumentsProps = {
   apiClient: ApiClient
 };
 
+type DocumentNamedVersion = {
+  documentName: String,
+  documentVersion: DocumentVersion
+}
+
+const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
+
+const compareByCreationTime = (first: DocumentVersion, second: DocumentVersion) => {
+  let firstDate = new Date(first.createdAt);
+  let secondDate = new Date(second.createdAt)
+  if(firstDate > secondDate){
+    return -1;
+  }
+  if(firstDate < secondDate){
+    return 1;
+  }
+  return 0;
+}
+
+const distinctByDocumentId = (array: DocumentNamedVersion[]) => {
+  const uniqueKeys = new Set();
+  return array.reduce((result: DocumentNamedVersion[], element) => {
+    const elementKey = element.documentVersion.documentId;
+    if (!uniqueKeys.has(elementKey)) {
+      uniqueKeys.add(elementKey);
+      result.push(element);
+    }
+    return result;
+  }, []);
+}
+
 export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
   const navigate = useNavigate();
-
-  const [docs, setDocs] = useState<Document[]>([])
-
+  const [docsVersions, setDocsVersions] = useState<DocumentNamedVersion[]>([])
 
   useEffect(() => {
     apiClient.getDocuments()
-      .then(response => setDocs(response));
+      .then(documentsResponse => {
+        documentsResponse.forEach(
+          document => {
+            apiClient.getVersions(document.documentId)
+            .then(response => {
+                setDocsVersions(old =>[...old,{documentName: document.documentName, documentVersion: response.slice().sort(compareByCreationTime).at(0)!} ]);
+            })
+          }
+        )
+
+      })
   }, [apiClient]);
 
   const navigateToVersionList = (documentId: string) => navigate(`/Versions?documentId=${encodeURIComponent(documentId)}`);
   const navigateToDocumentCreator = () => navigate('/Versions/new');
 
-  const documentRows = docs?.map(({ documentId, documentName }: Document, index: number) => (
-    <tr key={documentId}>
+  const documentRows = distinctByDocumentId(docsVersions).map(({ documentVersion, documentName }: DocumentNamedVersion, index: number) => (
+    <tr key={documentVersion.documentId}>
       <td>
         {index + 1}
       </td>
@@ -33,7 +72,13 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
         {documentName}
       </td>
       <td align='center'>
-        <Button variant="outline-secondary" onClick={() => navigateToVersionList(documentId)}>
+        {documentVersion.versionName}
+      </td>
+      <td align='center'>
+        {getFormattedDate(documentVersion.createdAt)}
+      </td>
+      <td align='center'>
+        <Button variant="outline-secondary" onClick={() => navigateToVersionList(documentVersion.documentId)}>
           Check versions
         </Button>
       </td>
@@ -46,17 +91,29 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
       <h3>
         Documents
       </h3>
+
       <Table striped bordered hover size="sm">
         <thead>
           <tr>
-            <th >
+            <th rowSpan={2}>
               #
             </th>
-            <th >
+            <th rowSpan={2}>
+              Version
+            </th>
+            <th colSpan={2}>
+              Most recent version
+            </th>
+            <th rowSpan={2}>
+              Options
+            </th>
+          </tr>
+          <tr>
+          <th >
               Name
             </th>
             <th >
-              Options
+            Created at
             </th>
           </tr>
         </thead>

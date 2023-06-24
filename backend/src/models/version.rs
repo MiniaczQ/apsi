@@ -2,21 +2,31 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 use uuid::Uuid;
+use validator::Validate;
 
-use super::version_state::DocumentVersionState;
+use super::{version_state::DocumentVersionState, VERSION_NAME_REGEX};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateInitialOrUpdateVersionRequest {
+pub struct CreateInitialVersion {
+    #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
     pub content: String,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateVersionWithParentsRequest {
+pub struct UpdateVersion {
+    pub content: String,
+}
+
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateVersionWithParents {
+    #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
     pub content: String,
+    #[validate(length(min = 1))]
     pub parents: Vec<Uuid>,
 }
 

@@ -143,7 +143,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"admin2\",\r\n    \"password\": \"admin2\"\r\n}",
+							"raw": "{\r\n    \"username\": \"q\",\r\n    \"password\": \"q\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -176,7 +176,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"piąty masdsdsddaja\",\r\n    \"content\": \"dobro wssdsdpólnie\",\r\n    \"parents\": [\"e8f82ef3-deb8-44ce-b916-04e5bb6abc78\"]\r\n}",
+							"raw": "{\r\n    \"versionName\": \"7.k\",\r\n    \"content\": \"abrakdadfdabrfgfgffgfgfga2\",\r\n    \"parents\": [\"65a45040-f418-11ed-a05b-0242ac120003\"]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -241,7 +241,7 @@
 								},
 								{
 									"key": "state",
-									"value": "inProgress"
+									"value": "published"
 								}
 							]
 						}
@@ -311,7 +311,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"trzeci maja\",\r\n    \"content\": \"dobro wspólne\"\r\n}",
+							"raw": "{\r\n    \"versionName\": \"trdsdsd\",\r\n    \"content\": \"dobro wspólne\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -852,6 +852,37 @@
 					"response": []
 				},
 				{
+					"name": "Get Member",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/members",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId",
+								":versionId",
+								"members"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								},
+								{
+									"key": "versionId",
+									"value": "{{versionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Grant Role",
 					"request": {
 						"method": "POST",
@@ -966,6 +997,365 @@
 			]
 		},
 		{
+			"name": "Comments",
+			"item": [
+				{
+					"name": "Add Comment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"content\": \"hello im joe biden\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/comment",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId",
+								":versionId",
+								"comment"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								},
+								{
+									"key": "versionId",
+									"value": "{{versionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Comments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/documents/:documentId/:versionId/comments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"documents",
+								":documentId",
+								":versionId",
+								"comments"
+							],
+							"variable": [
+								{
+									"key": "documentId",
+									"value": "{{documentId}}"
+								},
+								{
+									"key": "versionId",
+									"value": "{{versionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Document Sets",
+			"item": [
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"documentSetName\": \"joe biden\",\r\n    \"initialVersion\": {\r\n        \"setVersionName\": \"7\",\r\n        \"documentVersionIds\": [\r\n            [\"65a45040-f418-11ed-a05b-0242ac120003\", \"65a45040-f418-11ed-a05b-0242ac120003\"],\r\n            [\"65a4581a-f418-11ed-a05b-0242ac120003\", \"65a4581a-f418-11ed-a05b-0242ac120003\"]\r\n        ]\r\n    }\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/document-sets",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"document-sets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/document-sets/sets",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"document-sets",
+								"sets"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Set Versions",
+			"item": [
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"setVersionName\": \"1.5\",\r\n    \"documentVersionIds\": [\r\n        [\"65a45040-f418-11ed-a05b-0242ac120003\", \"65a45040-f418-11ed-a05b-0242ac120003\"],\r\n        [\"65a4581a-f418-11ed-a05b-0242ac120003\", \"65a4581a-f418-11ed-a05b-0242ac120003\"]\r\n    ],\r\n    \"parents\": [\"65a45040-f418-11ed-a05b-0242ac120003\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/document-sets/:documentSetId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"document-sets",
+								":documentSetId"
+							],
+							"variable": [
+								{
+									"key": "documentSetId",
+									"value": "{{documentSetId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Document Version",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"documentId\": \"65a45040-f418-11ed-a05b-0242ac120003\",\r\n    \"versionId\": \"65a45040-f418-11ed-a05b-0242ac120003\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/document-sets/:documentSetId/:setVersionId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"document-sets",
+								":documentSetId",
+								":setVersionId"
+							],
+							"variable": [
+								{
+									"key": "documentSetId",
+									"value": "{{documentSetId}}"
+								},
+								{
+									"key": "setVersionId",
+									"value": "{{setVersionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Document Version",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"documentId\": \"65a45040-f418-11ed-a05b-0242ac120003\",\r\n    \"versionId\": \"65a45040-f418-11ed-a05b-0242ac120003\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/document-sets/:documentSetId/:setVersionId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"document-sets",
+								":documentSetId",
+								":setVersionId"
+							],
+							"variable": [
+								{
+									"key": "documentSetId",
+									"value": "{{documentSetId}}"
+								},
+								{
+									"key": "setVersionId",
+									"value": "{{setVersionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/document-sets/:documentSetId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"document-sets",
+								":documentSetId"
+							],
+							"variable": [
+								{
+									"key": "documentSetId",
+									"value": "{{documentSetId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
 			"name": "Health",
 			"request": {
 				"method": "GET",
@@ -1011,21 +1401,31 @@
 		},
 		{
 			"key": "jwtToken",
-			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODQzNDcyMDYsIm5iZiI6MTY4NDI2MDgwNiwiaWF0IjoxNjg0MjYwODA2LCJ1c2VySWQiOiI4MTcyMTIxNy04ZjE5LTRjM2ItOGIyNS1hMmFmNjg4NzUwMTgiLCJ1c2VybmFtZSI6ImFkbWluIn0.I2EnFpoeOpfnNNUGWGf-b7DN6G3m3jr0d6cNkssSQj7By_8uCgG2IH5AbuT6Ponrrfk9PONcEzBl8kIkPeD6wA4Ev0RWhf0vrOpZItQkpw01mXQCjXGuH2gnL7JGkgoSiExrIO8_rjZscpHsa1jFlEeUI2ppoHjF-JDvPK6I1MNuOdNzwNhvBEVNIr_w7mf28RRdhIKKsS3alyvZV7r7Ma75WLZMzy21Ou_ET7BkKdwh6R176doNfW7SFLQ1JpJM1HOPNj8tvRAvvSrm2TiQZqDrvqGP_grcp7zyEzlOcmSBbkklTWKIU1MuEEpdlmz3zloMfsqLiiiTVo_c6Auf_w"
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODc3Mjc2MTUsIm5iZiI6MTY4NzY0MTIxNSwiaWF0IjoxNjg3NjQxMjE1LCJ1c2VySWQiOiI2NWE0NTA0MC1mNDE4LTExZWQtYTA1Yi0wMjQyYWMxMjAwMDMiLCJ1c2VybmFtZSI6InEifQ.OSpQy6hEqGXoScxwKAkIek_Y32Z5GhhDG2sMXI5x-i8YX2ILFmRnI1Wt07ESgLUO549PRQt2QfE30BKVkf709B-NUXmy0Pt0Pq5h8UwEkOQP2lfbApuBio6aHWPYXcr4GKlmQJFPEfM54JWGo7JMe_5JN66HGlcLRXnO-dgP1bXMnvrmwZmCd4rTGquswkMrFhRpC1jduNwY-F80XmOAK_SJEDKRf3NX9_hs8W38bzjOK2U19cwU1eMZ5FGvb6I6gW_FU5RwPdhm2XZJPemiZzlC0ILZkJrp8wAaEufK_hNJPLSVI9yPeU3IWIUhXL-F6UoLJwNiNXytkXq7owlCiQ"
 		},
 		{
 			"key": "documentId",
-			"value": "7d67282f-6bff-4f95-bd45-6b739e1b3e69",
+			"value": "65a45040-f418-11ed-a05b-0242ac120003",
 			"type": "string"
 		},
 		{
 			"key": "versionId",
-			"value": "1a0bf1fd-0694-4e1f-81ed-606dafecc1bb",
+			"value": "88c2e4be-f419-11ed-a05b-0242ac120003",
 			"type": "string"
 		},
 		{
 			"key": "fileId",
 			"value": "1655fa26-3d3a-484d-8c24-6f19639c7c0e",
+			"type": "string"
+		},
+		{
+			"key": "documentSetId",
+			"value": "65a45040-f418-11ed-a05b-0242ac120003",
+			"type": "string"
+		},
+		{
+			"key": "setVersionId",
+			"value": "65a45040-f418-11ed-a05b-0242ac120003",
 			"type": "string"
 		}
 	]

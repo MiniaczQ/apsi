@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useEffect, useRef, useState } from 'react';
+import { FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { Container, Button, Badge } from 'react-bootstrap';
 
 import ApiClient from '../api/ApiClient';
@@ -21,44 +21,34 @@ type DocumentVersionMemberRoleStateMap<Type> = {
 };
 
 const getStateBadge = (state: DocumentVersionMemberRole | undefined) => {
-    if (state === undefined) {
-      return <></>
+    if (state) {
+      const stateNameLUT: DocumentVersionMemberRoleStateMap<string> = {
+        'owner': 'Owner',
+        'viewer': 'Viewer',
+        'reviewer': 'Reviewer',
+        'editor': 'Editor',
+      };
+      const stateStyleLUT: DocumentVersionMemberRoleStateMap<string> = {
+        'owner': 'primary',
+        'viewer': 'danger',
+        'reviewer': 'warning',
+        'editor': 'success',
+      };
+      return <Badge pill bg={stateStyleLUT[state]}>
+        {stateNameLUT[state]}
+      </Badge>
     }
-    const stateNameLUT: DocumentVersionMemberRoleStateMap<string> = {
-      'owner': 'Owner',
-      'viewer': 'Viewer',
-      'reviewer': 'Reviewer',
-      'editor': 'Editor',
-    };
-    const stateStyleLUT: DocumentVersionMemberRoleStateMap<string> = {
-      'owner': 'primary',
-      'viewer': 'danger',
-      'reviewer': 'warning',
-      'editor': 'success',
-    };
-    return <Badge pill bg={stateStyleLUT[state]}>
-      {stateNameLUT[state]}
-    </Badge>
+    return <></>
   }
 
 export const Comments: FunctionComponent<CommentsProps> = ({ loginState, apiClient, documentId, versionId }) => {
   const [comments, setComments] = useState<Comment[]>([])
   const [formComment, setFormComment] = useState<Comment>()
 
-  const getFormattedDate = (createdAt: string) => {
-    const date = new Date(createdAt);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = String(date.getFullYear());
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-  
-    return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
-  }
+  const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
 
   const createComment = (comment: string) => {
-    const userRoles = comments.find(currentComment => currentComment.userRoles.userId == loginState.userId)
+    const userRoles = comments.find(currentComment => currentComment.userRoles.userId === loginState.userId)
     return {
         documentId: documentId,
         versionId: versionId,
@@ -72,7 +62,7 @@ export const Comments: FunctionComponent<CommentsProps> = ({ loginState, apiClie
   const renderButton = () => {
     let render = false;
     comments.forEach(coment => {
-        if(coment.userRoles.userId == loginState.userId){
+        if(coment.userRoles.userId === loginState.userId){
             if(coment.userRoles.roles.some(role => ['owner','editor','reviewer'].includes(role))){
                 render = true;
             }
@@ -81,7 +71,7 @@ export const Comments: FunctionComponent<CommentsProps> = ({ loginState, apiClie
     if(render){
         return (<div><CommentEditor defaultValue={""} disabled={false} onChange={comment => setFormComment(createComment(comment))} />
         <Button className="w-100" type="submit" onClick={event => {
-            if(formComment !== undefined && formComment.content != ""){
+            if(formComment && formComment.content !== "" ){
                 setComments([...comments, formComment!]);
                 //apiClient.createComment(formComment);
             }

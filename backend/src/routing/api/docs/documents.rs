@@ -18,13 +18,14 @@ use crate::{
             repositories::documents::{DocumentsRepository, RepoError},
             DbPool,
         },
+        util::ValidatedJson,
     },
 };
 
 async fn create_document(
     mut documents_repository: DocumentsRepository,
     claims: Claims,
-    Json(data): Json<CreateDocumentRequest>,
+    ValidatedJson(data): ValidatedJson<CreateDocumentRequest>,
 ) -> Result<Json<DocumentWithInitialVersion>, StatusCode> {
     let document = documents_repository
         .create_document(

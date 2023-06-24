@@ -24,7 +24,7 @@ use crate::{
             },
             DbPool,
         },
-        util::{Res2, Res3},
+        util::{Res2, Res3, ValidatedJson},
     },
 };
 
@@ -32,7 +32,7 @@ async fn create_version(
     mut documents_repository: DocumentsRepository,
     claims: Claims,
     Path(document_id): Path<Uuid>,
-    Json(data): Json<CreateVersionWithParentsRequest>,
+    ValidatedJson(data): ValidatedJson<CreateVersionWithParentsRequest>,
 ) -> Res3<DocumentVersion> {
     if data.parents.is_empty() {
         return Res3::Msg((

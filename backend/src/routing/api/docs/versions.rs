@@ -1,7 +1,7 @@
 use axum::{
     extract::{FromRef, Path},
     http::StatusCode,
-    routing::{delete, get, patch, post},
+    routing::{get, patch, post},
     Json, Router,
 };
 use s3::Bucket;
@@ -11,9 +11,7 @@ use uuid::Uuid;
 use crate::{
     models::{
         role::DocumentVersionRole,
-        version::{
-            CreateInitialOrUpdateVersionRequest, CreateVersionWithParentsRequest, DocumentVersion,
-        },
+        version::{CreateVersionWithParentsRequest, DocumentVersion, UpdateVersionRequest},
     },
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
@@ -98,7 +96,7 @@ async fn update_version(
     permission_repository: PermissionRepository,
     claims: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
-    Json(data): Json<CreateInitialOrUpdateVersionRequest>,
+    Json(data): Json<UpdateVersionRequest>,
 ) -> Res2 {
     match permission_repository
         .does_user_have_document_version_roles(
@@ -125,7 +123,7 @@ async fn update_version(
         }
     }
     match documents_repository
-        .update_version(document_id, version_id, data.version_name, data.content)
+        .update_version(document_id, version_id, data.content)
         .await
     {
         Ok(true) => Res2::NoMsg(StatusCode::OK),
@@ -133,26 +131,6 @@ async fn update_version(
         Err(error) => {
             error!({ error = error }, "Error during version update");
             Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR)
-        }
-    }
-}
-
-#[allow(unused_variables, unreachable_code)]
-async fn delete_version(
-    documents_repository: DocumentsRepository,
-    _: Claims,
-    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
-) -> StatusCode {
-    return StatusCode::IM_A_TEAPOT;
-    match documents_repository
-        .delete_version(document_id, version_id)
-        .await
-    {
-        Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::NOT_FOUND,
-        Err(e) => {
-            error!("{}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
         }
     }
 }
@@ -169,5 +147,4 @@ where
         .route("/:document_id/versions", get(get_versions))
         .route("/:document_id/:version_id", get(get_version))
         .route("/:document_id/:version_id", patch(update_version))
-        .route("/:document_id/:version_id", delete(delete_version))
 }

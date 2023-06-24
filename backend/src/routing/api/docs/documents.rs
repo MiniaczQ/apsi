@@ -1,7 +1,7 @@
 use axum::{
     extract::{FromRef, Path},
     http::StatusCode,
-    routing::{delete, get, patch, post},
+    routing::{get, post},
     Json, Router,
 };
 use s3::Bucket;
@@ -9,9 +9,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::document::{
-        CreateDocumentRequest, Document, DocumentWithInitialVersion, UpdateDocumentRequest,
-    },
+    models::document::{CreateDocumentRequest, Document, DocumentWithInitialVersion},
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
@@ -73,44 +71,6 @@ async fn get_documents(
     }
 }
 
-#[allow(unused_variables, unreachable_code)]
-async fn update_document(
-    documents_repository: DocumentsRepository,
-    _: Claims,
-    Path(document_id): Path<Uuid>,
-    Json(update): Json<UpdateDocumentRequest>,
-) -> StatusCode {
-    return StatusCode::IM_A_TEAPOT;
-    match documents_repository
-        .update_document(document_id, update.document_name)
-        .await
-    {
-        Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::NOT_FOUND,
-        Err(e) => {
-            error!("{}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
-}
-
-#[allow(unused_variables, unreachable_code)]
-async fn delete_document(
-    documents_repository: DocumentsRepository,
-    _: Claims,
-    Path(document_id): Path<Uuid>,
-) -> StatusCode {
-    return StatusCode::IM_A_TEAPOT;
-    match documents_repository.delete_document(document_id).await {
-        Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::NOT_FOUND,
-        Err(e) => {
-            error!("{}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        }
-    }
-}
-
 pub fn documents_router<T>() -> Router<T>
 where
     AuthKeys: FromRef<T>,
@@ -122,6 +82,4 @@ where
         .route("/", post(create_document))
         .route("/documents", get(get_documents))
         .route("/:document_id", get(get_document))
-        .route("/:document_id", patch(update_document))
-        .route("/:document_id", delete(delete_document))
 }

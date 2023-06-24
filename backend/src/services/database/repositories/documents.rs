@@ -215,39 +215,6 @@ impl DocumentsRepository {
         Ok(documents)
     }
 
-    pub async fn update_document(
-        &self,
-        document_id: Uuid,
-        document_name: String,
-    ) -> Result<bool, Box<dyn Error>> {
-        let updated = self
-            .database
-            .execute(
-                "
-                UPDATE documents
-                SET document_name = $2
-                WHERE document_id = $1
-                ",
-                &[&document_id, &document_name],
-            )
-            .await?;
-        Ok(updated == 1)
-    }
-
-    pub async fn delete_document(&self, document_id: Uuid) -> Result<bool, Box<dyn Error>> {
-        let deleted = self
-            .database
-            .execute(
-                "
-                DELETE FROM documents
-                WHERE document_id = $1
-                ",
-                &[&document_id],
-            )
-            .await?;
-        Ok(deleted == 1)
-    }
-
     pub async fn create_version(
         &mut self,
         user_id: Uuid,
@@ -345,7 +312,6 @@ impl DocumentsRepository {
         &self,
         document_id: Uuid,
         version_id: Uuid,
-        version_name: String,
         content: String,
     ) -> Result<bool, Box<dyn Error>> {
         let updated = self
@@ -353,12 +319,11 @@ impl DocumentsRepository {
             .execute(
                 "
                 UPDATE document_versions
-                SET version_name = $1, content = $2
-                WHERE document_id = $3
-                AND version_id = $4
-                AND version_state = $5",
+                SET content = $1
+                WHERE document_id = $2
+                AND version_id = $3
+                AND version_state = $4",
                 &[
-                    &version_name,
                     &content,
                     &document_id,
                     &version_id,
@@ -367,25 +332,6 @@ impl DocumentsRepository {
             )
             .await?;
         Ok(updated == 1)
-    }
-
-    pub async fn delete_version(
-        &self,
-        document_id: Uuid,
-        version_id: Uuid,
-    ) -> Result<bool, Box<dyn Error>> {
-        let deleted = self
-            .database
-            .execute(
-                "
-                DELETE FROM document_versions
-                WHERE document_id = $1
-                AND version_id = $2
-                ",
-                &[&document_id, &version_id],
-            )
-            .await?;
-        Ok(deleted == 1)
     }
 
     pub async fn get_file_attachments(

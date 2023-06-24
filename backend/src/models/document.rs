@@ -3,19 +3,13 @@ use tokio_postgres::Row;
 use uuid::Uuid;
 use validator::Validate;
 
-use super::version::{CreateInitialOrUpdateVersionRequest, DocumentVersion};
+use super::version::{CreateInitialVersionRequest, DocumentVersion};
 
 #[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateDocumentRequest {
     pub document_name: String,
-    pub initial_version: CreateInitialOrUpdateVersionRequest,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateDocumentRequest {
-    pub document_name: String,
+    pub initial_version: CreateInitialVersionRequest,
 }
 
 #[derive(Debug, Serialize)]

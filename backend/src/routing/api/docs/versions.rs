@@ -28,7 +28,7 @@ use crate::{
 };
 
 async fn create_version(
-    documents_repository: DocumentsRepository,
+    mut documents_repository: DocumentsRepository,
     claims: Claims,
     Path(document_id): Path<Uuid>,
     ValidatedJson(data): ValidatedJson<CreateVersionWithParents>,

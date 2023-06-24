@@ -6,7 +6,7 @@ use axum::{
     http::{request::Parts, StatusCode},
 };
 use chrono::Utc;
-use tokio_postgres::GenericClient;
+use tokio_postgres::Transaction;
 use tracing::error;
 use uuid::Uuid;
 
@@ -23,8 +23,8 @@ pub struct DocumentSetsRepository {
 }
 
 impl DocumentSetsRepository {
-    async fn create_set_version_inner<T: GenericClient>(
-        db: &T,
+    async fn create_set_version_inner<'a>(
+        db: &Transaction<'a>,
         _user_id: Uuid,
         document_set_id: Uuid,
         set_version_name: String,
@@ -153,15 +153,16 @@ impl DocumentSetsRepository {
     }
 
     pub async fn create_document_set_version(
-        &self,
+        &mut self,
         user_id: Uuid,
         document_set_id: Uuid,
         set_version_name: String,
         document_version_ids: Vec<(Uuid, Uuid)>,
         parents: Vec<Uuid>,
     ) -> Result<SetVersion, Box<dyn Error>> {
+        let transaction = self.database.transaction().await?;
         let document_version = Self::create_set_version_inner(
-            self.database.client(),
+            &transaction,
             user_id,
             document_set_id,
             set_version_name,
@@ -169,6 +170,7 @@ impl DocumentSetsRepository {
             &parents,
         )
         .await?;
+        transaction.commit().await?;
         Ok(document_version)
     }
 

@@ -54,7 +54,7 @@ async fn get_document_sets(
 }
 
 async fn create_document_set_version(
-    set_repository: DocumentSetsRepository,
+    mut set_repository: DocumentSetsRepository,
     claims: Claims,
     Path(document_set_id): Path<Uuid>,
     ValidatedJson(data): ValidatedJson<CreateSetVersionWithParents>,

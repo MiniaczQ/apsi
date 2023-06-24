@@ -72,16 +72,6 @@ function App() {
     setLoginDataUsingToken(cookies[cookieName]);
   }, [cookies]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const noop = 0 // Without this line interval check is not working
-      if(isLoggedIn){
-        apiClient.getNotifications(loginData.userId)
-        .then(response => setUnreadNotifications(response.filter(notification => !notification.read).length))
-      }
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
 
   const setToken: ((token: string | undefined) => void) = token => {
     if (token !== undefined)
@@ -98,6 +88,17 @@ function App() {
   };
 
   const apiClient: ApiClient = new BackendApiClient(API_BASE_URL, loginState);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log() // Without this line interval check is not working
+      if(isLoggedIn){
+        apiClient.getNotifications(loginData.userId)
+        .then(response => setUnreadNotifications(response.filter(notification => !notification.read).length))
+      }
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [isLoggedIn, loginData, apiClient])
 
   const router = createBrowserRouter(
     createRoutesFromElements(

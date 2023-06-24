@@ -11,7 +11,7 @@ import UpdateVersion from "../models/UpdateVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import User from "../models/User";
 import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
-
+import Comment from '../comments/Comment';
 
 class BackendApiClient implements ApiClient {
   private apiBaseUrl: string;
@@ -206,6 +206,17 @@ class BackendApiClient implements ApiClient {
     true,
     false,
   );
+
+  createComment = async (comment: Comment,documentId: string, versionId: string) => await this.post(
+    `documents/${documentId}/${versionId}/comment`,
+    comment,
+    true,
+    false,
+  );
+
+  loadComments = async (documentId: string, versionId: string) => await this.get(
+    `documents/${documentId}/${versionId}/comments`
+  ) as Comment[]
 
   constructor(url: string, loginState: LoginState) {
     if (url[url.length - 1] !== '/')

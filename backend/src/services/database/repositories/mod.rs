@@ -4,6 +4,7 @@ use std::{
 };
 
 pub mod comments;
+pub mod document_sets;
 pub mod documents;
 pub mod files;
 pub mod permission;

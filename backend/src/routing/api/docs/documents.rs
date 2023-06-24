@@ -9,7 +9,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::document::{CreateDocumentRequest, Document, DocumentWithInitialVersion},
+    models::document::{CreateDocument, Document, DocumentWithInitialVersion},
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
@@ -23,7 +23,7 @@ use crate::{
 async fn create_document(
     mut documents_repository: DocumentsRepository,
     claims: Claims,
-    ValidatedJson(data): ValidatedJson<CreateDocumentRequest>,
+    ValidatedJson(data): ValidatedJson<CreateDocument>,
 ) -> Result<Json<DocumentWithInitialVersion>, StatusCode> {
     let document = documents_repository
         .create_document(
@@ -62,13 +62,14 @@ async fn get_documents(
     documents_repository: DocumentsRepository,
     claims: Claims,
 ) -> Result<Json<Vec<Document>>, StatusCode> {
-    match documents_repository.get_documents(claims.user_id).await {
-        Ok(documents) => Ok(Json(documents)),
-        Err(error) => {
-            error!("{}", error);
-            Err(StatusCode::BAD_REQUEST)
-        }
-    }
+    let documents = documents_repository
+        .get_documents(claims.user_id)
+        .await
+        .map_err(|e| {
+            error!("{}", e);
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(documents))
 }
 
 pub fn documents_router<T>() -> Router<T>

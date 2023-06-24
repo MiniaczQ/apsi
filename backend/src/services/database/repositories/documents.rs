@@ -6,7 +6,7 @@ use axum::{
     http::{request::Parts, StatusCode},
 };
 use chrono::Utc;
-use tokio_postgres::GenericClient;
+use tokio_postgres::Transaction;
 use tracing::error;
 use uuid::Uuid;
 
@@ -28,8 +28,8 @@ pub struct DocumentsRepository {
 }
 
 impl DocumentsRepository {
-    async fn create_version_inner<T: GenericClient>(
-        db: &T,
+    async fn create_version_inner<'a>(
+        db: &Transaction<'a>,
         user_id: Uuid,
         document_id: Uuid,
         version_name: String,
@@ -402,7 +402,7 @@ impl DocumentsRepository {
         &self,
         document_id: Uuid,
         version_id: Uuid,
-        file_id: Uuid,
+        file_id: Uuid, // TODO: czemu send sync???
     ) -> Result<bool, Box<dyn Error + Send + Sync>> {
         let deleted = self
             .database

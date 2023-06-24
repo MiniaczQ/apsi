@@ -2,13 +2,14 @@
 
 pub mod auth;
 pub mod docs;
+pub mod sets;
 
 use axum::{extract::FromRef, http::StatusCode, response::IntoResponse, Router};
 use s3::Bucket;
 
 use crate::services::{auth::auth_keys::AuthKeys, database::DbPool};
 
-use self::{auth::auth_router, docs::documents_router};
+use self::{auth::auth_router, docs::documents_router, sets::document_sets_router};
 
 pub fn api_router<T>() -> Router<T>
 where
@@ -20,6 +21,7 @@ where
     Router::new()
         .nest("/auth", auth_router())
         .nest("/documents", documents_router())
+        .nest("/document-sets", document_sets_router())
         .fallback(handler_404)
 }
 

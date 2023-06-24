@@ -1,20 +1,14 @@
 use chrono::{DateTime, Utc};
-use lazy_static::lazy_static;
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 use uuid::Uuid;
 use validator::Validate;
 
-use super::version_state::DocumentVersionState;
-
-lazy_static! {
-    static ref VERSION_NAME_REGEX: Regex = Regex::new(r"^\d+(\.\d+)*$").unwrap();
-}
+use super::{version_state::DocumentVersionState, VERSION_NAME_REGEX};
 
 #[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateInitialVersionRequest {
+pub struct CreateInitialVersion {
     #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
     pub content: String,
@@ -22,16 +16,17 @@ pub struct CreateInitialVersionRequest {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateVersionRequest {
+pub struct UpdateVersion {
     pub content: String,
 }
 
 #[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateVersionWithParentsRequest {
+pub struct CreateVersionWithParents {
     #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
     pub content: String,
+    #[validate(length(min = 1))]
     pub parents: Vec<Uuid>,
 }
 

@@ -3,7 +3,6 @@ import { Button, Container, Table } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 
 import ApiClient from '../api/ApiClient';
-import { Document } from '../models/Document';
 import DocumentVersion from '../models/DocumentVersion';
 
 
@@ -16,17 +15,7 @@ type DocumentNamedVersion = {
   documentVersion: DocumentVersion
 }
 
-const getFormattedDate = (createdAt: string) => {
-  const date = new Date(createdAt);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = String(date.getFullYear());
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
-}
+const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
 
 const compareByCreationTime = (first: DocumentVersion, second: DocumentVersion) => {
   let firstDate = new Date(first.createdAt);
@@ -54,8 +43,6 @@ const distinctByDocumentId = (array: DocumentNamedVersion[]) => {
 
 export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
   const navigate = useNavigate();
-
-  const [docs, setDocs] = useState<Document[]>([])
   const [docsVersions, setDocsVersions] = useState<DocumentNamedVersion[]>([])
 
   useEffect(() => {
@@ -104,23 +91,29 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
       <h3>
         Documents
       </h3>
+
       <Table striped bordered hover size="sm">
         <thead>
           <tr>
-            <th >
+            <th rowSpan={2}>
               #
             </th>
-            <th >
+            <th rowSpan={2}>
+              Version
+            </th>
+            <th colSpan={2}>
+              Most recent version
+            </th>
+            <th rowSpan={2}>
+              Options
+            </th>
+          </tr>
+          <tr>
+          <th >
               Name
             </th>
             <th >
-              Version
-            </th>
-            <th >
-              Created
-            </th>
-            <th >
-              Options
+            Created at
             </th>
           </tr>
         </thead>

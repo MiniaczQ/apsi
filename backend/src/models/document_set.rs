@@ -9,6 +9,7 @@ use super::set_version::{CreateInitialSetVersion, SetVersion};
 #[serde(rename_all = "camelCase")]
 pub struct CreateDocumentSet {
     pub document_set_name: String,
+    #[validate]
     pub initial_version: CreateInitialSetVersion,
 }
 

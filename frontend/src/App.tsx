@@ -17,7 +17,7 @@ import Versions from './versions/Versions';
 import ApiClient from './api/ApiClient';
 import BackendApiClient from './api/BackendApiClient';
 import VersionEditor from './versions/VersionEditor';
-import Notifications from './events/Notifications';
+import Notifications from './notifications/Notifications';
 
 
 const API_BASE_URL = 'http://localhost:3000/api/'

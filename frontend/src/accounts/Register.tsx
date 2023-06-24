@@ -60,7 +60,7 @@ const Register: FunctionComponent<RegisterProps> = ({ apiClient }) => {
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
     };
-  }, [username, password]);
+  });
 
 
   return (

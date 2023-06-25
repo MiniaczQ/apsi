@@ -4,7 +4,7 @@ import { Badge, Button, Container, Table } from 'react-bootstrap';
 import ApiClient from '../api/ApiClient';
 import { Notification } from '../models/Notification';
 import { LoginState } from '../App';
-import { DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
+import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
 
 
 type NotificationsProps = {
@@ -12,8 +12,12 @@ type NotificationsProps = {
   apiClient: ApiClient
 };
 
+type NotificationVersion = {
+  notification: Notification
+  documentVersion: DocumentVersion
+}
 export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient, loginState }) => {
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [notifications, setNotifications] = useState<NotificationVersion[]>([])
 
   function getStateBadge(state: DocumentVersionState | undefined) {
     if (state === undefined) {
@@ -36,22 +40,25 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
     </Badge>
   }
 
-
+  const sorting = (first: NotificationVersion,second: NotificationVersion) => {
+      if(first.notification.read && !second.notification.read){
+        return 1
+      }
+      if(first.notification.read && second.notification.read){
+        return -1
+      }
+      return 0
+    }
   useEffect(() => {
     apiClient.getNotifications(loginState.userId!)
-      .then(response => setNotifications(response.sort((first,second) => {
-        if(first.read && !second.read){
-          return 1
-        }
-        if(first.read && second.read){
-          return -1
-        }
-        return 0
-      })));
+      .then(response => {
+        response.forEach(notification => apiClient.getVersion(notification.documentId,notification.versionId)
+        .then(version => setNotifications(old => [...old, {notification: notification, documentVersion: version}].sort(sorting))))
+      });
   }, [apiClient, loginState]);
 
-  const createState = (notification: Notification) => {
-    if(notification.read){
+  const createState = (notification: NotificationVersion) => {
+    if(notification.notification.read){
       return <td align='center'>
         Viewed
       </td>
@@ -59,31 +66,31 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
 
     return <td align='center'>
     <Button variant="outline-secondary" onClick={() => {
-      apiClient.markAsRead(notification.notificationId)
-      const filteredNotifications = notifications.filter(element => element.notificationId !== notification.notificationId)
-      notification.read = true
+      apiClient.markAsRead(notification.notification.notificationId)
+      const filteredNotifications = notifications.filter(element => element.notification.notificationId !== notification.notification.notificationId)
+      notification.notification.read = true
       setNotifications(old => [...filteredNotifications,notification])
       }}>
       Mark as read
     </Button>
   </td>
   }
-  const notificationRows = notifications?.map((notification: Notification, index: number) => (
-    <tr key={notification.notificationId}>
+  const notificationRows = notifications?.map((notification: NotificationVersion, index: number) => (
+    <tr key={notification.notification.notificationId}>
       <td>
         {index + 1}
       </td>
       <td align="center">
-        {notification.version.versionId}{getStateBadge(notification.version.versionState)}
+        {notification.documentVersion.versionId}{getStateBadge(notification.documentVersion.versionState)}
       </td>
       <td align="center">
-        {notification.version.versionName}
+        {notification.documentVersion.versionName}
       </td>
       <td align="center">
-        {notification.role}
+        {notification.notification.role}
       </td>
       <td align="center">
-        {notification.action}
+        {notification.notification.action}
       </td>
       {createState(notification)}
     </tr>

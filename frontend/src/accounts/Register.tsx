@@ -12,42 +12,38 @@ const Register: FunctionComponent<RegisterProps> = ({ apiClient }) => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [password2, setPassword2] = useState<string>('');
-  const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
 
   const successElement = success.length > 0 ? <Alert variant="success">{success}</Alert> : <></>
-  const errorElement = error.length > 0 ? <Alert variant="danger">{error}</Alert> : <></>
 
   const registerAndClear: MouseEventHandler<HTMLButtonElement> = async () => {
     try {
-      setError('');
       setSuccess('');
       await apiClient.register(username, password);
       setSuccess('Registered successfully. Try logging in now.');
+      setUsername('');
+      setPassword('');
+      setPassword2('');
     } catch (e) {
-      setError(e?.toString() ?? '');
+      console.error(e);
     }
   };
 
 
-  
   const registerEnterHandler = async (username: string, password: string) => {   
     
     try {
-      setError('');
       setSuccess('');
       await apiClient.register(username, password);
       setSuccess('Registered successfully. Try logging in now.');
     } catch (e) {
-      setError(e?.toString() ?? '');
+      console.error(e);
     }
 
   };
 
   useEffect(() => {
     const keyDownHandler = (event: { key: string; preventDefault: () => void; }) => {
-      
-
       if (event.key === 'Enter') {
         event.preventDefault(); 
 
@@ -67,7 +63,6 @@ const Register: FunctionComponent<RegisterProps> = ({ apiClient }) => {
     <>
       <p className="display-5">Registration form</p>
       {successElement}
-      {errorElement}
       <Form>
         <Form.Group className="mb-3" controlId="username">
           <Form.Label>Username</Form.Label>

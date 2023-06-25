@@ -17,6 +17,7 @@ import Versions from './versions/Versions';
 import ApiClient from './api/ApiClient';
 import BackendApiClient from './api/BackendApiClient';
 import VersionEditor from './versions/VersionEditor';
+import { Button, Modal } from 'react-bootstrap';
 
 
 const API_BASE_URL = 'http://localhost:3000/api/'
@@ -34,7 +35,13 @@ export type LoginState = {
   username?: string;
   userId?: string;
   setToken: ((token: string | undefined) => void);
-}
+};
+
+type ModalError = {
+  title: string;
+  message: string;
+  resolveFunc: () => void;
+};
 
 // source: https://stackoverflow.com/a/38552302
 function parseJwt(token: string) {
@@ -52,6 +59,9 @@ function App() {
 
   const [loginData, setLoginData] = useState<LoginData | undefined>();
   const isLoggedIn = loginData !== undefined;
+
+  const [modalError, setModalError] = useState<ModalError>();
+  const isModalErrorSet = modalError !== undefined;
 
   const setLoginDataUsingToken: ((token: string | undefined) => void) = token => {
     if (token === undefined) {
@@ -84,29 +94,47 @@ function App() {
     setToken
   };
 
-  const apiClient: ApiClient = new BackendApiClient(API_BASE_URL, loginState);
+  const clearModalError = () => {
+    modalError?.resolveFunc?.();
+    setModalError(undefined);
+  }
+
+  const apiClient: ApiClient = new BackendApiClient(API_BASE_URL, loginState, (message: string) => {
+    if (isModalErrorSet)
+      return;
+    setModalError({ title: 'Authentication error', message, resolveFunc: () => loginState.setToken(undefined) });
+  });
 
   const router = createBrowserRouter(
     createRoutesFromElements(
-      isLoggedIn ? (
-        <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
+      <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
+        {isLoggedIn ? (<>
           <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
           <Route index path="/*" element={<Documents apiClient={apiClient} />} />
-        </Route>
-      ) : (
-        <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
+        </>) : (<>
           <Route index path="/register" element={<Register apiClient={apiClient} />} />
           <Route index path="/*" element={<Login apiClient={apiClient} />} />
-        </Route>
-      )
+        </>)}
+      </Route>
     )
   );
 
   return (
     <div id="App">
+      <Modal centered scrollable backdrop="static" keyboard={false} show={isModalErrorSet} onHide={clearModalError}>
+        <Modal.Header closeButton>
+          <Modal.Title>{modalError?.title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{modalError?.message}</Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary" onClick={clearModalError}>
+            OK
+          </Button>
+        </Modal.Footer>
+      </Modal>
       <RouterProvider router={router} />
     </div>
   );

@@ -20,6 +20,7 @@ type BackendError = {
 class BackendApiClient implements ApiClient {
   private apiBaseUrl: string;
   private loginState: LoginState;
+  private authenticationErrorHandler?: (message: string) => void;
 
   private baseRequestOptions: RequestInit = {
     mode: 'cors',
@@ -77,6 +78,7 @@ class BackendApiClient implements ApiClient {
       ?? (jsonResponse !== undefined ? JSON.stringify(jsonResponse) : undefined);
     switch (response.status) {
       case 401:
+        this.authenticationErrorHandler?.(errorResponse);
         throw new AuthenticationError(errorResponse);
       case 403:
         throw new PermissionError(errorResponse);
@@ -263,11 +265,12 @@ class BackendApiClient implements ApiClient {
     `documents/${documentId}/${versionId}/comments`,
   );
 
-  constructor(url: string, loginState: LoginState) {
+  constructor(url: string, loginState: LoginState, authenticationErrorHandler?: (message: string) => void) {
     if (url[url.length - 1] !== '/')
       url += '/';  // the trailing slash is important
     this.apiBaseUrl = url;
     this.loginState = loginState;
+    this.authenticationErrorHandler = authenticationErrorHandler;
   }
 }
 

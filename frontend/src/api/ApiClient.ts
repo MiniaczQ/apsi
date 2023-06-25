@@ -11,7 +11,7 @@ import User from "../models/User";
 import Comment from "../comments/Comment";
 
 export class ApiError extends Error {
-    constructor(message: string) {
+    constructor(message?: string) {
         super(message);
         this.name = 'ApiError';
     }
@@ -24,6 +24,20 @@ export class ConcurrencyConflict extends ApiError {
         super(value !== undefined ? 'The object has been modified concurrently' : 'The identifier had been taken up');
         this.name = 'ConcurrencyConflict';
         this.value = value;
+    }
+}
+
+export class AuthenticationError extends ApiError {
+    constructor(message?: string) {
+        super(message);
+        this.name = 'AuthenticationError';
+    }
+}
+
+export class PermissionError extends ApiError {
+    constructor(message?: string) {
+        super(message);
+        this.name = 'PermissionError';
     }
 }
 

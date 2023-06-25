@@ -1,4 +1,4 @@
-import ApiClient, { ApiError, ConcurrencyConflict } from "./ApiClient";
+import ApiClient, { ApiError, AuthenticationError, ConcurrencyConflict, PermissionError } from "./ApiClient";
 import AuthResponse from "../models/AuthResponse";
 import CreateDocument from "../models/CreateDocument";
 import CreateVersion from "../models/CreateVersion";
@@ -66,16 +66,25 @@ class BackendApiClient implements ApiClient {
     const response = await fetch(input, options);
     if (response.ok)
       return response;
-    const isConcurrencyError = response.status === 409;
-    if (response.headers.get('content-type')?.startsWith('application/json') === true) {
-      const body = await response.json();
-      if (isConcurrencyError)
-        throw new ConcurrencyConflict(body);
-      throw new ApiError(`${response.statusText}: ${(body as BackendError).error}`);
+    const jsonResponse = response.headers.get('content-type')?.startsWith('application/json') === true
+      ? await response.json()
+      : undefined;
+    const textResponse = response.headers.get('content-type')?.startsWith('text/plain') === true
+        ? await response.text()
+        : undefined;
+    const errorResponse = (jsonResponse as BackendError)?.error
+      ?? textResponse
+      ?? (jsonResponse !== undefined ? JSON.stringify(jsonResponse) : undefined);
+    switch (response.status) {
+      case 401:
+        throw new AuthenticationError(errorResponse);
+      case 403:
+        throw new PermissionError(errorResponse);
+      case 409:
+        throw new ConcurrencyConflict(jsonResponse);
+      default:
+        throw new ApiError(response.statusText + (errorResponse !== undefined ? `: ${errorResponse}` : ''));
     }
-    if (response.headers.get('content-type')?.startsWith('text/plain') === true)
-      throw new ApiError(`${response.statusText}: ${await response.text()}`);
-    throw new ApiError(response.statusText);
   };
 
   private async post<TResponse>(relPath: string, data: any, authenticated?: boolean, returnBody?: true): Promise<TResponse>;

@@ -17,7 +17,7 @@ type DocumentNamedVersion = {
 
 const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
 
-const compareByCreationTime = (first: DocumentVersion, second: DocumentVersion) => {
+export const compareByCreationTime = (first: { createdAt: string }, second: { createdAt: string }) => {
   let firstDate = new Date(first.createdAt);
   let secondDate = new Date(second.createdAt)
   if(firstDate > secondDate){

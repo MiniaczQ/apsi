@@ -1,4 +1,4 @@
-import ApiClient from "./ApiClient";
+import ApiClient, { ApiError, AuthenticationError, ConcurrencyConflict, PermissionError } from "./ApiClient";
 import AuthResponse from "../models/AuthResponse";
 import CreateDocument from "../models/CreateDocument";
 import CreateVersion from "../models/CreateVersion";
@@ -11,11 +11,17 @@ import UpdateVersion from "../models/UpdateVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import User from "../models/User";
 import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
-import Comment from '../comments/Comment';
+import Comment from '../models/Comment';
+import CreateComment from '../models/CreateComment';
+
+type BackendError = {
+  error: string;
+};
 
 class BackendApiClient implements ApiClient {
   private apiBaseUrl: string;
   private loginState: LoginState;
+  private authenticationErrorHandler?: (message: string) => void;
 
   private baseRequestOptions: RequestInit = {
     mode: 'cors',
@@ -58,49 +64,92 @@ class BackendApiClient implements ApiClient {
     } as RequestInit;
   }
 
-  private post = async (relPath: string, data: any, authenticated = true, returnBody = true) => {
+  private fetchThrowing = async (input: RequestInfo | URL, options?: RequestInit) => {
+    const response = await fetch(input, options);
+    if (response.ok)
+      return response;
+    const jsonResponse = response.headers.get('content-type')?.startsWith('application/json') === true
+      ? await response.json()
+      : undefined;
+    const textResponse = response.headers.get('content-type')?.startsWith('text/plain') === true
+        ? await response.text()
+        : undefined;
+    const errorResponse = (jsonResponse as BackendError)?.error
+      ?? textResponse
+      ?? (jsonResponse !== undefined ? JSON.stringify(jsonResponse) : undefined);
+    switch (response.status) {
+      case 401:
+        this.authenticationErrorHandler?.(errorResponse);
+        throw new AuthenticationError(errorResponse);
+      case 403:
+        throw new PermissionError(errorResponse);
+      case 409:
+        throw new ConcurrencyConflict(jsonResponse);
+      default:
+        throw new ApiError(response.statusText + (errorResponse !== undefined ? `: ${errorResponse}` : ''));
+    }
+  };
+
+  private async post<TResponse>(relPath: string, data: any, authenticated?: boolean, returnBody?: true): Promise<TResponse>;
+  private async post(relPath: string, data: any, authenticated: boolean, returnBody: false): Promise<undefined>;
+  private async post<TResponse>(relPath: string, data: any, authenticated = true, returnBody = true) {
     let postReqOptions = this.addMethodToRequestOptions(this.baseRequestOptions, 'POST');
     postReqOptions = this.addJsonBodyToRequestOptions(postReqOptions, data);
     postReqOptions = this.addCredentialsToRequestOptions(postReqOptions, authenticated);
-    const response = await fetch(new URL(relPath, this.apiBaseUrl), postReqOptions);
+    const response = await this.fetchThrowing(new URL(relPath, this.apiBaseUrl), postReqOptions);
     if (returnBody)
-      return await response.json();
+      return await response.json() as TResponse;
   };
 
-  private sendFile = async (relPath: string, data: File, authenticated = true, returnBody = true) => {
+  private async sendFile<TResponse>(relPath: string, data: File, authenticated?: boolean, returnBody?: true): Promise<TResponse>;
+  private async sendFile(relPath: string, data: File, authenticated: boolean, returnBody: false): Promise<undefined>;
+  private async sendFile<TResponse>(relPath: string, data: File, authenticated = true, returnBody = true) {
     let form = new FormData();
     form.append('file', data)
     let reqOptions = this.addMethodToRequestOptions(this.baseRequestOptions, 'PATCH');
     reqOptions = this.addFormBodyToRequestOptions(reqOptions, form);
     reqOptions = this.addCredentialsToRequestOptions(reqOptions, authenticated);
-    const response = await fetch(new URL(relPath, this.apiBaseUrl), reqOptions);
+    const response = await this.fetchThrowing(new URL(relPath, this.apiBaseUrl), reqOptions);
     if (returnBody)
-      return await response.json();
+      return await response.json() as TResponse;
   };
 
-  private patch = async (relPath: string, data: any, authenticated = true, returnBody = true) => {
+  private async patch<TResponse>(relPath: string, data: any, authenticated?: boolean, returnBody?: true): Promise<TResponse>;
+  private async patch(relPath: string, data: any, authenticated: boolean, returnBody: false): Promise<undefined>;
+  private async patch<TResponse>(relPath: string, data: any, authenticated = true, returnBody = true) {
     let postReqOptions = this.addMethodToRequestOptions(this.baseRequestOptions, 'PATCH');
     postReqOptions = this.addJsonBodyToRequestOptions(postReqOptions, data);
     postReqOptions = this.addCredentialsToRequestOptions(postReqOptions, authenticated);
-    const response = await fetch(new URL(relPath, this.apiBaseUrl), postReqOptions);
+    const response = await this.fetchThrowing(new URL(relPath, this.apiBaseUrl), postReqOptions);
     if (returnBody)
-      return await response.json();
+      return await response.json() as TResponse;
   };
 
-  private delete = async (relPath: string, authenticated = true, returnBody = false) => {
+  private async delete<TResponse>(relPath: string, authenticated: boolean, returnBody: true): Promise<TResponse>;
+  private async delete(relPath: string, authenticated?: boolean, returnBody?: false): Promise<undefined>;
+  private async delete<TResponse>(relPath: string, authenticated = true, returnBody = false) {
     let postReqOptions = this.addMethodToRequestOptions(this.baseRequestOptions, 'DELETE');
     postReqOptions = this.addCredentialsToRequestOptions(postReqOptions, authenticated);
-    const response = await fetch(new URL(relPath, this.apiBaseUrl), postReqOptions);
+    const response = await this.fetchThrowing(new URL(relPath, this.apiBaseUrl), postReqOptions);
     if (returnBody)
-      return await response.json();
+      return await response.json() as TResponse;
   };
 
-  private get = async (relPath: string, authenticated = true, returnBody: 'JSON' | 'BLOB' | false = 'JSON') => {
+  private async get<TResponse>(relPath: string, authenticated?: boolean, returnBody?: true): Promise<TResponse>;
+  private async get(relPath: string, authenticated: boolean, returnBody: false): Promise<undefined>;
+  private async get<TResponse>(relPath: string, authenticated = true, returnBody = true) {
     const getReqOptions = this.addCredentialsToRequestOptions(this.baseRequestOptions, authenticated);
-    const response = await fetch(new URL(relPath, this.apiBaseUrl), getReqOptions);
-    if (returnBody === 'JSON')
-      return await response.json();
-    else if (returnBody === 'BLOB')
+    const response = await this.fetchThrowing(new URL(relPath, this.apiBaseUrl), getReqOptions);
+    if (returnBody)
+      return await response.json() as TResponse;
+  };
+
+  private async fetchFile(relPath: string, authenticated?: boolean, returnBody?: true): Promise<Blob>;
+  private async fetchFile(relPath: string, authenticated: boolean, returnBody: false): Promise<undefined>;
+  private async fetchFile(relPath: string, authenticated = true, returnBody = true) {
+    const getReqOptions = this.addCredentialsToRequestOptions(this.baseRequestOptions, authenticated);
+    const response = await this.fetchThrowing(new URL(relPath, this.apiBaseUrl), getReqOptions);
+    if (returnBody)
       return await response.blob();
   };
 
@@ -108,56 +157,56 @@ class BackendApiClient implements ApiClient {
     'auth/register',
     { username, password },
     false,
-    false
+    false,
   );
   login = async (username: string, password: string) => {
-    const authResponse = await this.post(
+    const authResponse = await this.post<AuthResponse>(
       'auth/login',
       { username, password },
-      false
-    ) as AuthResponse;
+      false,
+    );
     this.loginState.setToken(authResponse.token);
   };
   logout = async () => this.loginState.setToken(undefined);
-  getUsers = async () => await this.get(
-    'auth/users'
-  ) as User[];
+  getUsers = async () => await this.get<User[]>(
+    'auth/users',
+  );
 
-  getDocuments = async () => await this.get(
-    'documents/documents'
-  ) as Document[];
-  createDocument = async (data: CreateDocument) => await this.post(
+  getDocuments = async () => await this.get<Document[]>(
+    'documents/documents',
+  );
+  createDocument = async (data: CreateDocument) => await this.post<DocumentWithInitialVersion>(
     `documents`,
-    data
-  ) as DocumentWithInitialVersion;
-  getDocument = async (documentId: string) => await this.get(
-    `documents/${documentId}`
-  ) as Document;
+    data,
+  );
+  getDocument = async (documentId: string) => await this.get<Document>(
+    `documents/${documentId}`,
+  );
   updateDocument = async (documentId: string, data: UpdateDocument) => await this.patch(
     `documents/${documentId}`,
     data,
     true,
-    false
+    false,
   );
   deleteDocument = async (documentId: string) => await this.delete(
     `documents/${documentId}`
   );
 
-  getVersions = async (documentId: string) => await this.get(
-    `documents/${documentId}/versions`
-  ) as DocumentVersion[];
-  createVersion = async (documentId: string, data: CreateVersion) => await this.post(
+  getVersions = async (documentId: string) => await this.get<DocumentVersion[]>(
+    `documents/${documentId}/versions`,
+  );
+  createVersion = async (documentId: string, data: CreateVersion) => await this.post<DocumentVersion>(
     `documents/${documentId}`,
     data,
   );
-  getVersion = async (documentId: string, versionId: string) => await this.get(
+  getVersion = async (documentId: string, versionId: string) => await this.get<DocumentVersion>(
     `documents/${documentId}/${versionId}`
-  ) as DocumentVersion;
+  );
   updateVersion = async (documentId: string, versionId: string, data: UpdateVersion) => await this.patch(
     `documents/${documentId}/${versionId}`,
     data,
     true,
-    false
+    false,
   );
   deleteVersion = async (documentId: string, versionId: string) => await this.delete(
     `documents/${documentId}/${versionId}`
@@ -166,34 +215,34 @@ class BackendApiClient implements ApiClient {
     `documents/${documentId}/${versionId}/change-state/${state}`,
     '',
     true,
-    false
+    false,
   );
-  getVersionMembers = async (documentId: string, versionId: string) => await this.get(
-    `documents/${documentId}/${versionId}/members`
-  ) as DocumentVersionMember[];
+  getVersionMembers = async (documentId: string, versionId: string) => await this.get<DocumentVersionMember[]>(
+    `documents/${documentId}/${versionId}/members`,
+  );
 
-  getFiles = async (documentId: string, versionId: string) => await this.get(
+  getFiles = async (documentId: string, versionId: string) => await this.get<DocFile[]>(
     `documents/${documentId}/${versionId}/files`,
-  ) as DocFile[];
+  );
   uploadFile = async (documentId: string, versionId: string, data: File) => await this.sendFile(
     `documents/${documentId}/${versionId}/files`,
     data,
-  );
-  getFile = async (documentId: string, versionId: string, fileId: string) => await this.get(
-    `documents/${documentId}/${versionId}/files/${fileId}/content`,
     true,
-    'BLOB'
-  ) as Blob;
+    false,
+  );
+  getFile = async (documentId: string, versionId: string, fileId: string) => await this.fetchFile(
+    `documents/${documentId}/${versionId}/files/${fileId}/content`,
+  );
   deleteFile = async (documentId: string, versionId: string, fileId: string) => await this.delete(
     `documents/${documentId}/${versionId}/files/${fileId}`,
   );
 
-  getMembers = async (documentId: string, versionId: string) => await this.get(
+  getMembers = async (documentId: string, versionId: string) => await this.get<DocumentVersionMember[]>(
     `documents/${documentId}/${versionId}/members`,
-  ) as DocumentVersionMember[];
-  getMember = async (documentId: string, versionId: string) => await this.get(
+  );
+  getMember = async (documentId: string, versionId: string) => await this.get<DocumentVersionMember>(
     `documents/${documentId}/${versionId}/member`,
-  ) as DocumentVersionMember;
+  );
   grantRole = async (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => await this.post(
     `documents/${documentId}/${versionId}/grant/${userId}/${role}`,
     undefined,
@@ -207,22 +256,20 @@ class BackendApiClient implements ApiClient {
     false,
   );
 
-  createComment = async (comment: Comment,documentId: string, versionId: string) => await this.post(
+  createComment = async (documentId: string, versionId: string, comment: CreateComment) => await this.post<Comment>(
     `documents/${documentId}/${versionId}/comment`,
     comment,
-    true,
-    false,
+  );
+  loadComments = async (documentId: string, versionId: string) => await this.get<Comment[]>(
+    `documents/${documentId}/${versionId}/comments`,
   );
 
-  loadComments = async (documentId: string, versionId: string) => await this.get(
-    `documents/${documentId}/${versionId}/comments`
-  ) as Comment[]
-
-  constructor(url: string, loginState: LoginState) {
+  constructor(url: string, loginState: LoginState, authenticationErrorHandler?: (message: string) => void) {
     if (url[url.length - 1] !== '/')
       url += '/';  // the trailing slash is important
     this.apiBaseUrl = url;
     this.loginState = loginState;
+    this.authenticationErrorHandler = authenticationErrorHandler;
   }
 }
 

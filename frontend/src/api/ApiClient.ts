@@ -8,7 +8,39 @@ import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import UpdateVersion from "../models/UpdateVersion";
 import User from "../models/User";
-import Comment from "../comments/Comment";
+import Comment from "../models/Comment";
+import CreateComment from "../models/CreateComment";
+
+export class ApiError extends Error {
+    constructor(message?: string) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
+
+export class ConcurrencyConflict extends ApiError {
+    readonly value?: any;
+
+    constructor(value?: any) {
+        super(value !== undefined ? 'The object has been modified concurrently' : 'The identifier had been taken up');
+        this.name = 'ConcurrencyConflict';
+        this.value = value;
+    }
+}
+
+export class AuthenticationError extends ApiError {
+    constructor(message?: string) {
+        super(message);
+        this.name = 'AuthenticationError';
+    }
+}
+
+export class PermissionError extends ApiError {
+    constructor(message?: string) {
+        super(message);
+        this.name = 'PermissionError';
+    }
+}
 
 interface ApiClient {
     register: (username: string, password: string) => Promise<void>,
@@ -40,7 +72,7 @@ interface ApiClient {
     getMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
     getMember: (documentId: string, versionId: string) => Promise<DocumentVersionMember>;
 
-    createComment: (comment: Comment, documentId: string, versionId: string) => Promise<void>;
+    createComment: (documentId: string, versionId: string, comment: CreateComment) => Promise<Comment>;
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>
 };
 

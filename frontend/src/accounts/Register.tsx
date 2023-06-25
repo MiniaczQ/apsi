@@ -1,4 +1,4 @@
-import { useState, MouseEventHandler, FunctionComponent, useEffect } from 'react';
+import { useState, FunctionComponent, KeyboardEventHandler } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 
 import ApiClient from '../api/ApiClient';
@@ -12,63 +12,36 @@ const Register: FunctionComponent<RegisterProps> = ({ apiClient }) => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [password2, setPassword2] = useState<string>('');
-  const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
 
   const successElement = success.length > 0 ? <Alert variant="success">{success}</Alert> : <></>
-  const errorElement = error.length > 0 ? <Alert variant="danger">{error}</Alert> : <></>
 
-  const registerAndClear: MouseEventHandler<HTMLButtonElement> = async () => {
+  const registerAndClear = async () => {
     try {
-      setError('');
       setSuccess('');
       await apiClient.register(username, password);
       setSuccess('Registered successfully. Try logging in now.');
+      setUsername('');
+      setPassword('');
+      setPassword2('');
     } catch (e) {
-      setError(e?.toString() ?? '');
+      console.error(e);
     }
   };
 
-
-  
-  const registerEnterHandler = async (username: string, password: string) => {   
-    
-    try {
-      setError('');
-      setSuccess('');
-      await apiClient.register(username, password);
-      setSuccess('Registered successfully. Try logging in now.');
-    } catch (e) {
-      setError(e?.toString() ?? '');
+  const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
+    if (evt.key === 'Enter') {
+      evt.preventDefault();
+      await registerAndClear();
     }
-
   };
-
-  useEffect(() => {
-    const keyDownHandler = (event: { key: string; preventDefault: () => void; }) => {
-      
-
-      if (event.key === 'Enter') {
-        event.preventDefault(); 
-
-        registerEnterHandler(username, password);
-      }
-    };
-
-    document.addEventListener('keydown', keyDownHandler);
-
-    return () => {
-      document.removeEventListener('keydown', keyDownHandler);
-    };
-  });
 
 
   return (
     <>
       <p className="display-5">Registration form</p>
       {successElement}
-      {errorElement}
-      <Form>
+      <Form onKeyDown={handleEnter}>
         <Form.Group className="mb-3" controlId="username">
           <Form.Label>Username</Form.Label>
           <Form.Control type="text" placeholder="Enter username" value={username} onChange={evt => setUsername(evt.target.value)} />

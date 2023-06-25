@@ -61,7 +61,7 @@ async fn am_owner(
         .await
     {
         Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::UNAUTHORIZED,
+        Ok(false) => StatusCode::FORBIDDEN,
         Err(error) => {
             error!(
                 { error = error.to_string() },

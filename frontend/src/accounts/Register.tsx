@@ -1,4 +1,4 @@
-import { useState, MouseEventHandler, FunctionComponent, useEffect } from 'react';
+import { useState, FunctionComponent, KeyboardEventHandler } from 'react';
 import { Alert, Button, Form } from 'react-bootstrap';
 
 import ApiClient from '../api/ApiClient';
@@ -16,7 +16,7 @@ const Register: FunctionComponent<RegisterProps> = ({ apiClient }) => {
 
   const successElement = success.length > 0 ? <Alert variant="success">{success}</Alert> : <></>
 
-  const registerAndClear: MouseEventHandler<HTMLButtonElement> = async () => {
+  const registerAndClear = async () => {
     try {
       setSuccess('');
       await apiClient.register(username, password);
@@ -29,41 +29,19 @@ const Register: FunctionComponent<RegisterProps> = ({ apiClient }) => {
     }
   };
 
-
-  const registerEnterHandler = async (username: string, password: string) => {   
-    
-    try {
-      setSuccess('');
-      await apiClient.register(username, password);
-      setSuccess('Registered successfully. Try logging in now.');
-    } catch (e) {
-      console.error(e);
+  const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
+    if (evt.key === 'Enter') {
+      evt.preventDefault();
+      await registerAndClear();
     }
-
   };
-
-  useEffect(() => {
-    const keyDownHandler = (event: { key: string; preventDefault: () => void; }) => {
-      if (event.key === 'Enter') {
-        event.preventDefault(); 
-
-        registerEnterHandler(username, password);
-      }
-    };
-
-    document.addEventListener('keydown', keyDownHandler);
-
-    return () => {
-      document.removeEventListener('keydown', keyDownHandler);
-    };
-  });
 
 
   return (
     <>
       <p className="display-5">Registration form</p>
       {successElement}
-      <Form>
+      <Form onKeyDown={handleEnter}>
         <Form.Group className="mb-3" controlId="username">
           <Form.Label>Username</Form.Label>
           <Form.Control type="text" placeholder="Enter username" value={username} onChange={evt => setUsername(evt.target.value)} />

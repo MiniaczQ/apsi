@@ -1,5 +1,5 @@
-import { useState, MouseEventHandler, FunctionComponent, useEffect } from 'react';
-import { Alert, Button, Form } from 'react-bootstrap';
+import { useState, FunctionComponent, KeyboardEventHandler } from 'react';
+import { Button, Form } from 'react-bootstrap';
 
 import ApiClient from '../api/ApiClient';
 
@@ -12,7 +12,7 @@ const Login: FunctionComponent<LoginProps> = ({ apiClient }) => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
-  const loginAndUpdateState: MouseEventHandler<HTMLButtonElement> = async () => {
+  const loginAndUpdateState = async () => {
     try {
       await apiClient.login(username, password);
     } catch (e) {
@@ -20,35 +20,18 @@ const Login: FunctionComponent<LoginProps> = ({ apiClient }) => {
     }
   };
 
-  const loginEnterHandler = async (username: string, password: string) => {    
-    
-    try {
-      await apiClient.login(username, password);
-    } catch (e) {
-      console.error(e);
+  const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
+    if (evt.key === 'Enter') {
+      evt.preventDefault();      
+      await loginAndUpdateState();
     }
   };
 
-  useEffect(() => {
-    const keyDownHandler = (event: { key: string; preventDefault: () => void; }) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();      
-        loginEnterHandler(username, password);
-      }
-    };
-
-    document.addEventListener('keydown', keyDownHandler);
-
-    return () => {
-      document.removeEventListener('keydown', keyDownHandler);
-    };
-  })
- 
 
   return (
     <>
       <p className="display-5">Login form</p>
-      <Form>
+      <Form onKeyDown={handleEnter}>
         <Form.Group className="mb-3" controlId="username">
           <Form.Label>Username</Form.Label>
           <Form.Control type="text" placeholder="Enter username" value={username} onChange={evt => setUsername(evt.target.value)} />

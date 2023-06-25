@@ -130,7 +130,7 @@ function App() {
         </Modal.Header>
         <Modal.Body>{modalError?.message}</Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={clearModalError}>
+          <Button autoFocus onBlur={evt => evt.target.focus()} variant="primary" onClick={clearModalError}>
             OK
           </Button>
         </Modal.Footer>

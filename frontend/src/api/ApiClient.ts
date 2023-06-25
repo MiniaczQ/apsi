@@ -10,6 +10,23 @@ import UpdateVersion from "../models/UpdateVersion";
 import User from "../models/User";
 import Comment from "../comments/Comment";
 
+export class ApiError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'ApiError';
+    }
+}
+
+export class ConcurrencyConflict extends ApiError {
+    readonly value?: any;
+
+    constructor(value?: any) {
+        super(value !== undefined ? 'The object has been modified concurrently' : 'The identifier had been taken up');
+        this.name = 'ConcurrencyConflict';
+        this.value = value;
+    }
+}
+
 interface ApiClient {
     register: (username: string, password: string) => Promise<void>,
     login: (username: string, password: string) => Promise<void>;

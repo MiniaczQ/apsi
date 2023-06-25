@@ -1,5 +1,6 @@
 import { FunctionComponent, useState } from "react";
 import { Column, SortOrder } from "./TableBody";
+import {v4 as uuidv4 } from 'uuid';
 
 type TableHeadProps = {
     columns: Column[]
@@ -27,7 +28,7 @@ export const TableHead: FunctionComponent<TableHeadProps> = ({ columns, handleSo
     : "";
   return (
     <th
-      key={accessor}
+      key={uuidv4()}
       onClick={() => sortable ? handleSortingChange(accessor) : null}
       className={cl}
       rowSpan={rowSpan}
@@ -52,7 +53,7 @@ export const TableHead: FunctionComponent<TableHeadProps> = ({ columns, handleSo
         
         if(!uniqueGroups.includes(column.group)){
             uniqueGroups.push(column.group)
-            header.push(<th colSpan={column.colSpan}>{column.group}</th>)
+            header.push(<th key={uuidv4()} colSpan={column.colSpan}>{column.group}</th>)
         }
     }
     else {
@@ -62,13 +63,13 @@ export const TableHead: FunctionComponent<TableHeadProps> = ({ columns, handleSo
 
   if(header.length > 0){
     const secondRow = Object.values(groups).map(value => {
-        return (<tr>
+        return (<tr key={uuidv4()}>
             {value.map(column => (createColumn(column.label,column.accessor,column.sortable, 1, column.rowSpan)))}
         </tr>)
     })
     return (
         <thead>
-        <tr>
+        <tr key={uuidv4()}>
         {header}
       </tr>
       {secondRow}
@@ -77,7 +78,7 @@ export const TableHead: FunctionComponent<TableHeadProps> = ({ columns, handleSo
   }
   return (
     <thead>
-      <tr>
+      <tr key={uuidv4()}>
         {columns.map(({ label, accessor, sortable }) => createColumn(label,accessor,sortable))}
       </tr>
     </thead>

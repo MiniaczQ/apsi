@@ -1,5 +1,6 @@
 import React from "react";
 import { FunctionComponent } from "react";
+import { v4 as uuidv4 } from 'uuid';
 
 type TableBodyProps = {
     tableData: any[]
@@ -22,13 +23,13 @@ export const TableBody: FunctionComponent<TableBodyProps> = ({ tableData, column
       <tbody>
         {tableData.map((data) => {
           return (
-            <tr>
+            <tr key={uuidv4()}>
               {columns.map(({ accessor }) => {
                 if(React.isValidElement(data[accessor])){
-                    return <td key={accessor}>{data[accessor]}</td>
+                    return <td key={uuidv4()}>{data[accessor]}</td>
                 }
                 const tData = data[accessor] ? data[accessor].toString().replaceAll('"','') : '---';
-                return <td key={accessor}>{tData}</td>;
+                return <td key={uuidv4()}>{tData}</td>;
               })}
             </tr>
           );

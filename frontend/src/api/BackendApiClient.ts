@@ -11,7 +11,8 @@ import UpdateVersion from "../models/UpdateVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import User from "../models/User";
 import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
-import Comment from '../comments/Comment';
+import Comment from '../models/Comment';
+import CreateComment from '../models/CreateComment';
 
 type BackendError = {
   error: string;
@@ -255,11 +256,9 @@ class BackendApiClient implements ApiClient {
     false,
   );
 
-  createComment = async (comment: Comment,documentId: string, versionId: string) => await this.post(
+  createComment = async (documentId: string, versionId: string, comment: CreateComment) => await this.post<Comment>(
     `documents/${documentId}/${versionId}/comment`,
     comment,
-    true,
-    false,
   );
   loadComments = async (documentId: string, versionId: string) => await this.get<Comment[]>(
     `documents/${documentId}/${versionId}/comments`,

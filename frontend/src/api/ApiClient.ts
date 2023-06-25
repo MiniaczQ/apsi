@@ -8,7 +8,8 @@ import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 import UpdateDocument from "../models/UpdateDocument";
 import UpdateVersion from "../models/UpdateVersion";
 import User from "../models/User";
-import Comment from "../comments/Comment";
+import Comment from "../models/Comment";
+import CreateComment from "../models/CreateComment";
 
 export class ApiError extends Error {
     constructor(message?: string) {
@@ -71,7 +72,7 @@ interface ApiClient {
     getMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
     getMember: (documentId: string, versionId: string) => Promise<DocumentVersionMember>;
 
-    createComment: (comment: Comment, documentId: string, versionId: string) => Promise<void>;
+    createComment: (documentId: string, versionId: string, comment: CreateComment) => Promise<Comment>;
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>
 };
 

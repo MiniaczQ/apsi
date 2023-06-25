@@ -220,18 +220,21 @@ class BackendApiClient implements ApiClient {
   ) as Comment[]
 
 
+  // createNotification = async (notification: Notification) => await this.post(
+  //   `notifications/${notification.notificationId}`,
+  //   notification,
+  //   true,
+  //   false)
+
+  createNotification = async (notification: Notification) => Promise.resolve();  
   getNotifications = async(userId: string) => await Promise.resolve(
     [
       {
         notificationId: '1',
         userId: userId,
         action: 'role removed',
-        version: {
-          documentId: '1',
-          versionId: '1',
-          versionName: 'name',
-          versionState: 'published'
-        } as DocumentVersion,
+        versionId: '1',
+        documentId: '1',
         role: 'editor',
         read: false
       } as Notification,
@@ -239,12 +242,8 @@ class BackendApiClient implements ApiClient {
         notificationId: '2',
         userId: userId,
         action: 'new version',
-        version: {
-          documentId: '2',
-          versionId: '2',
-          versionName: 'name-2',
-          versionState: 'inProgress'
-        } as DocumentVersion,
+        versionId: '2',
+        documentId: '2',
         role: 'reviewer',
         read: true
       } as Notification

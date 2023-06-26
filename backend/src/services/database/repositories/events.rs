@@ -24,7 +24,7 @@ impl EventsRepository {
         version_id: Uuid,
         user_id: Uuid,
         event_type: EventType,
-    ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    ) -> Result<(), Box<dyn Error>> {
         let event_id = Uuid::new_v4();
         let (event_type, user_role_id, state_id) = to_sql(&event_type);
         self.database.execute(

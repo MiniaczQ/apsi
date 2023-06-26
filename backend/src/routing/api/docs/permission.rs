@@ -101,6 +101,7 @@ async fn grant_version_role(
 
 async fn revoke_version_role(
     permission_repository: PermissionRepository,
+    event_repository: EventsRepository,
     _: Claims,
     Path((document_id, version_id, user_id, role)): Path<(Uuid, Uuid, Uuid, DocumentVersionRole)>,
 ) -> Res2 {
@@ -112,7 +113,7 @@ async fn revoke_version_role(
         .revoke_document_version_role(user_id, document_id, version_id, role)
         .await
     {
-        Ok(true) => Res2::NoMsg(StatusCode::OK),
+        Ok(true) => {event_repository.create_event(document_id, version_id, user_id, EventType::RoleRemoved(role)).await.ok(); Res2::NoMsg(StatusCode::OK)},
         Ok(false) => Res2::NoMsg(StatusCode::BAD_REQUEST),
         Err(error) => {
             error!(

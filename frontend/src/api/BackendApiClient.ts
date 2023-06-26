@@ -1,3 +1,5 @@
+import { CreateSetVersion } from './../models/CreateSetVersion';
+import { CreateSet } from './../models/CreateSet';
 import ApiClient from "./ApiClient";
 import AuthResponse from "../models/AuthResponse";
 import CreateDocument from "../models/CreateDocument";
@@ -12,6 +14,8 @@ import UpdateDocument from "../models/UpdateDocument";
 import User from "../models/User";
 import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 import Comment from '../comments/Comment';
+import SetWithInitialVersion from '../models/SetWithInitialVersion';
+import SetDocumentVersion from '../models/SetDocumentVersion';
 
 class BackendApiClient implements ApiClient {
   private apiBaseUrl: string;
@@ -130,6 +134,10 @@ class BackendApiClient implements ApiClient {
     `documents`,
     data
   ) as DocumentWithInitialVersion;
+
+  
+
+  
   getDocument = async (documentId: string) => await this.get(
     `documents/${documentId}`
   ) as Document;
@@ -150,6 +158,8 @@ class BackendApiClient implements ApiClient {
     `documents/${documentId}`,
     data,
   );
+
+ 
   getVersion = async (documentId: string, versionId: string) => await this.get(
     `documents/${documentId}/${versionId}`
   ) as DocumentVersion;
@@ -200,6 +210,10 @@ class BackendApiClient implements ApiClient {
     true,
     false,
   );
+
+  
+
+
   revokeRole = async (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => await this.post(
     `documents/${documentId}/${versionId}/revoke/${userId}/${role}`,
     undefined,
@@ -217,6 +231,21 @@ class BackendApiClient implements ApiClient {
   loadComments = async (documentId: string, versionId: string) => await this.get(
     `documents/${documentId}/${versionId}/comments`
   ) as Comment[]
+
+  createSet = async(data: CreateSet) => await this.post(
+    'document-sets',
+    data
+  )as SetWithInitialVersion;
+  
+  createSetVersion = async (documentSetId: string, data: CreateSetVersion) => this.post(
+    `document-sets/${documentSetId}`,
+    data
+  ); 
+
+  addDocumentVersion=async(documentSetId: string, setVersionId:string,data:SetDocumentVersion) => await this.post(
+    `document-sets/${documentSetId}/${setVersionId}`,
+    data,
+  );
 
   constructor(url: string, loginState: LoginState) {
     if (url[url.length - 1] !== '/')

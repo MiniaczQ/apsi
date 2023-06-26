@@ -1,3 +1,6 @@
+import { SetVersion } from './../models/SetVersion';
+import { CreateSetVersion } from './../models/CreateSetVersion';
+import { CreateSet } from './../models/CreateSet';
 import CreateDocument from "../models/CreateDocument";
 import CreateVersion from "../models/CreateVersion";
 import DocFile from "../models/DocFile";
@@ -9,6 +12,9 @@ import UpdateDocument from "../models/UpdateDocument";
 import UpdateVersion from "../models/UpdateVersion";
 import User from "../models/User";
 import Comment from "../comments/Comment";
+import { __String } from 'typescript';
+import SetWithInitialVersion from '../models/SetWithInitialVersion';
+import SetDocumentVersion from '../models/SetDocumentVersion';
 
 interface ApiClient {
     register: (username: string, password: string) => Promise<void>,
@@ -42,6 +48,10 @@ interface ApiClient {
 
     createComment: (comment: Comment, documentId: string, versionId: string) => Promise<void>;
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>
+
+    createSet: (data: CreateSet) =>Promise<SetWithInitialVersion>;
+    createSetVersion: (documentSetId:string,data:CreateSetVersion) =>Promise<SetVersion>;
+    addDocumentVersion:(documentSetId:string,setVersionId: string,data:SetDocumentVersion )=>Promise<void>;
 };
 
 export default ApiClient;

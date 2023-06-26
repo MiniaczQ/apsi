@@ -60,7 +60,7 @@ export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }
       })
   }, [apiClient]);
 
-  //const navigateToVersionList = (documentId: string) => navigate(`/VersionSets?documentId=${encodeURIComponent(documentId)}`);
+  const navigateToVersionSetList = (documentSetId: string) => navigate(`/VersionSets?documentSetId=${encodeURIComponent(documentSetId)}`);
   //const navigateToDocumentCreator = () => navigate('/Versions/new');
 
   const documentRows = distinctByDocumentId(docsVersions).map(({ documentVersionSet, documentSetName }: DocumentNamedVersionSet, index: number) => (

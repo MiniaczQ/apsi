@@ -280,7 +280,7 @@ class BackendApiClient implements ApiClient {
     'document-sets/sets',
   );
 
-  getVersionSets = async (documentSetId: string) => await this.get<DocumentVersionSet>(
+  getVersionSets = async (documentSetId: string) => await this.get<DocumentVersionSet[]>(
     `document-sets/${documentSetId}`
   );
 }

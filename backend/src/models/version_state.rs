@@ -1,5 +1,6 @@
 use std::convert::Infallible;
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -31,4 +32,11 @@ impl From<DocumentVersionState> for i16 {
     fn from(value: DocumentVersionState) -> Self {
         value as i16
     }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VersionChangeState {
+    pub new_state: DocumentVersionState,
+    pub updated_at: DateTime<Utc>,
 }

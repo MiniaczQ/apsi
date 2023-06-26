@@ -13,7 +13,10 @@ use crate::{
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
-            repositories::{documents::DocumentsRepository, RepoError},
+            repositories::{
+                documents::{DocumentsRepository, UniqueError},
+                RepoError,
+            },
             DbPool,
         },
         util::ValidatedJson,
@@ -25,19 +28,22 @@ async fn create_document(
     claims: Claims,
     ValidatedJson(data): ValidatedJson<CreateDocument>,
 ) -> Result<Json<DocumentWithInitialVersion>, StatusCode> {
-    let document = documents_repository
+    let result = documents_repository
         .create_document(
             data.document_name,
             claims.user_id,
             data.initial_version.version_name,
             data.initial_version.content,
         )
-        .await
-        .map_err(|e| {
-            error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
-    Ok(Json(document))
+        .await;
+    match result {
+        Ok(document) => Ok(Json(document)),
+        Err(UniqueError::UniqueValueViolation) => Err(StatusCode::CONFLICT),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn get_document(

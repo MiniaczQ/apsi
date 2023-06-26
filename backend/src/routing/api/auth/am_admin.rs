@@ -7,7 +7,7 @@ use crate::services::{
 pub async fn am_admin(claims: Claims, permission_repository: PermissionRepository) -> StatusCode {
     match permission_repository.is_admin(claims.user_id).await {
         Ok(true) => StatusCode::OK,
-        Ok(false) => StatusCode::UNAUTHORIZED,
+        Ok(false) => StatusCode::FORBIDDEN,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }

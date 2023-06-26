@@ -56,7 +56,7 @@ impl PermissionRepository {
         document_id: Uuid,
         version_id: Uuid,
         role: DocumentVersionRole,
-    ) -> Result<bool, Box<dyn Error>> {
+    ) -> Result<bool, Box<dyn Error + Send + Sync>> {
         let modified = self
             .database
             .execute(
@@ -73,7 +73,7 @@ impl PermissionRepository {
         document_id: Uuid,
         version_id: Uuid,
         role: DocumentVersionRole,
-    ) -> Result<bool, Box<dyn Error>> {
+    ) -> Result<bool, Box<dyn Error + Send + Sync>> {
         let modified = self
             .database
             .execute(

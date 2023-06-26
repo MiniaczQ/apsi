@@ -11,13 +11,16 @@ use super::{version_state::DocumentVersionState, VERSION_NAME_REGEX};
 pub struct CreateInitialVersion {
     #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
+    #[validate(length(max = 2046))]
     pub content: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateVersion {
+    #[validate(length(max = 2046))]
     pub content: String,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Validate, Deserialize)]
@@ -25,6 +28,7 @@ pub struct UpdateVersion {
 pub struct CreateVersionWithParents {
     #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
+    #[validate(length(max = 2046))]
     pub content: String,
     #[validate(length(min = 1))]
     pub parents: Vec<Uuid>,
@@ -41,6 +45,7 @@ pub struct DocumentVersion {
     pub version_state: DocumentVersionState,
     pub children: Vec<Uuid>,
     pub parents: Vec<Uuid>,
+    pub updated_at: DateTime<Utc>,
 }
 
 impl TryFrom<Row> for DocumentVersion {
@@ -54,8 +59,9 @@ impl TryFrom<Row> for DocumentVersion {
         let content: String = value.try_get(4)?;
         let version_state: i16 = value.try_get(5)?;
         let version_state = DocumentVersionState::try_from(version_state).unwrap();
-        let children: Vec<Uuid> = value.try_get(6)?;
-        let parents: Vec<Uuid> = value.try_get(7)?;
+        let updated_at: DateTime<Utc> = value.try_get(6)?;
+        let children: Vec<Uuid> = value.try_get(7)?;
+        let parents: Vec<Uuid> = value.try_get(8)?;
 
         Ok(Self {
             document_id,
@@ -64,6 +70,7 @@ impl TryFrom<Row> for DocumentVersion {
             created_at,
             content,
             version_state,
+            updated_at,
             children,
             parents,
         })

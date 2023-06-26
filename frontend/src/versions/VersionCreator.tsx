@@ -1,4 +1,4 @@
-import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FunctionComponent, KeyboardEventHandler, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { Form, useSearchParams } from 'react-router-dom';
@@ -96,8 +96,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   }, [loginState]);
   const [grantedRoles, setGrantedRoles] = useState<Record<DocumentVersionMemberRole, string[]>>();
 
-  const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
-    (evt.target as HTMLButtonElement).disabled = true;
+  const createVersion = async () => {
     let creationPromise;
     if (documentId === undefined) {
       let doc = createdDocument
@@ -107,7 +106,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     } else {
       creationPromise = apiClient.createVersion(documentId, createdVersion);
     }
-    creationPromise.then(version => {
+    await creationPromise.then(version => {
       if (grantedRoles === undefined)
         return version;
       editableMemberRoles.forEach(
@@ -120,6 +119,23 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     });
   };
 
+  const handleClick: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
+    (evt.target as HTMLButtonElement).disabled = true;
+    try {
+      await createVersion();
+    } catch (e) {
+      console.error(e);
+      (evt.target as HTMLButtonElement).disabled = false;
+    }
+  };
+
+  const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
+    if (evt.key === 'Enter') {
+      evt.preventDefault();      
+      await createVersion();
+    }
+  };
+
   const changeVersion = useCallback(
     (versionName: string) => setCreatedVersion(createdVersion => ({ ...createdVersion, versionName })),
     [],
@@ -130,24 +146,26 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     return null;
 
   if (isCreatingNewDocument)
-    return (<>
-      <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
-      <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
-      <VersionContentEditor defaultValue={parentVersion?.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
-      <Button onClick={createVersion}>Create</Button>
-    </>);
+    return (
+      <Form onKeyDown={handleEnter}>
+        <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
+        <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
+        <VersionContentEditor defaultValue={parentVersion?.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
+        <Button onClick={handleClick}>Create</Button>
+      </Form>
+    );
 
   if (versions === undefined || versionsMinusParent === undefined || parentVersion === undefined)
     return null;
 
   return (
-    <Form>
+    <Form onKeyDown={handleEnter}>
       <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
       <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
       <VersionNameChooser versions={versions} parentVersion={parentVersion} onChange={changeVersion} />
       <VersionMergingOptions versions={versionsMinusParent} onChange={parents => setCreatedVersion({ ...createdVersion, parents: [parentVersion.versionId, ...parents] })} />
       <VersionContentEditor defaultValue={parentVersion.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
-      <Button className="w-100" type="submit" onClick={createVersion}>Create</Button>
+      <Button className="w-100" type="submit" onClick={handleClick}>Create</Button>
     </Form>
   );
 }

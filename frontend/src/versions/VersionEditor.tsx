@@ -1,4 +1,4 @@
-import { FunctionComponent, useEffect, useState } from 'react';
+import { FunctionComponent, KeyboardEventHandler, useEffect, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
@@ -81,11 +81,10 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
     </Form.Group>
   );
 
-  const updateVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
+  const updateVersion = async () => {
     if (documentId === undefined || versionId === undefined || updatedVersion === undefined)
       return;
-    (evt.target as HTMLButtonElement).disabled = true;
-    apiClient.updateVersion(documentId, versionId, updatedVersion)
+    await apiClient.updateVersion(documentId, versionId, updatedVersion)
       .then(() => {
         if (grantedRoles === undefined || revokedRoles === undefined)
           return;
@@ -98,17 +97,34 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
       });
   };
 
+  const handleClick: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
+    (evt.target as HTMLButtonElement).disabled = true;
+    try {
+      await updateVersion();
+    } catch (e) {
+      console.error(e);
+      (evt.target as HTMLButtonElement).disabled = false;
+    }
+  };
+
+  const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
+    if (evt.key === 'Enter') {
+      evt.preventDefault();      
+      await updateVersion();
+    }
+  };
+
   if (users === undefined || originalMembers === undefined || updatedVersion === undefined)
     return null;
 
   return (
-    <>
+    <Form onKeyDown={handleEnter}>
       <DocumentNameEditor disabled defaultValue={baseDocument?.documentName ?? ''} />
       {parentVersionField}
       <RoleEditor options={users} defaultValue={originalMembers} onChange={(granted, revoked) => { setGrantedRoles(granted); setRevokedRoles(revoked); }} />
       <VersionContentEditor defaultValue={updatedVersion.content} onChange={content => setUpdatedVersion({ ...updatedVersion, content })} />
-      <Button onClick={updateVersion}>Modify</Button>
-    </>
+      <Button onClick={handleClick}>Modify</Button>
+    </Form>
   );
 }
 

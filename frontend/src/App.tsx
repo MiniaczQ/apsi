@@ -58,6 +58,7 @@ function App() {
   const [cookies, setCookie, removeCookie] = useCookies([cookieName]);
 
   const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
+  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
   const [loginData, setLoginData] = useState<LoginData | undefined>();
   const isLoggedIn = loginData !== undefined;
 
@@ -80,6 +81,7 @@ function App() {
   useEffect(() => {
     setLoginDataUsingToken(cookies[cookieName]);
   }, [cookies]);
+
 
 
   const setToken: ((token: string | undefined) => void) = token => {
@@ -107,17 +109,6 @@ function App() {
     setModalError({ title: 'Authentication error', message, resolveFunc: () => loginState.setToken(undefined) });
   });
   
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log() // Without this line interval check is not working
-      if(isLoggedIn){
-        apiClient.getNotifications(loginData.userId)
-        .then(response => setUnreadNotifications(response.filter(notification => !notification.read).length))
-      }
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [isLoggedIn, loginData, apiClient])
-
   useEffect(() => {
     const interval = setInterval(() => {
       console.log() // Without this line interval check is not working

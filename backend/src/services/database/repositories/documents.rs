@@ -170,7 +170,7 @@ impl DocumentsRepository {
         user_id: Uuid,
         version_name: String,
         content: String,
-    ) -> Result<DocumentWithInitialVersion, Box<dyn Error>> {
+    ) -> Result<DocumentWithInitialVersion, UniqueError> {
         let document_id = Uuid::new_v4();
         let transaction = self.database.transaction().await?;
         transaction
@@ -181,7 +181,17 @@ impl DocumentsRepository {
                 ",
                 &[&document_id, &document_name],
             )
-            .await?;
+            .await
+            .map_err(|error| {
+                if let Some(db_error) = error.as_db_error() {
+                    if let Some(constraint) = db_error.constraint() {
+                        if constraint == "documents_document_name_key" {
+                            return UniqueError::UniqueValueViolation;
+                        }
+                    }
+                }
+                error.into()
+            })?;
         let initial_version = Self::create_version_inner(
             &transaction,
             user_id,

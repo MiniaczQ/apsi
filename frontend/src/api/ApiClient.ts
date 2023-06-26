@@ -12,6 +12,8 @@ import Comment from "../models/Comment";
 import CreateComment from "../models/CreateComment";
 import {Notification} from "../models/Notification";
 import ChangeVersionState from "../models/ChangeVersionState";
+import DocumentSet from "../models/DocumentSet";
+import DocumentVersionSet from "../models/DocumentVersionSet";
 
 export class ApiError extends Error {
     constructor(message?: string) {
@@ -77,6 +79,9 @@ interface ApiClient {
 
     createComment: (documentId: string, versionId: string, comment: CreateComment) => Promise<Comment>;
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>
+
+    getDocumentSets: () => Promise<DocumentSet[]>;
+    getVersionSets: (documentSetId: string) => Promise<DocumentVersionSet>;
 };
 
 export default ApiClient;

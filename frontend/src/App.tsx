@@ -17,6 +17,7 @@ import Versions from './versions/Versions';
 import ApiClient from './api/ApiClient';
 import BackendApiClient from './api/BackendApiClient';
 import VersionEditor from './versions/VersionEditor';
+import DocumentsSet from './document_set/DocumentsSet';
 import { Button, Modal } from 'react-bootstrap';
 import Notifications from './notifications/Notifications';
 
@@ -113,6 +114,7 @@ function App() {
           <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
+          <Route index path="/DocSets" element={<DocumentsSet apiClient={apiClient} />} />
           <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
           <Route index path="/*" element={<Documents apiClient={apiClient} />} />
           <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState} />}/>

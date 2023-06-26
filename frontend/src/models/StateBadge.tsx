@@ -24,3 +24,4 @@ export const StateBadge: FunctionComponent<StateBageProps> = (props) => {
       {stateNameLUT[props.state]}
     </Badge>
   }
+  

@@ -11,13 +11,12 @@ type RoutingRootProps = {
   apiClient: ApiClient;
 };
 
-function RoutingRoot({ loginState, apiClient}: RoutingRootProps) {
+function RoutingRoot({ loginState, apiClient }: RoutingRootProps) {
   const logout = async () => await apiClient.logout();
   const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
   
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log() // Without this line interval check is not working
       if(loginState.userId){
         apiClient.getNotifications()
         .then(response => setUnreadNotifications(response.filter(notification => !notification.seen).length))

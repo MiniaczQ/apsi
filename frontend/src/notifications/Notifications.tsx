@@ -19,9 +19,10 @@ type NotificationVersion = {
   documentName: string
   documentVersion: DocumentVersion
 }
+
 export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient, loginState }) => {
   const navigate = useNavigate();
-  const navigateToVersionInscpect = (documentId: string, versionId: string) => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${versionId}`);
+  const navigateToVersionInspect = (documentId: string, versionId: string) => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${versionId}`);
   const [notifications, setNotifications] = useState<NotificationVersion[]>([])
 
   const distinctByEventId = (array: NotificationVersion[]) => {
@@ -45,10 +46,11 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
       }
       return 0
     }
+
   useEffect(() => {
     apiClient.getNotifications()
       .then(response => {
-        response.forEach(notification => apiClient.getVersion(notification.documentId,notification.versionId)
+        response.forEach(notification => apiClient.getVersion(notification.documentId, notification.versionId)
         .then(version => apiClient.getDocument(notification.documentId).then(document => setNotifications(old => [...old, {notification: notification, documentVersion: version, documentName: document.documentName}].sort(sorting)))))
       });
   }, [apiClient, loginState]);
@@ -71,6 +73,7 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
     </Button>
   </td>
   }
+
   const notificationRows = distinctByEventId(notifications).map((notification: NotificationVersion, index: number) => (
     <tr key={notification.notification.eventId}>
       <td>
@@ -81,7 +84,7 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
         <StateBadge state={notification.documentVersion.versionState}/>
       </td>
       <td align="center">
-      <Button variant="outline-secondary" onClick={() => navigateToVersionInscpect(notification.notification.documentId, notification.notification.versionId)}>
+      <Button variant="outline-secondary" onClick={() => navigateToVersionInspect(notification.notification.documentId, notification.notification.versionId)}>
       {notification.documentVersion.versionName}
         </Button>
         
@@ -92,7 +95,6 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
       {createState(notification)}
     </tr>
   ));
-
 
   return (
     <Container>

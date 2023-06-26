@@ -273,8 +273,6 @@ class BackendApiClient implements ApiClient {
     true,
     false)
 
-  
-
   constructor(url: string, loginState: LoginState, authenticationErrorHandler?: (message: string) => void) {
     if (url[url.length - 1] !== '/')
       url += '/';  // the trailing slash is important

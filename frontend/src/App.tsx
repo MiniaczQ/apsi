@@ -36,13 +36,14 @@ export type LoginState = {
   username?: string;
   userId?: string;
   setToken: ((token: string | undefined) => void);
-}
+};
 
 type ModalError = {
   title: string;
   message: string;
   resolveFunc: () => void;
 };
+
 // source: https://stackoverflow.com/a/38552302
 function parseJwt(token: string) {
   const base64Url = token.split('.')[1];
@@ -80,8 +81,6 @@ function App() {
     setLoginDataUsingToken(cookies[cookieName]);
   }, [cookies]);
 
-
-
   const setToken: ((token: string | undefined) => void) = token => {
     if (token !== undefined)
       setCookie(cookieName, token);
@@ -109,14 +108,14 @@ function App() {
   
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient}/>}>
+      <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
         {isLoggedIn ? (<>
           <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
           <Route index path="/*" element={<Documents apiClient={apiClient} />} />
-          <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState}/>}/>
+          <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState} />}/>
         </>) : (<>
           <Route index path="/register" element={<Register apiClient={apiClient} />} />
           <Route index path="/*" element={<Login apiClient={apiClient} />} />

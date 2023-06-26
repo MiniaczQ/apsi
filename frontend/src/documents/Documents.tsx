@@ -72,18 +72,17 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
   const navigateToVersionList = (documentId: string) => navigate(`/Versions?documentId=${encodeURIComponent(documentId)}`);
   const navigateToDocumentCreator = () => navigate('/Versions/new');
 
-  const data: any[] = []
-  distinctByDocumentId(docsVersions).forEach(({ documentVersion, documentName }: DocumentNamedVersion, index: number) => {
-    data.push({
-      index: index + 1,
-      version: documentName,
-      name: documentVersion.versionName,
-      created: getFormattedDate(documentVersion.createdAt),
-      option: (<Button variant="outline-secondary" onClick={() => navigateToVersionList(documentVersion.documentId)}>
-      Check versions
-    </Button>)
-    })
-  });
+  const data = distinctByDocumentId(docsVersions).map(({ documentVersion, documentName }: DocumentNamedVersion, index: number) => ({
+    index: index + 1,
+    version: documentName,
+    name: documentVersion.versionName,
+    created: getFormattedDate(documentVersion.createdAt),
+    option: (
+      <Button variant="outline-secondary" onClick={() => navigateToVersionList(documentVersion.documentId)}>
+        Check versions
+      </Button>
+    )
+  }));
 
   return (
     <Container>

@@ -69,9 +69,8 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
     return -String(a.versionName).localeCompare(b.versionName, undefined, { numeric: true, sensitivity: 'base' });
   }
 
-  const data: any[] = []
-  versions?.sort(compareVersions).forEach(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion, index: number) => {
-    data.push({
+
+   const data: any[] =versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion, index: number) => ({
       index: index + 1,
       version: versionName,
       state: getStateBadge(versionState),
@@ -79,8 +78,8 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
       option: (<Button variant="outline-secondary" onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)}>
       Inspect version
     </Button>)
-    })
-  });
+    }
+  ));
 
   return (
     <Container>

@@ -2,15 +2,15 @@ import { Table } from "react-bootstrap";
 import { TableBody, Column, SortOrder } from "./TableBody";
 import TableHead from "./TableHead";
 
-import { FunctionComponent, useEffect, useState } from "react";
-type SortedTableProps = {
-    data: any[]
-    columns: Column[]
+import { useEffect, useState } from "react";
+type SortedTableProps<T> = {
+  data: T[]
+  columns: Column[]
 }
 
-export const SortedTable: FunctionComponent<SortedTableProps> = ({ data, columns }) => {
-    const useSortableTable = (data: any[], columns: Column[]) => {
-    const handleSorting = (sortField: any, sortOrder: SortOrder) => {
+export function SortedTable<T>(props: SortedTableProps<T>) {
+  const useSortableTable = (data: T[], columns: Column[]) => {
+    const handleSorting = (sortField: T, sortOrder: SortOrder) => {
       if (sortField) {
         const sorted = [...tableData].sort((a, b) => {
           if (a[sortField] === null) return 1;
@@ -25,21 +25,21 @@ export const SortedTable: FunctionComponent<SortedTableProps> = ({ data, columns
         setTableData(sorted);
       }
     };
-  
+
     return [tableData, handleSorting];
   };
 
   const [tableData, setTableData] = useState<any[]>([]);
-  const [tData, handleSorting] = useSortableTable(data, columns);
+  const [tData, handleSorting] = useSortableTable(props.data, props.columns);
   useEffect(() => {
-    setTableData(getDefaultSorting(data, columns))
-  },[data, columns])
+    setTableData(getDefaultSorting(props.data, props.columns))
+  }, [props.data, props.columns])
 
   return (
     <>
       <Table striped bordered hover size="sm">
-        <TableHead columns={columns} handleSorting={handleSorting as (sortField: any, sortOrder: SortOrder) => void} />
-        <TableBody columns={columns} tableData={tData as any[]} />
+        <TableHead columns={props.columns} handleSorting={handleSorting as (sortField: any, sortOrder: SortOrder) => void} />
+        <TableBody columns={props.columns} tableData={tData as any[]} />
       </Table>
     </>
   );

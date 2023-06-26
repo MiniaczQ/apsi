@@ -61,7 +61,7 @@ export const VersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({
       <Form.Label>Parent version name</Form.Label>
       <Form.Control disabled type="text" value={parentVersion.versionName} />
       <Form.Label>New version name</Form.Label>
-      <Select required
+      <Select key={versions.length} required
         options={possibleNames}
         defaultValue={possibleNames[0]}
         isDisabled={disabled}

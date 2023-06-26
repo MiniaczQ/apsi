@@ -45,7 +45,9 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   const [error, setError] = useState<string>();
   const isErrorSet = (error?.length ?? 0) > 0;
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setIsLoading] = useState(true);
+
   const [document, setDocument] = useState<Document>();
   const [versions, setVersions] = useState<DocumentVersion[]>();
   const [users, setUsers] = useState<User[]>();
@@ -72,8 +74,8 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
       return;
     setCreatedVersion(createdVersion => ({
       ...createdVersion,
-      content: parentVersion.content,
-      parents: [parentVersion.versionId],
+      content: createdVersion.content.length > 0 ? createdVersion.content : parentVersion.content,
+      parents: createdVersion.parents.length > 0 ? createdVersion.parents : [parentVersion.versionId],
     }));
   }, [parentVersion]);
 
@@ -101,6 +103,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
 
   const createVersion = async () => {
     setError(undefined);
+    setIsSubmitting(true);
     let creationPromise;
     if (documentId === undefined) {
       let doc = { ...createdDocument };
@@ -120,6 +123,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
       }
       navigate(`/Versions?documentId=${response.documentId}`);
     } catch (e) {
+      setIsSubmitting(false);
       const prefix = isCreatingNewVersion
         ? 'Error while creating a new version: '
         : isCreatingNewDocument ? 'Error while creating a new document: ' : 'Error: ';
@@ -137,20 +141,12 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     }
   };
 
-  const handleClick: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
-    (evt.target as HTMLButtonElement).disabled = true;
-    try {
-      await createVersion();
-    } catch (e) {
-      console.error(e);
-      (evt.target as HTMLButtonElement).disabled = false;
-    }
-  };
-
   const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
     if (evt.key === 'Enter') {
-      evt.preventDefault();      
-      await createVersion();
+      evt.preventDefault();
+      if (!isSubmitting) {
+        await createVersion();
+      }
     }
   };
 
@@ -174,7 +170,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
         <VersionMergingOptions versions={versionsMinusParent} onChange={parents => setCreatedVersion({ ...createdVersion, parents: [parentVersion.versionId, ...parents] })} />
       </>) : <></>}
       <VersionContentEditor defaultValue={parentVersion?.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
-      <Button className="w-100" type="submit" onClick={handleClick}>Create</Button>
+      <Button disabled={isSubmitting} className="w-100" type="submit" onClick={createVersion}>Create</Button>
     </Form>
   </>) : <></>;
 }

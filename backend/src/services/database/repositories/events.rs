@@ -56,7 +56,7 @@ impl EventsRepository {
     pub async fn mark_read(&self, event_id: Uuid) -> Result<(), Box<dyn Error>> {
         self.database
             .execute(
-                "UPDATE users_events SET seen = TRUE WHERE event_id = $1",
+                "UPDATE events SET seen = TRUE WHERE event_id = $1",
                 &[&event_id],
             )
             .await?;

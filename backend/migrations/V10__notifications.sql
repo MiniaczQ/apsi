@@ -10,6 +10,6 @@ CREATE TABLE events (
     created_at timestamp with time zone DEFAULT now(),
     CONSTRAINT fk__events__users FOREIGN KEY(user_id) REFERENCES users(user_id),
     CONSTRAINT fk__events__document_versions FOREIGN KEY(document_id, version_id) REFERENCES document_versions(document_id, version_id),
-    CONSTRAINT fk__events__user_roles FOREIGN KEY(user_id, role_id) REFERENCES user_roles(user_id, role_id),
+    CONSTRAINT fk__events__document_version_roles FOREIGN KEY(role_id) REFERENCES document_version_roles(role_id),
     CONSTRAINT fk__events__document_version_states FOREIGN KEY(state_id) REFERENCES document_version_states(state_id)
 );

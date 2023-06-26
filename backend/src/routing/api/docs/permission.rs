@@ -2,18 +2,18 @@ use axum::{
     extract::{FromRef, Path},
     http::StatusCode,
     routing::{get, post},
-    Json, Router,
+    Json, Router, debug_handler,
 };
 use s3::Bucket;
 use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::{role::DocumentVersionRole, user::PublicUserWithRoles},
+    models::{role::DocumentVersionRole, user::PublicUserWithRoles, event::EventType},
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
-        database::{repositories::permission::PermissionRepository, DbPool},
-        util::Res2,
+        database::{repositories::{permission::PermissionRepository, events::EventsRepository}, DbPool},
+        util::Res2, state::AppState,
     },
 };
 
@@ -72,8 +72,10 @@ async fn am_owner(
     }
 }
 
+#[debug_handler(state=AppState)]
 async fn grant_version_role(
     permission_repository: PermissionRepository,
+    event_repository: EventsRepository,
     _: Claims,
     Path((document_id, version_id, user_id, role)): Path<(Uuid, Uuid, Uuid, DocumentVersionRole)>,
 ) -> Res2 {
@@ -85,7 +87,7 @@ async fn grant_version_role(
         .grant_document_version_role(user_id, document_id, version_id, role)
         .await
     {
-        Ok(true) => Res2::NoMsg(StatusCode::OK),
+        Ok(true) => {event_repository.create_event(document_id, version_id, user_id, EventType::RoleAdded(role)).await.ok(); Res2::NoMsg(StatusCode::OK)},
         Ok(false) => Res2::NoMsg(StatusCode::BAD_REQUEST),
         Err(error) => {
             error!(

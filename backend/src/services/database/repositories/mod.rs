@@ -6,6 +6,7 @@ use std::{
 pub mod comments;
 pub mod document_sets;
 pub mod documents;
+pub mod events;
 pub mod files;
 pub mod permission;
 pub mod users;

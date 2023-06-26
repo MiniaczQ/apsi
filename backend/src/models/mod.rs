@@ -2,6 +2,7 @@ pub mod attachment;
 pub mod comment;
 pub mod document;
 pub mod document_set;
+pub mod event;
 pub mod role;
 pub mod set_version;
 pub mod user;

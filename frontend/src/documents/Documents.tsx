@@ -12,7 +12,7 @@ type DocumentsProps = {
   apiClient: ApiClient
 };
 
-type DocumentNamedVersion = {
+export type DocumentNamedVersion = {
   documentName: String,
   documentVersion: DocumentVersion
 }

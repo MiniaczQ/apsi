@@ -90,7 +90,7 @@ export const Comments: FunctionComponent<CommentsProps> = ({ loginState, apiClie
     return (
       <div className={'my-3'} key={comment.commentId}>
         {documentVersionMember.find(member => member.userId === comment.userId)?.roles.map(role => getStateBadge(role))}
-        <b className="ms-3">{loginState.username}</b>
+        <b className="ms-3">{comment.username}</b>
         <span className="ms-3">{getFormattedDate(comment.createdAt)}</span>
         <br /> 
         <div className="ms-3">{comment.content}</div>

@@ -10,6 +10,7 @@ import UpdateVersion from "../models/UpdateVersion";
 import User from "../models/User";
 import Comment from "../models/Comment";
 import CreateComment from "../models/CreateComment";
+import {Notification} from "../models/Notification";
 
 export class ApiError extends Error {
     constructor(message?: string) {
@@ -71,6 +72,9 @@ interface ApiClient {
     revokeRole: (documentId: string, versionId: string, userId: string, role: DocumentVersionMemberRole) => Promise<void>;
     getMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
     getMember: (documentId: string, versionId: string) => Promise<DocumentVersionMember>;
+
+    getNotifications: () => Promise<Notification[]>;
+    markAsRead: (notificationId: string) => Promise<void>;
 
     createComment: (documentId: string, versionId: string, comment: CreateComment) => Promise<Comment>;
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>

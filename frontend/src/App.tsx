@@ -18,6 +18,7 @@ import ApiClient from './api/ApiClient';
 import BackendApiClient from './api/BackendApiClient';
 import VersionEditor from './versions/VersionEditor';
 import { Button, Modal } from 'react-bootstrap';
+import Notifications from './notifications/Notifications';
 
 
 const API_BASE_URL = 'http://localhost:3000/api/'
@@ -104,7 +105,7 @@ function App() {
       return;
     setModalError({ title: 'Authentication error', message, resolveFunc: () => loginState.setToken(undefined) });
   });
-
+  
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
@@ -114,6 +115,7 @@ function App() {
           <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
           <Route index path="/*" element={<Documents apiClient={apiClient} />} />
+          <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState} />}/>
         </>) : (<>
           <Route index path="/register" element={<Register apiClient={apiClient} />} />
           <Route index path="/*" element={<Login apiClient={apiClient} />} />

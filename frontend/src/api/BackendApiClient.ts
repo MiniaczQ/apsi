@@ -13,10 +13,12 @@ import User from "../models/User";
 import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 import Comment from '../models/Comment';
 import CreateComment from '../models/CreateComment';
+import { Notification } from "../models/Notification";
 
 type BackendError = {
   error: string;
 };
+
 
 class BackendApiClient implements ApiClient {
   private apiBaseUrl: string;
@@ -263,6 +265,13 @@ class BackendApiClient implements ApiClient {
   loadComments = async (documentId: string, versionId: string) => await this.get<Comment[]>(
     `documents/${documentId}/${versionId}/comments`,
   );
+
+  getNotifications = async() => await this.get<Notification[]>(`events`);
+  markAsRead = async (eventId: string) => await this.post(
+    `events/${eventId}`,
+    undefined,
+    true,
+    false)
 
   constructor(url: string, loginState: LoginState, authenticationErrorHandler?: (message: string) => void) {
     if (url[url.length - 1] !== '/')

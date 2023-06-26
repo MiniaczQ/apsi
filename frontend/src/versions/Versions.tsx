@@ -1,12 +1,13 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { Button, Badge, Container } from 'react-bootstrap';
+import { Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
 import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
 import Document from '../models/Document';
-import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
+import { StateBadge } from '../models/StateBadge';
+import { DocumentVersion} from '../models/DocumentVersion';
 import { Column } from '../table/TableBody';
 import { SortedTable } from '../table/SortedTable';
 
@@ -33,28 +34,6 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const [document, setDocument] = useState<Document>();
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
 
-
-  function getStateBadge(state: DocumentVersionState | undefined) {
-    if (state === undefined) {
-      return <></>
-    }
-    const stateNameLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'In Progress',
-      'readyForReview': 'Ready For Review',
-      'reviewed': 'Reviewed',
-      'published': 'Published',
-    };
-    const stateStyleLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'primary',
-      'readyForReview': 'danger',
-      'reviewed': 'warning',
-      'published': 'success',
-    };
-    return <Badge pill bg={stateStyleLUT[state]} className="ms-3">
-      {stateNameLUT[state]}
-    </Badge>
-  }
-
   useEffect(() => {
     if (documentId === undefined)
       return;
@@ -69,11 +48,10 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
     return -String(a.versionName).localeCompare(b.versionName, undefined, { numeric: true, sensitivity: 'base' });
   }
 
-
-   const data: any[] =versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion, index: number) => ({
+   const data: any[] = versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion, index: number) => ({
       index: index + 1,
       version: versionName,
-      state: getStateBadge(versionState),
+      state: <StateBadge state={versionState}/>,
       created: getFormattedDate(createdAt),
       option: (<Button variant="outline-secondary" onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)}>
       Inspect version

@@ -63,8 +63,8 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
     }
 
     return <td align='center'>
-    <Button variant="outline-secondary" onClick={() => {
-      apiClient.markAsRead(notification.notification.eventId)
+    <Button variant="outline-secondary" onClick={async () => {
+      await apiClient.markAsRead(notification.notification.eventId)
       const filteredNotifications = notifications.filter(element => element.notification.eventId !== notification.notification.eventId)
       notification.notification.seen = true
       setNotifications(old => [...filteredNotifications,notification])

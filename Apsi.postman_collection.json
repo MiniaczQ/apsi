@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "ee966f40-cfee-48d1-b239-8ae87a7f050f",
+		"_postman_id": "977d03a3-4513-446c-8f69-3a7d93b7b1fd",
 		"name": "Apsi",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "19281773"
+		"_exporter_id": "21770631"
 	},
 	"item": [
 		{
@@ -176,7 +176,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"7.k\",\r\n    \"content\": \"abrakdadfdabrfgfgffgfgfga2\",\r\n    \"parents\": [\"65a45040-f418-11ed-a05b-0242ac120003\"]\r\n}",
+							"raw": "{\r\n    \"versionName\": \"5\",\r\n    \"content\": \"abrakdadfdabrfgfgffgfgfga2\",\r\n    \"parents\": [\"65a45040-f418-11ed-a05b-0242ac120003\"]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -210,7 +210,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"piąty masdsdsddaja\",\r\n    \"content\": \"dobro wssdsdpólnie\",\r\n    \"parents\": [\"e8f82ef3-deb8-44ce-b916-04e5bb6abc78\"]\r\n}",
+							"raw": "{\r\n    \"newState\": \"published\",\r\n    \"updatedAt\": \"2023-06-26T17:27:27.688392Z\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -218,7 +218,7 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/documents/:document_id/:version_id/change-state/:state",
+							"raw": "{{baseUrl}}/api/documents/:document_id/:version_id/change-state",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -227,8 +227,7 @@
 								"documents",
 								":document_id",
 								":version_id",
-								"change-state",
-								":state"
+								"change-state"
 							],
 							"variable": [
 								{
@@ -238,10 +237,6 @@
 								{
 									"key": "version_id",
 									"value": "{{versionId}}"
-								},
-								{
-									"key": "state",
-									"value": "published"
 								}
 							]
 						}
@@ -311,7 +306,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"versionName\": \"trdsdsd\",\r\n    \"content\": \"dobro wspólne\"\r\n}",
+							"raw": "{\r\n    \"versionName\": \"trdsdsd\",\r\n    \"content\": \"dobro wspólne\",\r\n    \"updatedAt\": \"2023-06-26T17:27:27.688392Z\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -631,7 +626,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"documentName\": \"konstyddtucja\",\r\n    \"initialVersion\": {\r\n        \"versionName\": \"aaa\",\r\n        \"content\": \"bbb\"\r\n    }\r\n}",
+							"raw": "{\r\n    \"documentName\": \"konstyddtucja\",\r\n    \"initialVersion\": {\r\n        \"versionName\": \"1\",\r\n        \"content\": \"bbb\"\r\n    }\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1479,7 +1474,7 @@
 		},
 		{
 			"key": "jwtToken",
-			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODc3Mjc2MTUsIm5iZiI6MTY4NzY0MTIxNSwiaWF0IjoxNjg3NjQxMjE1LCJ1c2VySWQiOiI2NWE0NTA0MC1mNDE4LTExZWQtYTA1Yi0wMjQyYWMxMjAwMDMiLCJ1c2VybmFtZSI6InEifQ.OSpQy6hEqGXoScxwKAkIek_Y32Z5GhhDG2sMXI5x-i8YX2ILFmRnI1Wt07ESgLUO549PRQt2QfE30BKVkf709B-NUXmy0Pt0Pq5h8UwEkOQP2lfbApuBio6aHWPYXcr4GKlmQJFPEfM54JWGo7JMe_5JN66HGlcLRXnO-dgP1bXMnvrmwZmCd4rTGquswkMrFhRpC1jduNwY-F80XmOAK_SJEDKRf3NX9_hs8W38bzjOK2U19cwU1eMZ5FGvb6I6gW_FU5RwPdhm2XZJPemiZzlC0ILZkJrp8wAaEufK_hNJPLSVI9yPeU3IWIUhXL-F6UoLJwNiNXytkXq7owlCiQ"
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2ODc4ODY4NjUsIm5iZiI6MTY4NzgwMDQ2NSwiaWF0IjoxNjg3ODAwNDY1LCJ1c2VySWQiOiI2NWE0NTA0MC1mNDE4LTExZWQtYTA1Yi0wMjQyYWMxMjAwMDMiLCJ1c2VybmFtZSI6InEifQ.RchGE2nTJplFRoY1wXxHll-JHasidP2xDZoTYfqsQZdQlgyvlnc5ekSBZebjLvJikHEQP_jeM2sYPrUQAf2v6MANxW61ZXF_p9HnE8bqxcPGLIi1O4Uo8AJhjqO3XqTiOS8xcSPCMCTmfWBtiWXXAKYWARoKEF2psEx7Lw7S2m3po9yDwoWZ7lnXBemP4wNOCEs6kqtVj1cn0FZOmZAwafM6xYPrTm29L9sLMbnzgH-DqLpLViwF9Zj4vlmuQ8GHaX_sPBSXbh-SGHCi9KhM6c1M0nE0NPypgJx4vujwa_mpqxsclu_NBOox7nihP_QsHD4SuAdsE91UDGo2arYvKw"
 		},
 		{
 			"key": "documentId",

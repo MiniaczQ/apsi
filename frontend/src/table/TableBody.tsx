@@ -16,6 +16,7 @@ export type Column = {
   rowSpan: number | undefined
   colSpan: number | undefined
   group: string | undefined
+  
 }
 
 export const TableBody: FunctionComponent<TableBodyProps> = ({ tableData, columns }) => {

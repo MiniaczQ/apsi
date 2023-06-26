@@ -3,6 +3,7 @@ import { TableBody, Column, SortOrder } from "./TableBody";
 import TableHead from "./TableHead";
 
 import { useEffect, useState } from "react";
+import moment from "moment";
 type SortedTableProps<T> = {
   data: T[]
   columns: Column[]
@@ -16,6 +17,18 @@ export function SortedTable<T>(props: SortedTableProps<T>) {
           if (a[sortField] === null) return 1;
           if (b[sortField] === null) return -1;
           if (a[sortField] === null && b[sortField] === null) return 0;
+          if (a[sortField].match(/[0-9]{2}\.[0-9]{2}\.[0-9]{4}, [0-9]{2}:[0-9]{2}:[0-9]{2}/) ||
+            b[sortField].match(/[0-9]{2}\.[0-9]{2}\.[0-9]{4}, [0-9]{2}:[0-9]{2}:[0-9]{2}/)) {
+              const aDate = moment(a[sortField], 'DD.MM.YYYY, HH:mm:ss').toDate()
+              const bDate = moment(b[sortField], 'DD.MM.YYYY, HH:mm:ss').toDate()
+              if(aDate > bDate){
+                return -1 * (sortOrder === "asc" ? 1 : -1);
+              }
+              if(aDate < bDate){
+                return 1 * (sortOrder === "asc" ? 1 : -1);
+              }
+              return 0 * (sortOrder === "asc" ? 1 : -1);
+          }
           return (
             a[sortField].toString().localeCompare(b[sortField].toString(), "en", {
               numeric: true,

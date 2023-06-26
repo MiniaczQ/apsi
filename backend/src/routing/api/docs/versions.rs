@@ -18,12 +18,14 @@ use crate::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
             repositories::{
-                comments::CommentsRepository, documents::DocumentsRepository,
-                permission::PermissionRepository, RepoError,
+                comments::CommentsRepository,
+                documents::{ConcurrencyError, DocumentsRepository, UniqueError},
+                permission::PermissionRepository,
+                RepoError,
             },
             DbPool,
         },
-        util::{Res2, ValidatedJson},
+        util::{Res3, ValidatedJson},
     },
 };
 
@@ -33,7 +35,7 @@ async fn create_version(
     Path(document_id): Path<Uuid>,
     ValidatedJson(data): ValidatedJson<CreateVersionWithParents>,
 ) -> Result<Json<DocumentVersion>, StatusCode> {
-    let version = documents_repository
+    let result = documents_repository
         .create_version(
             claims.user_id,
             document_id,
@@ -41,12 +43,15 @@ async fn create_version(
             data.content,
             data.parents,
         )
-        .await
-        .map_err(|e| {
-            error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
-    Ok(Json(version))
+        .await;
+    match result {
+        Ok(version) => Ok(Json(version)),
+        Err(UniqueError::UniqueValueViolation) => Err(StatusCode::CONFLICT),
+        Err(error) => {
+            error!("{}", error);
+            Err(StatusCode::BAD_REQUEST)
+        }
+    }
 }
 
 async fn get_version(
@@ -88,7 +93,7 @@ async fn update_version(
     claims: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
     ValidatedJson(data): ValidatedJson<UpdateVersion>,
-) -> Res2 {
+) -> Res3<DocumentVersion> {
     match permission_repository
         .does_user_have_document_version_roles(
             claims.user_id,
@@ -100,7 +105,7 @@ async fn update_version(
     {
         Ok(true) => {}
         Ok(false) => {
-            return Res2::Msg((
+            return Res3::Msg((
                 StatusCode::FORBIDDEN,
                 "User does not have permission to perform update",
             ));
@@ -110,18 +115,23 @@ async fn update_version(
                 { error = error },
                 "Error during version update permission check"
             );
-            return Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR);
+            return Res3::NoMsg(StatusCode::INTERNAL_SERVER_ERROR);
         }
     }
     match documents_repository
-        .update_version(document_id, version_id, data.content)
+        .update_version(document_id, version_id, data.content, data.updated_at)
         .await
     {
-        Ok(true) => Res2::NoMsg(StatusCode::OK),
-        Ok(false) => Res2::NoMsg(StatusCode::BAD_REQUEST),
-        Err(error) => {
-            error!({ error = error }, "Error during version update");
-            Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR)
+        Ok(version) => Res3::Json((version, StatusCode::OK)),
+        Err(ConcurrencyError::UniqueValueViolation(version)) => {
+            Res3::Json((version, StatusCode::CONFLICT))
+        }
+        Err(ConcurrencyError::Failed) => {
+            Res3::Msg((StatusCode::BAD_REQUEST, "Version could not be updated"))
+        }
+        Err(ConcurrencyError::Pg(error)) => {
+            error!({ error = error.to_string() }, "Error during version update");
+            Res3::NoMsg(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
 }

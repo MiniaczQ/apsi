@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/uuid": "^9.0.2",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -11,6 +10,8 @@
     "@types/node": "^16.18.23",
     "@types/react": "^18.0.32",
     "@types/react-dom": "^18.0.11",
+    "@types/uuid": "^9.0.2",
+    "moment": "2.29.4",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.2",
     "react-cookie": "^4.1.1",

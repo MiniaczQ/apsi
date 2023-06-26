@@ -1,5 +1,4 @@
 use axum::{
-    debug_handler,
     extract::{FromRef, Path},
     http::StatusCode,
     routing::post,
@@ -26,12 +25,10 @@ use crate::{
             },
             DbPool,
         },
-        state::AppState,
         util::Res3,
     },
 };
 
-#[debug_handler(state=AppState)]
 async fn change_state(
     documents_repository: DocumentsRepository,
     permission_repository: PermissionRepository,

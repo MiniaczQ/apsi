@@ -1,26 +1,19 @@
-import { FunctionComponent, SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
+import { FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
-import { Form, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 import { LoginState } from '../App';
 import ApiClient from '../api/ApiClient';
-import CreateDocument from '../models/CreateDocument';
-import CreateVersion from '../models/CreateVersion';
+
 import Document from '../models/Document';
 import DocumentVersion from '../models/DocumentVersion';
-import User from '../models/User';
-import VersionMergingOptions from './VersionMergingOptions';
-import VersionNameChooser from './VersionNameChooser';
-import VersionContentEditor from './VersionContentEditor';
-import RoleEditor from './RoleEditor';
-import DocumentNameEditor from './DocumentNameEditor';
-import DocumentVersionMember, { DocumentVersionMemberRole, editableMemberRoles } from '../models/DocumentVersionMember';
+
 import SetNameEditor from './SetNameEditor';
 import CreateSet from '../models/CreateSet';
 import CreateSetVersion from '../models/CreateSetVersion';
 import SetDocumentVersion from '../models/SetDocumentVersion';
-import { getSystemErrorMap } from 'util';
+
 import Set from '../models/Set';
 
 type VersionCreatorProps = {
@@ -53,20 +46,12 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
     setVersionName: '1', 
     documentVersionIds:[[]],  
     parents: [],
-  });
-
-  
-
-  
-  
-
-  
+  });  
 
   const changeVersion = useCallback(
     (versionName: string) => setCreatedVersion(createdVersion => ({ ...createdVersion, versionName })),
     [],
   );
-  
 
 
   const [AddedVersion, setAddedVersion] = useState<SetDocumentVersion>({
@@ -78,7 +63,6 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
     documentId:'', 
     versionId: ''  
   }
-
 
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string>();

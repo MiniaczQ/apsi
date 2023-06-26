@@ -1,4 +1,4 @@
-import { FunctionComponent, KeyboardEventHandler, useEffect, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
@@ -107,18 +107,11 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
     }
   };
 
-  const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
-    if (evt.key === 'Enter') {
-      evt.preventDefault();      
-      await updateVersion();
-    }
-  };
-
   if (users === undefined || originalMembers === undefined || updatedVersion === undefined)
     return null;
 
   return (
-    <Form onKeyDown={handleEnter}>
+    <Form>
       <DocumentNameEditor disabled defaultValue={baseDocument?.documentName ?? ''} />
       {parentVersionField}
       <RoleEditor options={users} defaultValue={originalMembers} onChange={(granted, revoked) => { setGrantedRoles(granted); setRevokedRoles(revoked); }} />

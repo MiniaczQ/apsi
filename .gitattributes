@@ -1,1 +1,3 @@
 * text eol=crlf
+# Images
+*.png        binary svneol=unset#image/png

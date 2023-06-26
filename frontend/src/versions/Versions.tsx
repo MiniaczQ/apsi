@@ -1,13 +1,15 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { Table, Button, Container } from 'react-bootstrap';
+import { Button, Badge, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
 import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
 import Document from '../models/Document';
-import { DocumentVersion } from '../models/DocumentVersion';
 import { StateBadge } from '../models/StateBadge';
+import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
+import { Column } from '../table/TableBody';
+import { SortedTable } from '../table/SortedTable';
 
 
 type VersionsProps = {
@@ -15,6 +17,14 @@ type VersionsProps = {
 };
 
 const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
+
+const columns = [
+  { label: '#', accessor: 'index', sortable: false, sortByOrder: 'asc'},
+  { label: 'Version', accessor: 'version', sortable: true, sortByOrder: 'asc'},
+  { label: 'State', accessor: 'state', sortable: false, sortByOrder: 'asc'},
+  { label: 'Created', accessor: 'created', sortable: true, sortByOrder: 'asc'}, 
+  { label: 'Options', accessor: 'option', sortable: false, sortByOrder: 'asc'}   
+] as Column[]
 
 export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
   const navigate = useNavigate();
@@ -57,30 +67,23 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
     </tr>
   );
 
+   const data: any[] =versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion, index: number) => ({
+      index: index + 1,
+      version: versionName,
+      state: getStateBadge(versionState),
+      created: getFormattedDate(createdAt),
+      option: (<Button variant="outline-secondary" onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)}>
+      Inspect version
+    </Button>)
+    }
+  ));
 
   return (
     <Container>
       <h3>
         {document?.documentName}
       </h3>
-      <Table striped bordered hover size="sm">
-        <thead>
-          <tr>
-            <th>
-              Version
-            </th>
-            <th >
-              Created
-            </th>
-            <th>
-              Options
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {versionRows}
-        </tbody>
-      </Table>
+      <SortedTable data={data} columns={columns}/>
     </Container>
   );
 }

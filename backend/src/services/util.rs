@@ -6,8 +6,30 @@ use axum::{
     response::IntoResponse,
     BoxError, Json,
 };
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 use validator::{Validate, ValidationErrors};
+
+pub enum Res3<T>
+where
+    T: Serialize,
+{
+    Json((T, StatusCode)),
+    Msg((StatusCode, &'static str)),
+    NoMsg(StatusCode),
+}
+
+impl<T> IntoResponse for Res3<T>
+where
+    T: Serialize,
+{
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            Res3::Json((data, code)) => (code, Json(data)).into_response(),
+            Res3::Msg(r) => r.into_response(),
+            Res3::NoMsg(r) => r.into_response(),
+        }
+    }
+}
 
 pub enum Res2 {
     Msg((StatusCode, &'static str)),

@@ -1,11 +1,14 @@
-use std::error::Error;
+use std::{
+    error::Error,
+    fmt::{Debug, Display},
+};
 
 use axum::{
     async_trait,
     extract::{FromRef, FromRequestParts},
     http::{request::Parts, StatusCode},
 };
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use tokio_postgres::Transaction;
 use tracing::error;
 use uuid::Uuid;
@@ -27,6 +30,63 @@ pub struct DocumentsRepository {
     database: DbConn,
 }
 
+#[derive(Debug)]
+pub enum UniqueError {
+    Pg(tokio_postgres::Error),
+    UniqueValueViolation,
+}
+
+impl Display for UniqueError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Pg(error) => Display::fmt(error, f),
+            Self::UniqueValueViolation => f.write_str("Key already exists"),
+        }
+    }
+}
+
+impl Error for UniqueError {}
+
+impl From<tokio_postgres::Error> for UniqueError {
+    fn from(value: tokio_postgres::Error) -> Self {
+        Self::Pg(value)
+    }
+}
+
+#[derive(Debug)]
+pub enum ConcurrencyError<T>
+where
+    T: Debug,
+{
+    Pg(tokio_postgres::Error),
+    UniqueValueViolation(T),
+    Failed,
+}
+
+impl<T> Display for ConcurrencyError<T>
+where
+    T: Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Pg(error) => Display::fmt(error, f),
+            Self::UniqueValueViolation(_) => f.write_str("Concurrency error"),
+            Self::Failed => f.write_str("Failed to updated"),
+        }
+    }
+}
+
+impl<T> Error for ConcurrencyError<T> where T: Debug {}
+
+impl<T> From<tokio_postgres::Error> for ConcurrencyError<T>
+where
+    T: Debug,
+{
+    fn from(value: tokio_postgres::Error) -> Self {
+        Self::Pg(value)
+    }
+}
+
 impl DocumentsRepository {
     async fn create_version_inner<'a>(
         db: &Transaction<'a>,
@@ -35,7 +95,7 @@ impl DocumentsRepository {
         version_name: String,
         content: String,
         parent_ids: &[Uuid],
-    ) -> Result<DocumentVersion, Box<dyn Error>> {
+    ) -> Result<DocumentVersion, UniqueError> {
         let version_id = Uuid::new_v4();
         let created_at = Utc::now();
         db
@@ -52,7 +112,16 @@ impl DocumentsRepository {
                     &content,
                 ],
             )
-            .await?;
+            .await.map_err(|error| {
+                if let Some(db_error) = error.as_db_error() {
+                    if let Some(constraint) = db_error.constraint() {
+                        if constraint == "document_versions_document_id_version_name_key" {
+                            return UniqueError::UniqueValueViolation
+                        }
+                    }
+                }
+                error.into()
+            })?;
         for parent_id in parent_ids {
             db
                 .execute(
@@ -80,7 +149,7 @@ impl DocumentsRepository {
         let document_version = db
             .query_one(
                 "
-                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state, v.updated_at,
                     array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
                     array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
                 FROM document_versions v
@@ -101,7 +170,7 @@ impl DocumentsRepository {
         user_id: Uuid,
         version_name: String,
         content: String,
-    ) -> Result<DocumentWithInitialVersion, Box<dyn Error>> {
+    ) -> Result<DocumentWithInitialVersion, UniqueError> {
         let document_id = Uuid::new_v4();
         let transaction = self.database.transaction().await?;
         transaction
@@ -112,7 +181,17 @@ impl DocumentsRepository {
                 ",
                 &[&document_id, &document_name],
             )
-            .await?;
+            .await
+            .map_err(|error| {
+                if let Some(db_error) = error.as_db_error() {
+                    if let Some(constraint) = db_error.constraint() {
+                        if constraint == "documents_document_name_key" {
+                            return UniqueError::UniqueValueViolation;
+                        }
+                    }
+                }
+                error.into()
+            })?;
         let initial_version = Self::create_version_inner(
             &transaction,
             user_id,
@@ -196,7 +275,7 @@ impl DocumentsRepository {
         version_name: String,
         content: String,
         parents: Vec<Uuid>,
-    ) -> Result<DocumentVersion, Box<dyn Error>> {
+    ) -> Result<DocumentVersion, UniqueError> {
         let transaction = self.database.transaction().await?;
         let document_version = Self::create_version_inner(
             &transaction,
@@ -217,11 +296,11 @@ impl DocumentsRepository {
         document_id: Uuid,
         version_id: Uuid,
     ) -> Result<DocumentVersion, RepoError> {
-        let versions = self
+        let version = self
             .database
-            .query(
+            .query_opt(
                 "
-                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state, v.updated_at,
                     array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
                     array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
                 FROM document_versions v
@@ -239,13 +318,12 @@ impl DocumentsRepository {
                 &[&document_id, &version_id, &user_id],
             )
             .await?;
-        match versions.len() {
-            0 => Err(RepoError::Forbidden),
-            1 => {
-                let version = DocumentVersion::try_from(versions.into_iter().next().unwrap())?;
+        match version {
+            None => Err(RepoError::Forbidden),
+            Some(version) => {
+                let version = DocumentVersion::try_from(version)?;
                 Ok(version)
             }
-            _ => Err(RepoError::Unreachable),
         }
     }
 
@@ -258,7 +336,7 @@ impl DocumentsRepository {
             .database
             .query(
                 "
-                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state,
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state, v.updated_at,
                     array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
                     array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
                 FROM document_versions v
@@ -287,25 +365,52 @@ impl DocumentsRepository {
         document_id: Uuid,
         version_id: Uuid,
         content: String,
-    ) -> Result<bool, Box<dyn Error>> {
+        updated_at: DateTime<Utc>,
+    ) -> Result<DocumentVersion, ConcurrencyError<DocumentVersion>> {
+        let now = Utc::now();
         let updated = self
             .database
             .execute(
                 "
                 UPDATE document_versions
-                SET content = $1
-                WHERE document_id = $2
-                AND version_id = $3
-                AND version_state = $4",
+                SET content = $1, updated_at = $2
+                WHERE document_id = $3
+                AND version_id = $4
+                AND updated_at = $5
+                AND version_state = $6
+                ",
                 &[
                     &content,
+                    &now,
                     &document_id,
                     &version_id,
+                    &updated_at,
                     &i16::from(DocumentVersionState::InProgress),
                 ],
             )
             .await?;
-        Ok(updated == 1)
+        let version = self
+            .database
+            .query_one(
+                "
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state, v.updated_at,
+                    array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
+                    array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
+                FROM document_versions v
+                WHERE v.document_id = $1
+                AND v.version_id = $2
+                ",
+                &[&document_id, &version_id],
+            )
+            .await?;
+        let version = DocumentVersion::try_from(version)?;
+        if updated == 1 {
+            Ok(version)
+        } else if updated == 0 && updated_at != version.updated_at {
+            Err(ConcurrencyError::UniqueValueViolation(version))
+        } else {
+            Err(ConcurrencyError::Failed)
+        }
     }
 
     pub async fn get_file_attachments(
@@ -402,7 +507,7 @@ impl DocumentsRepository {
         &self,
         document_id: Uuid,
         version_id: Uuid,
-        file_id: Uuid, // TODO: czemu send sync???
+        file_id: Uuid,
     ) -> Result<bool, Box<dyn Error + Send + Sync>> {
         let deleted = self
             .database
@@ -424,7 +529,8 @@ impl DocumentsRepository {
         document_id: Uuid,
         version_id: Uuid,
         new_state: DocumentVersionState,
-    ) -> Result<bool, Box<dyn Error + Send + Sync>> {
+        updated_at: DateTime<Utc>,
+    ) -> Result<DocumentVersion, ConcurrencyError<DocumentVersion>> {
         let allowed_states: Vec<i16> = match new_state {
             DocumentVersionState::InProgress => vec![
                 i16::from(DocumentVersionState::ReadyForReview),
@@ -436,25 +542,50 @@ impl DocumentsRepository {
             DocumentVersionState::Reviewed => vec![i16::from(DocumentVersionState::ReadyForReview)],
             DocumentVersionState::Published => vec![i16::from(DocumentVersionState::Reviewed)],
         };
+        let now = Utc::now();
         let modified = self
             .database
             .execute(
                 "
                 UPDATE document_versions
-                SET version_state = $1
-                WHERE document_id = $2
-                AND version_id = $3
-                AND version_state = ANY($4)
+                SET version_state = $1, updated_at = $2
+                WHERE document_id = $3
+                AND version_id = $4
+                AND version_state = ANY($5)
+                AND updated_at = $6
                 ",
                 &[
                     &i16::from(new_state),
+                    &now,
                     &document_id,
                     &version_id,
                     &allowed_states,
+                    &updated_at,
                 ],
             )
             .await?;
-        Ok(modified == 1)
+        let version = self
+            .database
+            .query_one(
+                "
+                SELECT v.document_id, v.version_id, v.version_name, v.created_at, v.content, v.version_state, v.updated_at,
+                    array(SELECT c.child_version_id FROM documents_dependencies c WHERE c.document_id = v.document_id AND c.parent_version_id = v.version_id),
+                    array(SELECT p.parent_version_id FROM documents_dependencies p WHERE p.document_id = v.document_id AND p.child_version_id = v.version_id)
+                FROM document_versions v
+                WHERE v.document_id = $1
+                AND v.version_id = $2
+                ",
+                &[&document_id, &version_id],
+            )
+            .await?;
+        let version = DocumentVersion::try_from(version)?;
+        if modified == 1 {
+            Ok(version)
+        } else if modified == 0 && updated_at != version.updated_at {
+            Err(ConcurrencyError::UniqueValueViolation(version))
+        } else {
+            Err(ConcurrencyError::Failed)
+        }
     }
 }
 

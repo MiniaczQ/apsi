@@ -2,24 +2,30 @@ use axum::{
     extract::{FromRef, Path},
     http::StatusCode,
     routing::post,
-    Router,
+    Json, Router,
 };
 use s3::Bucket;
 use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::{event::EventType, role::DocumentVersionRole, version_state::DocumentVersionState},
+    models::{
+        event::EventType,
+        role::DocumentVersionRole,
+        version::DocumentVersion,
+        version_state::{DocumentVersionState, VersionChangeState},
+    },
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
             repositories::{
-                documents::DocumentsRepository, events::EventsRepository,
+                documents::{ConcurrencyError, DocumentsRepository},
+                events::EventsRepository,
                 permission::PermissionRepository,
             },
             DbPool,
         },
-        util::Res2,
+        util::Res3,
     },
 };
 
@@ -28,9 +34,10 @@ async fn change_state(
     permission_repository: PermissionRepository,
     event_repository: EventsRepository,
     claims: Claims,
-    Path((document_id, version_id, new_state)): Path<(Uuid, Uuid, DocumentVersionState)>,
-) -> Res2 {
-    let required_roles = match new_state {
+    Path((document_id, version_id)): Path<(Uuid, Uuid)>,
+    Json(data): Json<VersionChangeState>,
+) -> Res3<DocumentVersion> {
+    let required_roles = match data.new_state {
         DocumentVersionState::InProgress => {
             vec![DocumentVersionRole::Owner, DocumentVersionRole::Editor]
         }
@@ -53,7 +60,7 @@ async fn change_state(
     {
         Ok(true) => {}
         Ok(false) => {
-            return Res2::Msg((
+            return Res3::Msg((
                 StatusCode::BAD_REQUEST,
                 "User does not have permission to perform this state change",
             ));
@@ -63,14 +70,14 @@ async fn change_state(
                 { error = error.to_string() },
                 "Error when checking permission for changing state"
             );
-            return Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR);
+            return Res3::NoMsg(StatusCode::INTERNAL_SERVER_ERROR);
         }
     }
     match documents_repository
-        .change_state(document_id, version_id, new_state)
+        .change_state(document_id, version_id, data.new_state, data.updated_at)
         .await
     {
-        Ok(true) => {
+        Ok(version) => {
             let users = permission_repository
                 .get_document_version_users(document_id, version_id)
                 .await
@@ -81,20 +88,23 @@ async fn change_state(
                         document_id,
                         version_id,
                         user.user.user_id,
-                        EventType::StatusChange(new_state),
+                        EventType::StatusChange(data.new_state),
                     )
                     .await
                     .ok();
             }
-            Res2::NoMsg(StatusCode::OK)
+            Res3::Json((version, StatusCode::OK))
         }
-        Ok(false) => Res2::Msg((
+        Err(ConcurrencyError::UniqueValueViolation(version)) => {
+            Res3::Json((version, StatusCode::CONFLICT))
+        }
+        Err(ConcurrencyError::Failed) => Res3::Msg((
             StatusCode::BAD_REQUEST,
             "Version could not be updated to desired state from current state",
         )),
-        Err(error) => {
+        Err(ConcurrencyError::Pg(error)) => {
             error!({ error = error.to_string() }, "Error when changing state");
-            Res2::NoMsg(StatusCode::INTERNAL_SERVER_ERROR)
+            Res3::NoMsg(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }
 }
@@ -106,8 +116,5 @@ where
     Bucket: FromRef<T>,
     T: 'static + Send + Sync + Clone,
 {
-    Router::new().route(
-        "/:document_id/:version_id/change-state/:state",
-        post(change_state),
-    )
+    Router::new().route("/:document_id/:version_id/change-state", post(change_state))
 }

@@ -9,11 +9,14 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::{role::DocumentVersionRole, version_state::DocumentVersionState, event::EventType},
+    models::{event::EventType, role::DocumentVersionRole, version_state::DocumentVersionState},
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
         database::{
-            repositories::{documents::DocumentsRepository, permission::PermissionRepository, events::EventsRepository},
+            repositories::{
+                documents::DocumentsRepository, events::EventsRepository,
+                permission::PermissionRepository,
+            },
             DbPool,
         },
         util::Res2,
@@ -67,7 +70,24 @@ async fn change_state(
         .change_state(document_id, version_id, new_state)
         .await
     {
-        Ok(true) => {event_repository.create_event(document_id, version_id, claims.user_id, EventType::StatusChange(new_state)).await.ok(); Res2::NoMsg(StatusCode::OK)},
+        Ok(true) => {
+            let users = permission_repository
+                .get_document_version_users(document_id, version_id)
+                .await
+                .unwrap();
+            for user in users {
+                event_repository
+                    .create_event(
+                        document_id,
+                        version_id,
+                        user.user.user_id,
+                        EventType::StatusChange(new_state),
+                    )
+                    .await
+                    .ok();
+            }
+            Res2::NoMsg(StatusCode::OK)
+        }
         Ok(false) => Res2::Msg((
             StatusCode::BAD_REQUEST,
             "Version could not be updated to desired state from current state",

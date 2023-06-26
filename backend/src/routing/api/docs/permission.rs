@@ -1,19 +1,24 @@
 use axum::{
+    debug_handler,
     extract::{FromRef, Path},
     http::StatusCode,
     routing::{get, post},
-    Json, Router, debug_handler,
+    Json, Router,
 };
 use s3::Bucket;
 use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::{role::DocumentVersionRole, user::PublicUserWithRoles, event::EventType},
+    models::{event::EventType, role::DocumentVersionRole, user::PublicUserWithRoles},
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
-        database::{repositories::{permission::PermissionRepository, events::EventsRepository}, DbPool},
-        util::Res2, state::AppState,
+        database::{
+            repositories::{events::EventsRepository, permission::PermissionRepository},
+            DbPool,
+        },
+        state::AppState,
+        util::Res2,
     },
 };
 
@@ -87,7 +92,13 @@ async fn grant_version_role(
         .grant_document_version_role(user_id, document_id, version_id, role)
         .await
     {
-        Ok(true) => {event_repository.create_event(document_id, version_id, user_id, EventType::RoleAdded(role)).await.ok(); Res2::NoMsg(StatusCode::OK)},
+        Ok(true) => {
+            event_repository
+                .create_event(document_id, version_id, user_id, EventType::RoleAdded(role))
+                .await
+                .ok();
+            Res2::NoMsg(StatusCode::OK)
+        }
         Ok(false) => Res2::NoMsg(StatusCode::BAD_REQUEST),
         Err(error) => {
             error!(
@@ -113,7 +124,18 @@ async fn revoke_version_role(
         .revoke_document_version_role(user_id, document_id, version_id, role)
         .await
     {
-        Ok(true) => {event_repository.create_event(document_id, version_id, user_id, EventType::RoleRemoved(role)).await.ok(); Res2::NoMsg(StatusCode::OK)},
+        Ok(true) => {
+            event_repository
+                .create_event(
+                    document_id,
+                    version_id,
+                    user_id,
+                    EventType::RoleRemoved(role),
+                )
+                .await
+                .ok();
+            Res2::NoMsg(StatusCode::OK)
+        }
         Ok(false) => Res2::NoMsg(StatusCode::BAD_REQUEST),
         Err(error) => {
             error!(

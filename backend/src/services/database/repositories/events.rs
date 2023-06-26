@@ -9,7 +9,7 @@ use tracing::error;
 use uuid::Uuid;
 
 use crate::{
-    models::{event::{EventType, to_sql, Event}},
+    models::event::{to_sql, Event, EventType},
     services::database::{DbConn, DbPool},
 };
 
@@ -29,8 +29,8 @@ impl EventsRepository {
         let (event_type, user_role_id, state_id) = to_sql(&event_type);
         self.database.execute(
             "
-                INSERT INTO events (event_id, user_id, document_id, version_id, event_type, user_role_id, state_id, FALSE)
-                VALUES ($1, $2, $3, $4, $5, $6)
+                INSERT INTO events (event_id, user_id, document_id, version_id, event_type, role_id, state_id)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
                 ",
             &[&event_id, &user_id, &document_id, &version_id, &event_type, &user_role_id, &state_id],
         ).await?;
@@ -38,16 +38,28 @@ impl EventsRepository {
     }
 
     pub async fn get_events_for_user(&self, user_id: Uuid) -> Result<Vec<Event>, Box<dyn Error>> {
-        let events = self.database.query("SELECT * FROM events WHERE user_id = $1 ORDER BY seen DESC, created_at DESC", &[&user_id]).await?;
+        let events = self.database.query(
+            "
+                SELECT event_id, user_id, document_id, version_id, event_type, role_id, state_id, seen, created_at
+                FROM events
+                WHERE user_id = $1
+                ORDER BY seen DESC, created_at DESC
+                ",
+            &[&user_id]).await?;
         let events = events
-        .into_iter()
-        .map(Event::try_from)
-        .collect::<Result<_, _>>()?;
+            .into_iter()
+            .map(Event::try_from)
+            .collect::<Result<_, _>>()?;
         Ok(events)
     }
 
     pub async fn mark_read(&self, event_id: Uuid) -> Result<(), Box<dyn Error>> {
-        self.database.execute("UPDATE users_events SET seen = TRUE WHERE event_id = $1", &[&event_id]).await?;
+        self.database
+            .execute(
+                "UPDATE users_events SET seen = TRUE WHERE event_id = $1",
+                &[&event_id],
+            )
+            .await?;
         Ok(())
     }
 }

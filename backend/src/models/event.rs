@@ -1,8 +1,8 @@
+use crate::models::{role::DocumentVersionRole, version_state::DocumentVersionState};
 use chrono::{DateTime, Utc};
-use serde::{Serialize};
+use serde::Serialize;
 use tokio_postgres::Row;
 use uuid::Uuid;
-use crate::models::{role::DocumentVersionRole, version_state::DocumentVersionState};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,10 +33,10 @@ impl TryFrom<Row> for Event {
         let document_id = value.try_get(2)?;
         let version_id = value.try_get(3)?;
         let event_type_id = value.try_get(4)?;
-        let role_id: i16 = value.try_get(5)?;
-        let state_id: i16 = value.try_get(6)?;
-        let role_id = DocumentVersionRole::try_from(role_id).unwrap();
-        let state_id = DocumentVersionState::try_from(state_id).unwrap();
+        let role_id: Option<i16> = value.try_get(5)?;
+        let state_id: Option<i16> = value.try_get(6)?;
+        let role_id = role_id.map(|role_id| DocumentVersionRole::try_from(role_id).unwrap());
+        let state_id = state_id.map(|state_id| DocumentVersionState::try_from(state_id).unwrap());
         let event_type = from_sql(event_type_id, role_id, state_id);
         let seen = value.try_get(7)?;
         let created_at = value.try_get(8)?;
@@ -52,11 +52,15 @@ impl TryFrom<Row> for Event {
     }
 }
 
-pub fn from_sql(event_type: i16, role: DocumentVersionRole, state: DocumentVersionState) -> EventType {
+pub fn from_sql(
+    event_type: i16,
+    role: Option<DocumentVersionRole>,
+    state: Option<DocumentVersionState>,
+) -> EventType {
     match event_type {
-        0 => EventType::RoleAdded(role),
-        1 => EventType::RoleRemoved(role),
-        2 => EventType::StatusChange(state),
+        0 => EventType::RoleAdded(role.unwrap()),
+        1 => EventType::RoleRemoved(role.unwrap()),
+        2 => EventType::StatusChange(state.unwrap()),
         _ => unreachable!(),
     }
 }

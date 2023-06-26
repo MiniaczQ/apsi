@@ -11,7 +11,7 @@ use crate::{
     models::event::Event,
     services::{
         auth::{auth_keys::AuthKeys, claims::Claims},
-        database::{repositories::events::EventsRepository, DbPool}
+        database::{repositories::events::EventsRepository, DbPool},
     },
 };
 
@@ -32,14 +32,12 @@ async fn get_events_for_user(
 async fn mark_read(
     event_repository: EventsRepository,
     Path(event_id): Path<Uuid>,
+    _: Claims,
 ) -> Result<(), StatusCode> {
-    event_repository
-        .mark_read(event_id)
-        .await
-        .map_err(|e| {
-            error!("{}", e);
-            StatusCode::BAD_REQUEST
-        })?;
+    event_repository.mark_read(event_id).await.map_err(|e| {
+        error!("{}", e);
+        StatusCode::BAD_REQUEST
+    })?;
     Ok(())
 }
 

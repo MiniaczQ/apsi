@@ -57,8 +57,6 @@ function App() {
   const cookieName = 'jwt-token';
   const [cookies, setCookie, removeCookie] = useCookies([cookieName]);
 
-  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
-  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
   const [loginData, setLoginData] = useState<LoginData | undefined>();
   const isLoggedIn = loginData !== undefined;
 
@@ -109,20 +107,9 @@ function App() {
     setModalError({ title: 'Authentication error', message, resolveFunc: () => loginState.setToken(undefined) });
   });
   
-  useEffect(() => {
-    const interval = setInterval(() => {
-      console.log() // Without this line interval check is not working
-      if(isLoggedIn){
-        apiClient.getNotifications(loginData.userId)
-        .then(response => setUnreadNotifications(response.filter(notification => !notification.read).length))
-      }
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [isLoggedIn, loginData, apiClient])
-
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} unreadNotifications={unreadNotifications}/>}>
+      <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient}/>}>
         {isLoggedIn ? (<>
           <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />

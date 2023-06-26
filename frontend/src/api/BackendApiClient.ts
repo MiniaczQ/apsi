@@ -266,46 +266,12 @@ class BackendApiClient implements ApiClient {
     `documents/${documentId}/${versionId}/comments`,
   );
 
-
-  // createNotification = async (notification: Notification) => await this.post(
-  //   `notifications/${notification.notificationId}`,
-  //   notification,
-  //   true,
-  //   false)
-
-  createNotification = async (notification: Notification) => Promise.resolve();  
-  getNotifications = async(userId: string) => await Promise.resolve(
-    [
-      {
-        notificationId: '1',
-        userId: userId,
-        action: 'role removed',
-        versionId: '1',
-        documentId: '1',
-        role: 'editor',
-        read: false
-      } as Notification,
-      {
-        notificationId: '2',
-        userId: userId,
-        action: 'new version',
-        versionId: '2',
-        documentId: '2',
-        role: 'reviewer',
-        read: true
-      } as Notification
-    ]
-  )
-
-// getNotifications = async(userId: string) => await this.get(`notifications/${userId}`) as Notification[];
-
-  markAsRead = async (notificationId: string) => await Promise.resolve()
-  
-  // markAsRead = async (notificationId: string) => await this.post(
-  //   `notifications/mark/${notificationId}`,
-  //   undefined,
-  //   true,
-  //   false)
+  getNotifications = async() => await this.get<Notification[]>(`events`);
+  markAsRead = async (eventId: string) => await this.post(
+    `events/${eventId}`,
+    undefined,
+    true,
+    false)
 
   
 

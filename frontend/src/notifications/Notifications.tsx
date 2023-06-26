@@ -1,10 +1,11 @@
 import { FunctionComponent, useState, useEffect } from 'react';
-import { Badge, Button, Container, Table } from 'react-bootstrap';
+import { Button, Container, Table } from 'react-bootstrap';
 
 import ApiClient from '../api/ApiClient';
-import { Notification } from '../models/Notification';
+import { Notification, eventTypeMessageResolver } from '../models/Notification';
 import { LoginState } from '../App';
-import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
+import DocumentVersion from '../models/DocumentVersion';
+import { StateBadge } from '../models/StateBadge';
 
 
 type NotificationsProps = {
@@ -14,51 +15,43 @@ type NotificationsProps = {
 
 type NotificationVersion = {
   notification: Notification
+  documentName: string
   documentVersion: DocumentVersion
 }
 export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient, loginState }) => {
   const [notifications, setNotifications] = useState<NotificationVersion[]>([])
 
-  function getStateBadge(state: DocumentVersionState | undefined) {
-    if (state === undefined) {
-      return <></>
-    }
-    const stateNameLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'In Progress',
-      'readyForReview': 'Ready For Review',
-      'reviewed': 'Reviewed',
-      'published': 'Published',
-    };
-    const stateStyleLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'primary',
-      'readyForReview': 'danger',
-      'reviewed': 'warning',
-      'published': 'success',
-    };
-    return <Badge pill bg={stateStyleLUT[state]} className="ms-3">
-      {stateNameLUT[state]}
-    </Badge>
+  const distinctByEventId = (array: NotificationVersion[]) => {
+    const uniqueKeys = new Set();
+    return array.reduce((result: NotificationVersion[], element) => {
+      const elementKey = element.notification.eventId;
+      if (!uniqueKeys.has(elementKey)) {
+        uniqueKeys.add(elementKey);
+        result.push(element);
+      }
+      return result;
+    }, []);
   }
 
   const sorting = (first: NotificationVersion,second: NotificationVersion) => {
-      if(first.notification.read && !second.notification.read){
+      if(first.notification.seen && !second.notification.seen){
         return 1
       }
-      if(first.notification.read && second.notification.read){
+      if(first.notification.seen && second.notification.seen){
         return -1
       }
       return 0
     }
   useEffect(() => {
-    apiClient.getNotifications(loginState.userId!)
+    apiClient.getNotifications()
       .then(response => {
         response.forEach(notification => apiClient.getVersion(notification.documentId,notification.versionId)
-        .then(version => setNotifications(old => [...old, {notification: notification, documentVersion: version}].sort(sorting))))
+        .then(version => apiClient.getDocument(notification.documentId).then(document => setNotifications(old => [...old, {notification: notification, documentVersion: version, documentName: document.documentName}].sort(sorting)))))
       });
   }, [apiClient, loginState]);
 
   const createState = (notification: NotificationVersion) => {
-    if(notification.notification.read){
+    if(notification.notification.seen){
       return <td align='center'>
         Viewed
       </td>
@@ -66,31 +59,29 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
 
     return <td align='center'>
     <Button variant="outline-secondary" onClick={() => {
-      apiClient.markAsRead(notification.notification.notificationId)
-      const filteredNotifications = notifications.filter(element => element.notification.notificationId !== notification.notification.notificationId)
-      notification.notification.read = true
+      apiClient.markAsRead(notification.notification.eventId)
+      const filteredNotifications = notifications.filter(element => element.notification.eventId !== notification.notification.eventId)
+      notification.notification.seen = true
       setNotifications(old => [...filteredNotifications,notification])
       }}>
       Mark as read
     </Button>
   </td>
   }
-  const notificationRows = notifications?.map((notification: NotificationVersion, index: number) => (
-    <tr key={notification.notification.notificationId}>
+  const notificationRows = distinctByEventId(notifications).map((notification: NotificationVersion, index: number) => (
+    <tr key={notification.notification.eventId}>
       <td>
         {index + 1}
       </td>
       <td align="center">
-        {notification.documentVersion.versionId}{getStateBadge(notification.documentVersion.versionState)}
+        {notification.documentName}
+        <StateBadge state={notification.documentVersion.versionState}/>
       </td>
       <td align="center">
         {notification.documentVersion.versionName}
       </td>
       <td align="center">
-        {notification.notification.role}
-      </td>
-      <td align="center">
-        {notification.notification.action}
+        {eventTypeMessageResolver(notification.notification.eventType)}
       </td>
       {createState(notification)}
     </tr>
@@ -109,13 +100,10 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
               #
             </th>
             <th >
-              Version id
+              Document name
             </th>
             <th >
               Version name
-            </th>
-            <th >
-              Role
             </th>
             <th >
               Notification

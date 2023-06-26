@@ -3,20 +3,31 @@ import { Link, Outlet } from 'react-router-dom';
 
 import { LoginState } from './App';
 import ApiClient from './api/ApiClient';
+import { useEffect, useState } from 'react';
 
 
 type RoutingRootProps = {
   loginState: LoginState;
   apiClient: ApiClient;
-  unreadNotifications: number;
 };
 
-function RoutingRoot({ loginState, apiClient, unreadNotifications }: RoutingRootProps) {
+function RoutingRoot({ loginState, apiClient}: RoutingRootProps) {
   const logout = async () => await apiClient.logout();
+  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log() // Without this line interval check is not working
+      if(loginState.userId){
+        apiClient.getNotifications()
+        .then(response => setUnreadNotifications(response.filter(notification => !notification.seen).length))
+      }
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [loginState, apiClient])
 
-  const notificationMarker = unreadNotifications > 0 ? (<Badge pill bg={'danger'}>
-  {unreadNotifications}
-</Badge>) : (<></>)
+  const notificationMarker = unreadNotifications > 0 ? 
+  (<Badge pill bg={'danger'}>{unreadNotifications}</Badge>) : (<></>)
   const loggedInLinks = (<>
     <Nav.Link as={Link} to="/">Home</Nav.Link>
     <Nav.Link as={Link} to="/notifications">Notifications {notificationMarker}</Nav.Link>

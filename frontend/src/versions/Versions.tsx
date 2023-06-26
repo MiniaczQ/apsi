@@ -1,12 +1,13 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { Table, Button, Badge, Container } from 'react-bootstrap';
+import { Table, Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
 import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
 import Document from '../models/Document';
-import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
+import { DocumentVersion } from '../models/DocumentVersion';
+import { StateBadge } from '../models/StateBadge';
 
 
 type VersionsProps = {
@@ -22,28 +23,6 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
 
   const [document, setDocument] = useState<Document>();
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
-
-
-  function getStateBadge(state: DocumentVersionState | undefined) {
-    if (state === undefined) {
-      return <></>
-    }
-    const stateNameLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'In Progress',
-      'readyForReview': 'Ready For Review',
-      'reviewed': 'Reviewed',
-      'published': 'Published',
-    };
-    const stateStyleLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'primary',
-      'readyForReview': 'danger',
-      'reviewed': 'warning',
-      'published': 'success',
-    };
-    return <Badge pill bg={stateStyleLUT[state]} className="ms-3">
-      {stateNameLUT[state]}
-    </Badge>
-  }
 
   useEffect(() => {
     if (documentId === undefined)
@@ -63,7 +42,7 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
     <tr key={versionId}>
       <td>
         {versionName}
-        {getStateBadge(versionState)}
+        <StateBadge state={versionState}/>
       </td>
       <td>
         {getFormattedDate(createdAt)}

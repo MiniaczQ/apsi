@@ -1,12 +1,28 @@
-import Role from "./Role"
+export type EventType = {
+    statusChanged: string | undefined
+    roleAdded: string | undefined
+    roleRemoved: string | undefined
+}
 
-export type Action = 'role removed' | 'role added' | 'new version' | 'version modified'
 export type Notification = {
-    notificationId: string,
+    eventId: string,
     userId: string,
-    action: Action,
     documentId: string,
     versionId: string,
-    role: Role,
-    read: boolean
+    eventType: EventType,
+    seen: boolean
+    createdAt: Date
+}
+
+export function eventTypeMessageResolver(eventType: EventType): string{
+    if(eventType.statusChanged !== undefined){
+        return `Status changed: ${eventType.statusChanged}`
+    }
+    if(eventType.roleAdded !== undefined){
+        return `Added role: ${eventType.roleAdded}`
+    }
+    if(eventType.roleRemoved !== undefined){
+        return `Removed role: ${eventType.roleRemoved}`
+    }
+    return ''
 }

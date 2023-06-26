@@ -73,8 +73,7 @@ interface ApiClient {
     getMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
     getMember: (documentId: string, versionId: string) => Promise<DocumentVersionMember>;
 
-    createNotification: (notification: Notification) => Promise<void>;
-    getNotifications: (userId: string) => Promise<Notification[]>;
+    getNotifications: () => Promise<Notification[]>;
     markAsRead: (notificationId: string) => Promise<void>;
 
     createComment: (documentId: string, versionId: string, comment: CreateComment) => Promise<Comment>;

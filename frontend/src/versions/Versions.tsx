@@ -1,5 +1,5 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { Button, Badge, Container } from 'react-bootstrap';
+import { Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
@@ -7,7 +7,7 @@ import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
 import Document from '../models/Document';
 import { StateBadge } from '../models/StateBadge';
-import { DocumentVersion, DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
+import { DocumentVersion} from '../models/DocumentVersion';
 import { Column } from '../table/TableBody';
 import { SortedTable } from '../table/SortedTable';
 
@@ -48,29 +48,10 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
     return -String(a.versionName).localeCompare(b.versionName, undefined, { numeric: true, sensitivity: 'base' });
   }
 
-  const versionRows = versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion) =>
-    <tr key={versionId}>
-      <td>
-        {versionName}
-        <StateBadge state={versionState}/>
-      </td>
-      <td>
-        {getFormattedDate(createdAt)}
-      </td>
-      <td>
-        <Button variant="outline-secondary"
-          onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)}
-        >
-          Inspect version
-        </Button>
-      </td>
-    </tr>
-  );
-
-   const data: any[] =versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion, index: number) => ({
+   const data: any[] = versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion, index: number) => ({
       index: index + 1,
       version: versionName,
-      state: getStateBadge(versionState),
+      state: <StateBadge state={versionState}/>,
       created: getFormattedDate(createdAt),
       option: (<Button variant="outline-secondary" onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)}>
       Inspect version

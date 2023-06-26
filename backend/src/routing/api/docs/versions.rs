@@ -87,7 +87,7 @@ async fn update_version(
     permission_repository: PermissionRepository,
     claims: Claims,
     Path((document_id, version_id)): Path<(Uuid, Uuid)>,
-    Json(data): Json<UpdateVersion>,
+    ValidatedJson(data): ValidatedJson<UpdateVersion>,
 ) -> Res2 {
     match permission_repository
         .does_user_have_document_version_roles(

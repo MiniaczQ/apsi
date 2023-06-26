@@ -11,12 +11,14 @@ use super::{version_state::DocumentVersionState, VERSION_NAME_REGEX};
 pub struct CreateInitialVersion {
     #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
+    #[validate(length(max = 2046))]
     pub content: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateVersion {
+    #[validate(length(max = 2046))]
     pub content: String,
 }
 
@@ -25,6 +27,7 @@ pub struct UpdateVersion {
 pub struct CreateVersionWithParents {
     #[validate(regex = "VERSION_NAME_REGEX")]
     pub version_name: String,
+    #[validate(length(max = 2046))]
     pub content: String,
     #[validate(length(min = 1))]
     pub parents: Vec<Uuid>,

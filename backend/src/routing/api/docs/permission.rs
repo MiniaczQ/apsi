@@ -1,5 +1,4 @@
 use axum::{
-    debug_handler,
     extract::{FromRef, Path},
     http::StatusCode,
     routing::{get, post},
@@ -17,7 +16,6 @@ use crate::{
             repositories::{events::EventsRepository, permission::PermissionRepository},
             DbPool,
         },
-        state::AppState,
         util::Res2,
     },
 };
@@ -77,7 +75,6 @@ async fn am_owner(
     }
 }
 
-#[debug_handler(state=AppState)]
 async fn grant_version_role(
     permission_repository: PermissionRepository,
     event_repository: EventsRepository,

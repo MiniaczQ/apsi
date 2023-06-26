@@ -11,6 +11,7 @@ import User from "../models/User";
 import Comment from "../models/Comment";
 import CreateComment from "../models/CreateComment";
 import {Notification} from "../models/Notification";
+import ChangeVersionState from "../models/ChangeVersionState";
 
 export class ApiError extends Error {
     constructor(message?: string) {
@@ -53,14 +54,12 @@ interface ApiClient {
     createDocument: (data: CreateDocument) => Promise<DocumentWithInitialVersion>;
     getDocument: (documentId: string) => Promise<Document>;
     updateDocument: (documentId: string, data: UpdateDocument) => Promise<void>;
-    deleteDocument: (documentId: string) => Promise<void>;
 
     getVersions: (documentId: string) => Promise<DocumentVersion[]>;
     createVersion: (documentId: string, data: CreateVersion) => Promise<DocumentVersion>;
     getVersion: (documentId: string, versionId: string) => Promise<DocumentVersion>;
     updateVersion: (documentId: string, versionId: string, data: UpdateVersion) => Promise<void>;
-    deleteVersion: (documentId: string, versionId: string) => Promise<void>;
-    setVersionState: (documentId: string, versionId: string, state: string) => Promise<void>;
+    setVersionState: (documentId: string, versionId: string, state: ChangeVersionState) => Promise<DocumentVersion>;
     getVersionMembers: (documentId: string, versionId: string) => Promise<DocumentVersionMember[]>;
 
     getFiles: (documentId: string, versionId: string) => Promise<DocFile[]>;

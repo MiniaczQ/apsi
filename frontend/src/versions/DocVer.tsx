@@ -1,13 +1,13 @@
 import { FunctionComponent, MouseEventHandler, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Badge, Container } from 'react-bootstrap';
+import { Button, Badge, Container, Alert } from 'react-bootstrap';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 
 import styles from './docVer.module.css';
 import Attachments from "../attachments/Attachments";
-import ApiClient from '../api/ApiClient';
+import ApiClient, { ConcurrencyConflict } from '../api/ApiClient';
 import Document from '../models/Document';
 import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
 import DocumentVersionMember, { DocumentVersionMemberRole } from '../models/DocumentVersionMember';
@@ -26,6 +26,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
   const documentId = searchParams.get('documentId') ?? undefined;
   const versionId = searchParams.get('versionId') ?? undefined;
 
+  const [error, setError] = useState<string>();
+  const isErrorSet = (error?.length ?? 0) > 0;
+
   const [document, setDocument] = useState<Document>();
   const [version, setVersion] = useState<DocumentVersion>();
   const [versions, setVersions] = useState<DocumentVersion[]>([]);
@@ -38,9 +41,32 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
   const reviewers = authorizedUsers?.filter(user => user.roles.indexOf('reviewer') >= 0);
 
 
+  const stateNameLUT: DocumentVersionStateMap<string> = {
+    'inProgress': 'In Progress',
+    'readyForReview': 'Ready For Review',
+    'reviewed': 'Reviewed',
+    'published': 'Published',
+  };
+
+  const changeState = async (newState: DocumentVersionState) => {
+    try {
+      setError(undefined);
+      setVersion(await apiClient.setVersionState(documentId!, versionId!, { newState, updatedAt: version!.updatedAt }));
+    } catch (e) {
+      const prefix = 'Error changing version state: ';
+      if (e instanceof ConcurrencyConflict) {
+        const anotherVersion = e.value as DocumentVersion;
+        setVersion(anotherVersion);
+        setError(prefix + `the state has already been changed to ${stateNameLUT[anotherVersion.versionState]}!`);
+      } else {
+        setError(prefix + ((e as Error)?.message ?? e?.toString() ?? 'Unknown error. Try again.'));
+      }
+    }
+  };
+
   const changeStateForward: MouseEventHandler<HTMLButtonElement> = async () => {
     if (version === undefined) {
-      return
+      return;
     }
     const stateProgressionLUT: DocumentVersionStateMap<DocumentVersionState> = {
       'inProgress': 'readyForReview',
@@ -48,10 +74,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'reviewed': 'published',
       'published': 'published'
     };
-    const newState = stateProgressionLUT[version?.versionState];
-    apiClient.setVersionState(documentId!, versionId!, newState)
-      .then(() => setVersion({ ...version, versionState: newState }));
-  }
+    const newState = stateProgressionLUT[version.versionState];
+    await changeState(newState);
+  };
 
   const changeStateBackward: MouseEventHandler<HTMLButtonElement> = async () => {
     if (version === undefined) {
@@ -63,10 +88,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'reviewed': 'inProgress',
       'published': 'published'
     };
-    const newState = stateProgressionLUT[version?.versionState];
-    apiClient.setVersionState(documentId!, versionId!, newState)
-      .then(() => setVersion({ ...version, versionState: newState }));
-  }
+    const newState = stateProgressionLUT[version.versionState];
+    await changeState(newState);
+  };
 
   function getRolesForState(state: DocumentVersionState | undefined): DocumentVersionMemberRole[] {
     if (state === undefined) {
@@ -79,7 +103,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'published': []
     };
     return stateRoleLUT[state];
-  }
+  };
 
   const showDate = (dateString: string) => new Date(dateString).toDateString();
   const navigateToVersionCreator = (documentId: string, versionId: string) =>
@@ -144,12 +168,6 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
     if (state === undefined) {
       return <></>
     }
-    const stateNameLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'In Progress',
-      'readyForReview': 'Ready For Review',
-      'reviewed': 'Reviewed',
-      'published': 'Published',
-    };
     const stateStyleLUT: DocumentVersionStateMap<string> = {
       'inProgress': 'primary',
       'readyForReview': 'danger',
@@ -189,6 +207,9 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
         justify
       >
         <Tab eventKey="details" title="Details">
+          <Alert variant="danger" show={isErrorSet} onClose={() => setError(undefined)} dismissible>
+            {error}
+          </Alert>
           <div className="container w-75">
             <h4 className={styles.pblue}>
               Document name

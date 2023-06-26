@@ -39,7 +39,11 @@ async fn change_state(
 ) -> Res3<DocumentVersion> {
     let required_roles = match data.new_state {
         DocumentVersionState::InProgress => {
-            vec![DocumentVersionRole::Owner, DocumentVersionRole::Editor]
+            vec![
+                DocumentVersionRole::Owner,
+                DocumentVersionRole::Editor,
+                DocumentVersionRole::Reviewer,
+            ]
         }
         DocumentVersionState::ReadyForReview => {
             vec![DocumentVersionRole::Owner, DocumentVersionRole::Editor]

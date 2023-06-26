@@ -1,10 +1,10 @@
 import { FunctionComponent, useEffect, useState } from 'react';
-import { Button, Form } from 'react-bootstrap';
+import { Alert, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
 import { LoginState } from '../App';
-import ApiClient from '../api/ApiClient';
+import ApiClient, { ConcurrencyConflict } from '../api/ApiClient';
 import Document from '../models/Document';
 import DocumentVersion from '../models/DocumentVersion';
 import DocumentVersionMember, { DocumentVersionMemberRole, editableMemberRoles } from '../models/DocumentVersionMember';
@@ -36,6 +36,10 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
       navigate('/');
   }, [documentId, gotRequiredSearchParams, navigate])
 
+  const [error, setError] = useState<string>();
+  const isErrorSet = (error?.length ?? 0) > 0;
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setIsLoading] = useState(true);
   const [baseDocument, setBaseDocument] = useState<Document>();
   const [versions, setVersions] = useState<DocumentVersion[]>();
@@ -60,11 +64,11 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   const parentNames = parents?.map(parent => parent?.versionName)?.filter(x => x !== undefined)?.join(', ');
 
   const [updatedVersion, setUpdatedVersion] = useState<UpdateVersion>();
+  const [conflictVersion, setConflictVersion] = useState<UpdateVersion>();
   useEffect(() => {
     if (baseVersion === undefined)
       return;
     setUpdatedVersion({
-      versionName: baseVersion.versionName,
       content: baseVersion.content,
       updatedAt: baseVersion.updatedAt,
     });
@@ -85,17 +89,30 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   const updateVersion = async () => {
     if (documentId === undefined || versionId === undefined || updatedVersion === undefined)
       return;
-    await apiClient.updateVersion(documentId, versionId, updatedVersion)
-      .then(() => {
-        if (grantedRoles === undefined || revokedRoles === undefined)
-          return;
+    setError(undefined);
+    setConflictVersion(undefined);
+    setIsSubmitting(true);
+    try {
+      await apiClient.updateVersion(documentId, versionId, updatedVersion);
+      if (grantedRoles !== undefined && revokedRoles !== undefined) {
         editableMemberRoles.forEach(role => {
           grantedRoles[role].forEach(member => apiClient.grantRole(documentId, versionId, member, role));
           revokedRoles[role].forEach(member => apiClient.revokeRole(documentId, versionId, member, role));
         });
-      }).then(() => {
-        navigate(`/Versions?documentId=${documentId}`);
-      });
+      }
+      navigate(`/Versions?documentId=${documentId}`);
+    } catch (e) {
+      setIsSubmitting(false);
+      const prefix = 'Error modifying version: ';
+      if (e instanceof ConcurrencyConflict) {
+        const anotherVersion = e.value as DocumentVersion;
+        setConflictVersion(anotherVersion);
+        setUpdatedVersion({ ...updatedVersion, updatedAt: anotherVersion.updatedAt });
+        setError(prefix + 'another modification has been submitted! Compare changes and resubmit.');
+      } else {
+        setError(prefix + ((e as Error)?.message ?? e?.toString() ?? 'Unknown error. Try again.'));
+      }
+    }
   };
 
   const handleClick: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
@@ -111,15 +128,21 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   if (users === undefined || originalMembers === undefined || updatedVersion === undefined)
     return null;
 
-  return (
+  return (<>
+    <Alert variant="danger" show={isErrorSet} onClose={() => setError(undefined)} dismissible>
+      {error}
+    </Alert>
     <Form>
       <DocumentNameEditor disabled defaultValue={baseDocument?.documentName ?? ''} />
       {parentVersionField}
       <RoleEditor options={users} defaultValue={originalMembers} onChange={(granted, revoked) => { setGrantedRoles(granted); setRevokedRoles(revoked); }} />
+      {conflictVersion !== undefined
+        ? <VersionContentEditor disabled name={'Conflicting content'} value={conflictVersion.content} />
+        : <></>}
       <VersionContentEditor defaultValue={updatedVersion.content} onChange={content => setUpdatedVersion({ ...updatedVersion, content })} />
-      <Button onClick={handleClick}>Modify</Button>
+      <Button disabled={isSubmitting} onClick={handleClick}>Modify</Button>
     </Form>
-  );
+  </>);
 }
 
 export default VersionEditor;

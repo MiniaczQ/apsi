@@ -209,7 +209,7 @@ class BackendApiClient implements ApiClient {
     false,
   );
   setVersionState = async (documentId: string, versionId: string, state: ChangeVersionState) => await this.post<DocumentVersion>(
-    `documents/${documentId}/${versionId}/change-state/${state}`,
+    `documents/${documentId}/${versionId}/change-state`,
     state,
   );
   getVersionMembers = async (documentId: string, versionId: string) => await this.get<DocumentVersionMember[]>(

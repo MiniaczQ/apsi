@@ -34,7 +34,7 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
       navigate(`/Versions?documentId=${documentId}`);
     else
       navigate('/');
-  }, [documentId, gotRequiredSearchParams, navigate])
+  }, [documentId, gotRequiredSearchParams, navigate]);
 
   const [error, setError] = useState<string>();
   const isErrorSet = (error?.length ?? 0) > 0;

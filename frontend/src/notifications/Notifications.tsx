@@ -6,6 +6,7 @@ import { Notification, eventTypeMessageResolver } from '../models/Notification';
 import { LoginState } from '../App';
 import DocumentVersion from '../models/DocumentVersion';
 import { StateBadge } from '../models/StateBadge';
+import { useNavigate } from 'react-router-dom';
 
 
 type NotificationsProps = {
@@ -19,6 +20,8 @@ type NotificationVersion = {
   documentVersion: DocumentVersion
 }
 export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient, loginState }) => {
+  const navigate = useNavigate();
+  const navigateToVersionInscpect = (documentId: string, versionId: string) => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${versionId}`);
   const [notifications, setNotifications] = useState<NotificationVersion[]>([])
 
   const distinctByEventId = (array: NotificationVersion[]) => {
@@ -78,7 +81,10 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
         <StateBadge state={notification.documentVersion.versionState}/>
       </td>
       <td align="center">
-        {notification.documentVersion.versionName}
+      <Button variant="outline-secondary" onClick={() => navigateToVersionInscpect(notification.notification.documentId, notification.notification.versionId)}>
+      {notification.documentVersion.versionName}
+        </Button>
+        
       </td>
       <td align="center">
         {eventTypeMessageResolver(notification.notification.eventType)}

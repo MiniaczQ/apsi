@@ -1,10 +1,10 @@
-import { FunctionComponent, KeyboardEventHandler, useCallback, useEffect, useMemo, useState } from 'react';
-import { Button } from 'react-bootstrap';
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { Form, useSearchParams } from 'react-router-dom';
 
 import { LoginState } from '../App';
-import ApiClient from '../api/ApiClient';
+import ApiClient, { ConcurrencyConflict } from '../api/ApiClient';
 import CreateDocument from '../models/CreateDocument';
 import CreateVersion from '../models/CreateVersion';
 import Document from '../models/Document';
@@ -42,7 +42,12 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
       navigate(`/`);
   }, [documentId, gotRequiredSearchParams, navigate]);
 
+  const [error, setError] = useState<string>();
+  const isErrorSet = (error?.length ?? 0) > 0;
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setIsLoading] = useState(true);
+
   const [document, setDocument] = useState<Document>();
   const [versions, setVersions] = useState<DocumentVersion[]>();
   const [users, setUsers] = useState<User[]>();
@@ -69,8 +74,8 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
       return;
     setCreatedVersion(createdVersion => ({
       ...createdVersion,
-      content: parentVersion.content,
-      parents: [parentVersion.versionId],
+      content: createdVersion.content.length > 0 ? createdVersion.content : parentVersion.content,
+      parents: createdVersion.parents.length > 0 ? createdVersion.parents : [parentVersion.versionId],
     }));
   }, [parentVersion]);
 
@@ -97,42 +102,42 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
   const [grantedRoles, setGrantedRoles] = useState<Record<DocumentVersionMemberRole, string[]>>();
 
   const createVersion = async () => {
+    setError(undefined);
+    setIsSubmitting(true);
     let creationPromise;
     if (documentId === undefined) {
-      let doc = createdDocument
-      doc.initialVersion.content = createdVersion.content
+      let doc = { ...createdDocument };
+      doc.initialVersion.content = createdVersion.content;
       creationPromise = apiClient.createDocument(doc)
         .then(response => response.initialVersion);
     } else {
       creationPromise = apiClient.createVersion(documentId, createdVersion);
     }
-    await creationPromise.then(version => {
-      if (grantedRoles === undefined)
-        return version;
-      editableMemberRoles.forEach(
-        role => grantedRoles[role]
-          .forEach(member => apiClient.grantRole(version.documentId, version.versionId, member, role))
-      );
-      return version;
-    }).then(version => {
-      navigate(`/Versions?documentId=${version.documentId}`);
-    });
-  };
-
-  const handleClick: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
-    (evt.target as HTMLButtonElement).disabled = true;
     try {
-      await createVersion();
+      const response = await creationPromise;
+      if (grantedRoles !== undefined) {
+        editableMemberRoles.forEach(
+          role => grantedRoles[role]
+            .forEach(member => apiClient.grantRole(response.documentId, response.versionId, member, role))
+        );
+      }
+      navigate(`/Versions?documentId=${response.documentId}`);
     } catch (e) {
-      console.error(e);
-      (evt.target as HTMLButtonElement).disabled = false;
-    }
-  };
-
-  const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
-    if (evt.key === 'Enter') {
-      evt.preventDefault();      
-      await createVersion();
+      setIsSubmitting(false);
+      const prefix = isCreatingNewVersion
+        ? 'Error while creating a new version: '
+        : isCreatingNewDocument ? 'Error while creating a new document: ' : 'Error: ';
+      if (e instanceof ConcurrencyConflict) {
+        if (isCreatingNewVersion) {
+          setError(prefix + 'chosen version name is already taken! Resubmit with another version name.');
+          setVersions(await apiClient.getVersions(documentId));
+        }
+        if (isCreatingNewDocument) {
+          setError(prefix + 'chosen document name is already taken! Resubmit with another document name.');
+        }
+      } else {
+        setError(prefix + ((e as Error)?.message ?? e?.toString() ?? 'Unknown error. Try again.'));
+      }
     }
   };
 
@@ -141,33 +146,24 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     [],
   );
 
+  const rolesDefined = users !== undefined && defaultRoles !== undefined;
+  const parentVersionDefined = versions !== undefined && versionsMinusParent !== undefined && parentVersion !== undefined;
 
-  if (users === undefined || defaultRoles === undefined)
-    return null;
-
-  if (isCreatingNewDocument)
-    return (
-      <Form onKeyDown={handleEnter}>
-        <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
-        <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
-        <VersionContentEditor defaultValue={parentVersion?.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
-        <Button onClick={handleClick}>Create</Button>
-      </Form>
-    );
-
-  if (versions === undefined || versionsMinusParent === undefined || parentVersion === undefined)
-    return null;
-
-  return (
-    <Form onKeyDown={handleEnter}>
+  return (rolesDefined && (isCreatingNewDocument || (isCreatingNewVersion && parentVersionDefined))) ? (<>
+    <Alert variant="danger" show={isErrorSet} onClose={() => setError(undefined)} dismissible>
+      {error}
+    </Alert>
+    <Form>
       <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
       <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
-      <VersionNameChooser versions={versions} parentVersion={parentVersion} onChange={changeVersion} />
-      <VersionMergingOptions versions={versionsMinusParent} onChange={parents => setCreatedVersion({ ...createdVersion, parents: [parentVersion.versionId, ...parents] })} />
-      <VersionContentEditor defaultValue={parentVersion.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
-      <Button className="w-100" type="submit" onClick={handleClick}>Create</Button>
+      {(isCreatingNewVersion && parentVersionDefined) ? (<>
+        <VersionNameChooser versions={versions} parentVersion={parentVersion} onChange={changeVersion} />
+        <VersionMergingOptions versions={versionsMinusParent} onChange={parents => setCreatedVersion({ ...createdVersion, parents: [parentVersion.versionId, ...parents] })} />
+      </>) : <></>}
+      <VersionContentEditor defaultValue={parentVersion?.content} onChange={content => setCreatedVersion({ ...createdVersion, content })} />
+      <Button disabled={isSubmitting} className="w-100" type="submit" onClick={createVersion}>Create</Button>
     </Form>
-  );
+  </>) : <></>;
 }
 
 export default VersionCreator;

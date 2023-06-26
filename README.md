@@ -8,90 +8,83 @@ Set environmental variable `DOCKER_BUILDKIT=1`
 
 # Running
 
-Currently backend and frontend are run separately.
+>This environment hosts the entire application on `localhost:3000`.
 
-## Starting
-
-### Backend
-
-Run
-
-```sh
-docker compose --profile all up -d
-```
-
-to start the database, file storage and backend server.
-
-If there were any changes to project since last run, execute
-
+Start:
 ```sh
 docker compose --profile all up -d --build
 ```
 
-instead to rebuild the server image.
-
-### Frontend
-
-Run
-
-```sh
-npm run --prefix frontend start
-```
-
-to start frontend development server.
-
-## Closing
-
-### Frontend
-
-Quit the frontend server process with Ctrl-C.
-
-### Backend
-
-Run
-
+Stop:
 ```sh
 docker compose --profile all down
 ```
 
-If you want to wipe all project-related storage data (created documents, versions, users, etc.), do
-
+Cleanup:
 ```sh
 docker compose --profile all down -v
 ```
-
-instead.
 
 # Development
 
 ## Frontend
 
-The following commands start the development server.
+### Databse + Backend environment
 
+>This environment has to be running during frontend development.
+
+Start:
+```sh
+docker compose --profile backend up -d --build
+```
+
+Stop:
+```sh
+docker compose --profile backend down
+```
+
+Cleanup:
+```sh
+docker compose --profile backend down -v
+```
+
+### Frontend
+
+Start:
 ```sh
 npm run --prefix frontend start
 ```
+`Ctrl-C` to quit.
 
 ## Backend
 
-### Setup
+### Databse environment
 
+>This environment has to be running during backend development.
+
+Start:
 ```sh
 docker compose --profile db up -d
-cd backend
+```
+(no `--build` because we are using pre-made images)
+
+Stop:
+```sh
+docker compose --profile db down
 ```
 
-### Running
-
+Cleanup:
 ```sh
-cargo run
-```
-
-### Teardown
-
-```sh
-cd ..
 docker compose --profile db down -v
+```
+
+### Backend
+
+Start:
+```sh
+cd backend
+cargo run
+cd ..
 ```
 
 # API documentation

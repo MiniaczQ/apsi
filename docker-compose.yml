@@ -1,10 +1,32 @@
 version: '3.9'
 
 services:
-  webserver:
-    container_name: webserver
+  webserver-backend:
+    container_name: webserver-backend
     hostname: webserver
     build: './backend'
+    ports:
+      - 3000:3000
+    environment:
+      RUST_BACKTRACE: 1
+      database__host: database
+      s3storage__region_endpoint: http://s3storage:9000
+    profiles:
+      - backend
+    depends_on:
+      database:
+        condition: service_healthy
+      s3storage:
+        condition: service_healthy
+      s3storage-create-bucket:
+        condition: service_completed_successfully
+    volumes:
+      - ./backend/seeding:/app/seeding
+
+  webserver-backend-frontend:
+    container_name: webserver-backend-frontend
+    hostname: webserver
+    build: '.'
     ports:
       - 3000:3000
     environment:
@@ -41,6 +63,7 @@ services:
       retries: 5
     profiles:
       - db
+      - backend
       - all
 
   s3storage:
@@ -62,6 +85,7 @@ services:
       start_period: 5s
     profiles:
       - db
+      - backend
       - all
 
   s3storage-create-bucket:
@@ -73,4 +97,5 @@ services:
       /bin/sh -c " /usr/bin/mc config host add s3storage http://s3storage:9000 adminadmin adminadmin; /usr/bin/mc mb --ignore-existing s3storage/file-attachments || true; /usr/bin/mc policy set download s3storage/file-attachments || true; exit 0; "
     profiles:
       - db
+      - backend
       - all

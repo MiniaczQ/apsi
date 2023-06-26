@@ -49,8 +49,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'published': 'published'
     };
     const newState = stateProgressionLUT[version?.versionState];
-    apiClient.setVersionState(documentId!, versionId!, newState)
-      .then(() => setVersion({ ...version, versionState: newState }));
+    setVersion(await apiClient.setVersionState(documentId!, versionId!, { newState, updatedAt: version.updatedAt }));
   }
 
   const changeStateBackward: MouseEventHandler<HTMLButtonElement> = async () => {
@@ -64,8 +63,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       'published': 'published'
     };
     const newState = stateProgressionLUT[version?.versionState];
-    apiClient.setVersionState(documentId!, versionId!, newState)
-      .then(() => setVersion({ ...version, versionState: newState }));
+    setVersion(await apiClient.setVersionState(documentId!, versionId!, { newState, updatedAt: version.updatedAt }));
   }
 
   function getRolesForState(state: DocumentVersionState | undefined): DocumentVersionMemberRole[] {

@@ -14,6 +14,7 @@ import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 import Comment from '../models/Comment';
 import CreateComment from '../models/CreateComment';
 import { Notification } from "../models/Notification";
+import ChangeVersionState from "../models/ChangeVersionState";
 
 type BackendError = {
   error: string;
@@ -190,9 +191,6 @@ class BackendApiClient implements ApiClient {
     true,
     false,
   );
-  deleteDocument = async (documentId: string) => await this.delete(
-    `documents/${documentId}`
-  );
 
   getVersions = async (documentId: string) => await this.get<DocumentVersion[]>(
     `documents/${documentId}/versions`,
@@ -210,14 +208,9 @@ class BackendApiClient implements ApiClient {
     true,
     false,
   );
-  deleteVersion = async (documentId: string, versionId: string) => await this.delete(
-    `documents/${documentId}/${versionId}`
-  );
-  setVersionState = async (documentId: string, versionId: string, state: string) => await this.post(
+  setVersionState = async (documentId: string, versionId: string, state: ChangeVersionState) => await this.post<DocumentVersion>(
     `documents/${documentId}/${versionId}/change-state/${state}`,
-    '',
-    true,
-    false,
+    state,
   );
   getVersionMembers = async (documentId: string, versionId: string) => await this.get<DocumentVersionMember[]>(
     `documents/${documentId}/${versionId}/members`,

@@ -10,8 +10,9 @@ export type DocumentVersion = {
     createdAt: string,
     content: string,
     versionState: DocumentVersionState,
-    parents: string[],
     children: string[],
+    parents: string[],
+    updatedAt: string,
 };
 
 export default DocumentVersion;

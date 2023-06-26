@@ -66,6 +66,7 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
     setUpdatedVersion({
       versionName: baseVersion.versionName,
       content: baseVersion.content,
+      updatedAt: baseVersion.updatedAt,
     });
   }, [baseVersion]);
 

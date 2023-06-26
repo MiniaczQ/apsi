@@ -1,4 +1,4 @@
-import { FunctionComponent, KeyboardEventHandler, useCallback, useEffect, useMemo, useState } from 'react';
+import { FunctionComponent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { Form, useSearchParams } from 'react-router-dom';
@@ -141,15 +141,6 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     }
   };
 
-  const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
-    if (evt.key === 'Enter') {
-      evt.preventDefault();
-      if (!isSubmitting) {
-        await createVersion();
-      }
-    }
-  };
-
   const changeVersion = useCallback(
     (versionName: string) => setCreatedVersion(createdVersion => ({ ...createdVersion, versionName })),
     [],
@@ -162,7 +153,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
     <Alert variant="danger" show={isErrorSet} onClose={() => setError(undefined)} dismissible>
       {error}
     </Alert>
-    <Form onKeyDown={handleEnter}>
+    <Form>
       <DocumentNameEditor disabled={parentVersionId !== undefined} defaultValue={document?.documentName} onChange={documentName => setCreatedDocument({ ...createdDocument, documentName })} />
       <RoleEditor options={users} defaultValue={defaultRoles} onChange={userIdsPerRole => setGrantedRoles(userIdsPerRole)} />
       {(isCreatingNewVersion && parentVersionDefined) ? (<>

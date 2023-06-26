@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "76959435-1429-4d11-8743-3f3afc6fd491",
+		"_postman_id": "ee966f40-cfee-48d1-b239-8ae87a7f050f",
 		"name": "Apsi",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "21770631"
+		"_exporter_id": "19281773"
 	},
 	"item": [
 		{
@@ -1356,6 +1356,84 @@
 			]
 		},
 		{
+			"name": "Events",
+			"item": [
+				{
+					"name": "Get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mark Seen",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/events/:event_id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"events",
+								":event_id"
+							],
+							"variable": [
+								{
+									"key": "event_id",
+									"value": "{{eventId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{jwtToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
 			"name": "Health",
 			"request": {
 				"method": "GET",
@@ -1426,6 +1504,11 @@
 		{
 			"key": "setVersionId",
 			"value": "65a45040-f418-11ed-a05b-0242ac120003",
+			"type": "string"
+		},
+		{
+			"key": "eventId",
+			"value": "974293b4-6de5-4a5d-b14a-da2393534c0c",
 			"type": "string"
 		}
 	]

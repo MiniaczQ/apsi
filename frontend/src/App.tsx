@@ -14,11 +14,11 @@ import BackendApiClient from './api/BackendApiClient';
 import VersionEditor from './versions/VersionEditor';
 import Sets from './sets/Sets';
 import SetVersions from './set_versions/SetVersions';
-import SetVersionDocuments from './set_version_documents/SetVersionDocuments';
+import SetVersionDocuments from './set_versions/SetVersionDocuments';
 import { Button, Modal } from 'react-bootstrap';
 import Notifications from './notifications/Notifications';
-import SetCreator from './versions/SetCreator';
-import SetEditor from './versions/SetEditor';
+import SetCreator from './set_versions/SetCreator';
+import SetEditor from './set_versions/SetEditor';
 
 const API_BASE_URL = 'http://localhost:3000/api/';
 

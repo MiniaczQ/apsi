@@ -3,6 +3,7 @@ export type DocumentVersionSet = {
     setVersionId: string,
     setVersionName: string,
     createdAt: string,
+    documentVersionIds: string[][],
     parents: string[],
     children: string[],
 };

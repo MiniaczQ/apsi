@@ -23,8 +23,7 @@ export const VersionsSet: FunctionComponent<VersionSetProps> = ({ apiClient }) =
 
   useEffect(() => {
     if (documentSetId === undefined)
-      {console.log("dupa")
-      return};
+      return;
     apiClient.getVersionSets(documentSetId)
       .then(response => { setVersionSets(response) });
   }, [apiClient, documentSetId]);
@@ -44,7 +43,7 @@ export const VersionsSet: FunctionComponent<VersionSetProps> = ({ apiClient }) =
       </td>
       <td>
         <Button variant="outline-secondary"
-          onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(documentSetId)}&versionId=${encodeURIComponent(setVersionId)}`)}
+          onClick={() => navigate(`/SetListed?documentSetId=${encodeURIComponent(documentSetId)}&versionSetId=${encodeURIComponent(setVersionId)}`)}
         >
           Inspect set version
         </Button>

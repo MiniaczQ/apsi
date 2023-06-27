@@ -3,7 +3,6 @@ import { Button, Form } from 'react-bootstrap';
 
 import ApiClient from '../api/ApiClient';
 
-
 type LoginProps = {
   apiClient: ApiClient;
 };
@@ -22,11 +21,10 @@ const Login: FunctionComponent<LoginProps> = ({ apiClient }) => {
 
   const handleEnter: KeyboardEventHandler<HTMLFormElement> = async (evt) => {
     if (evt.key === 'Enter') {
-      evt.preventDefault();      
+      evt.preventDefault();
       await loginAndUpdateState();
     }
   };
-
 
   return (
     <>
@@ -34,11 +32,21 @@ const Login: FunctionComponent<LoginProps> = ({ apiClient }) => {
       <Form onKeyDown={handleEnter}>
         <Form.Group className="mb-3" controlId="username">
           <Form.Label>Username</Form.Label>
-          <Form.Control type="text" placeholder="Enter username" value={username} onChange={evt => setUsername(evt.target.value)} />
+          <Form.Control
+            type="text"
+            placeholder="Enter username"
+            value={username}
+            onChange={(evt) => setUsername(evt.target.value)}
+          />
         </Form.Group>
         <Form.Group className="mb-3" controlId="password">
           <Form.Label>Password</Form.Label>
-          <Form.Control type="password" placeholder="Enter password" value={password} onChange={evt => setPassword(evt.target.value)} />
+          <Form.Control
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(evt) => setPassword(evt.target.value)}
+          />
         </Form.Group>
         <Button variant="primary" className="me-2" onClick={loginAndUpdateState}>
           Log in
@@ -46,6 +54,6 @@ const Login: FunctionComponent<LoginProps> = ({ apiClient }) => {
       </Form>
     </>
   );
-}
+};
 
 export default Login;

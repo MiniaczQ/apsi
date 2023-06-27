@@ -8,22 +8,22 @@ import DocumentVersion from '../models/DocumentVersion';
 import { StateBadge } from '../models/StateBadge';
 import { useNavigate } from 'react-router-dom';
 
-
 type NotificationsProps = {
-  loginState: LoginState
-  apiClient: ApiClient
+  loginState: LoginState;
+  apiClient: ApiClient;
 };
 
 type NotificationVersion = {
-  notification: Notification
-  documentName: string
-  documentVersion: DocumentVersion
-}
+  notification: Notification;
+  documentName: string;
+  documentVersion: DocumentVersion;
+};
 
 export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient, loginState }) => {
   const navigate = useNavigate();
-  const navigateToVersionInspect = (documentId: string, versionId: string) => navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${versionId}`);
-  const [notifications, setNotifications] = useState<NotificationVersion[]>([])
+  const navigateToVersionInspect = (documentId: string, versionId: string) =>
+    navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${versionId}`);
+  const [notifications, setNotifications] = useState<NotificationVersion[]>([]);
 
   const distinctByEventId = (array: NotificationVersion[]) => {
     const uniqueKeys = new Set();
@@ -35,98 +35,99 @@ export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient
       }
       return result;
     }, []);
-  }
+  };
 
-  const sorting = (first: NotificationVersion,second: NotificationVersion) => {
-      if(first.notification.seen && !second.notification.seen){
-        return 1
-      }
-      if(first.notification.seen && second.notification.seen){
-        return -1
-      }
-      return 0
+  const sorting = (first: NotificationVersion, second: NotificationVersion) => {
+    if (first.notification.seen && !second.notification.seen) {
+      return 1;
     }
+    if (first.notification.seen && second.notification.seen) {
+      return -1;
+    }
+    return 0;
+  };
 
   useEffect(() => {
-    apiClient.getNotifications()
-      .then(response => {
-        response.forEach(notification => apiClient.getVersion(notification.documentId, notification.versionId)
-        .then(version => apiClient.getDocument(notification.documentId).then(document => setNotifications(old => [...old, {notification: notification, documentVersion: version, documentName: document.documentName}].sort(sorting)))))
-      });
+    apiClient.getNotifications().then((response) => {
+      response.forEach((notification) =>
+        apiClient
+          .getVersion(notification.documentId, notification.versionId)
+          .then((version) =>
+            apiClient
+              .getDocument(notification.documentId)
+              .then((document) =>
+                setNotifications((old) =>
+                  [...old, { notification: notification, documentVersion: version, documentName: document.documentName }].sort(
+                    sorting
+                  )
+                )
+              )
+          )
+      );
+    });
   }, [apiClient, loginState]);
 
   const createState = (notification: NotificationVersion) => {
-    if(notification.notification.seen){
-      return <td align='center'>
-        Viewed
-      </td>
+    if (notification.notification.seen) {
+      return <td align="center">Viewed</td>;
     }
 
-    return <td align='center'>
-    <Button variant="outline-secondary" onClick={async () => {
-      await apiClient.markAsRead(notification.notification.eventId)
-      const filteredNotifications = notifications.filter(element => element.notification.eventId !== notification.notification.eventId)
-      notification.notification.seen = true
-      setNotifications(old => [...filteredNotifications,notification])
-      }}>
-      Mark as read
-    </Button>
-  </td>
-  }
+    return (
+      <td align="center">
+        <Button
+          variant="outline-secondary"
+          onClick={async () => {
+            await apiClient.markAsRead(notification.notification.eventId);
+            const filteredNotifications = notifications.filter(
+              (element) => element.notification.eventId !== notification.notification.eventId
+            );
+            notification.notification.seen = true;
+            setNotifications((old) => [...filteredNotifications, notification]);
+          }}
+        >
+          Mark as read
+        </Button>
+      </td>
+    );
+  };
 
   const notificationRows = distinctByEventId(notifications).map((notification: NotificationVersion, index: number) => (
     <tr key={notification.notification.eventId}>
-      <td>
-        {index + 1}
-      </td>
+      <td>{index + 1}</td>
       <td align="center">
         {notification.documentName}
-        <StateBadge state={notification.documentVersion.versionState}/>
+        <StateBadge state={notification.documentVersion.versionState} />
       </td>
       <td align="center">
-      <Button variant="outline-secondary" onClick={() => navigateToVersionInspect(notification.notification.documentId, notification.notification.versionId)}>
-      {notification.documentVersion.versionName}
+        <Button
+          variant="outline-secondary"
+          onClick={() => navigateToVersionInspect(notification.notification.documentId, notification.notification.versionId)}
+        >
+          {notification.documentVersion.versionName}
         </Button>
-        
       </td>
-      <td align="center">
-        {eventTypeMessageResolver(notification.notification.eventType)}
-      </td>
+      <td align="center">{eventTypeMessageResolver(notification.notification.eventType)}</td>
       {createState(notification)}
     </tr>
   ));
 
   return (
     <Container>
-      <h3>
-        Notifications
-      </h3>
+      <h3>Notifications</h3>
       <Table striped bordered hover size="sm">
         <thead>
           <tr>
-            <th >
-              #
-            </th>
-            <th >
-              Document name
-            </th>
-            <th >
-              Version name
-            </th>
-            <th >
-              Notification
-            </th>
-            <th>
-              State
-            </th>
+            <th>#</th>
+            <th>Document name</th>
+            <th>Version name</th>
+            <th>Notification</th>
+            <th>State</th>
           </tr>
         </thead>
-        <tbody>
-          {notificationRows}
-        </tbody>
+        <tbody>{notificationRows}</tbody>
       </Table>
     </Container>
   );
-}
+};
 
 export default Notifications;

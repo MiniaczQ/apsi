@@ -14,10 +14,9 @@ import DocumentNameEditor from './DocumentNameEditor';
 import RoleEditor from './RoleEditor';
 import VersionContentEditor from './VersionContentEditor';
 
-
 type VersionEditorProps = {
-  loginState: LoginState,
-  apiClient: ApiClient
+  loginState: LoginState;
+  apiClient: ApiClient;
 };
 
 export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginState, apiClient }) => {
@@ -28,12 +27,9 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   const gotRequiredSearchParams = documentId !== undefined && versionId !== undefined;
 
   useEffect(() => {
-    if (gotRequiredSearchParams)
-      return;
-    if (documentId !== undefined)
-      navigate(`/Versions?documentId=${documentId}`);
-    else
-      navigate('/');
+    if (gotRequiredSearchParams) return;
+    if (documentId !== undefined) navigate(`/Versions?documentId=${documentId}`);
+    else navigate('/');
   }, [documentId, gotRequiredSearchParams, navigate]);
 
   const [error, setError] = useState<string>();
@@ -47,27 +43,24 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   const [originalMembers, setOriginalMembers] = useState<DocumentVersionMember[]>();
 
   useEffect(() => {
-    let usersPromise = apiClient.getUsers()
-      .then(response => setUsers(response));
-    let documentPromise = apiClient.getDocument(documentId!)
-      .then(response => setBaseDocument(response));
-    let versionsPromise = apiClient.getVersions(documentId!)
-      .then(response => setVersions(response));
-    let membersPromise = apiClient.getMembers(documentId!, versionId!)
-      .then(response => setOriginalMembers(response));
-    Promise.all([usersPromise, documentPromise, versionsPromise, membersPromise])
-      .then(() => setIsLoading(false));
+    let usersPromise = apiClient.getUsers().then((response) => setUsers(response));
+    let documentPromise = apiClient.getDocument(documentId!).then((response) => setBaseDocument(response));
+    let versionsPromise = apiClient.getVersions(documentId!).then((response) => setVersions(response));
+    let membersPromise = apiClient.getMembers(documentId!, versionId!).then((response) => setOriginalMembers(response));
+    Promise.all([usersPromise, documentPromise, versionsPromise, membersPromise]).then(() => setIsLoading(false));
   }, [apiClient, documentId, versionId]);
 
-  const baseVersion = versions?.find(version => version.versionId === versionId);
-  const parents = baseVersion?.parents?.map(parentId => versions?.find(version => version.versionId === parentId));
-  const parentNames = parents?.map(parent => parent?.versionName)?.filter(x => x !== undefined)?.join(', ');
+  const baseVersion = versions?.find((version) => version.versionId === versionId);
+  const parents = baseVersion?.parents?.map((parentId) => versions?.find((version) => version.versionId === parentId));
+  const parentNames = parents
+    ?.map((parent) => parent?.versionName)
+    ?.filter((x) => x !== undefined)
+    ?.join(', ');
 
   const [updatedVersion, setUpdatedVersion] = useState<UpdateVersion>();
   const [conflictVersion, setConflictVersion] = useState<UpdateVersion>();
   useEffect(() => {
-    if (baseVersion === undefined)
-      return;
+    if (baseVersion === undefined) return;
     setUpdatedVersion({
       content: baseVersion.content,
       updatedAt: baseVersion.updatedAt,
@@ -87,17 +80,16 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   );
 
   const updateVersion = async () => {
-    if (documentId === undefined || versionId === undefined || updatedVersion === undefined)
-      return;
+    if (documentId === undefined || versionId === undefined || updatedVersion === undefined) return;
     setError(undefined);
     setConflictVersion(undefined);
     setIsSubmitting(true);
     try {
       await apiClient.updateVersion(documentId, versionId, updatedVersion);
       if (grantedRoles !== undefined && revokedRoles !== undefined) {
-        editableMemberRoles.forEach(role => {
-          grantedRoles[role].forEach(member => apiClient.grantRole(documentId, versionId, member, role));
-          revokedRoles[role].forEach(member => apiClient.revokeRole(documentId, versionId, member, role));
+        editableMemberRoles.forEach((role) => {
+          grantedRoles[role].forEach((member) => apiClient.grantRole(documentId, versionId, member, role));
+          revokedRoles[role].forEach((member) => apiClient.revokeRole(documentId, versionId, member, role));
         });
       }
       navigate(`/Versions?documentId=${documentId}`);
@@ -125,24 +117,39 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
     }
   };
 
-  if (users === undefined || originalMembers === undefined || updatedVersion === undefined)
-    return null;
+  if (users === undefined || originalMembers === undefined || updatedVersion === undefined) return null;
 
-  return (<>
-    <Alert variant="danger" show={isErrorSet} onClose={() => setError(undefined)} dismissible>
-      {error}
-    </Alert>
-    <Form>
-      <DocumentNameEditor disabled defaultValue={baseDocument?.documentName ?? ''} />
-      {parentVersionField}
-      <RoleEditor options={users} defaultValue={originalMembers} onChange={(granted, revoked) => { setGrantedRoles(granted); setRevokedRoles(revoked); }} />
-      {conflictVersion !== undefined
-        ? <VersionContentEditor disabled name={'Conflicting content'} value={conflictVersion.content} />
-        : <></>}
-      <VersionContentEditor defaultValue={updatedVersion.content} onChange={content => setUpdatedVersion({ ...updatedVersion, content })} />
-      <Button disabled={isSubmitting} onClick={handleClick}>Modify</Button>
-    </Form>
-  </>);
-}
+  return (
+    <>
+      <Alert variant="danger" show={isErrorSet} onClose={() => setError(undefined)} dismissible>
+        {error}
+      </Alert>
+      <Form>
+        <DocumentNameEditor disabled defaultValue={baseDocument?.documentName ?? ''} />
+        {parentVersionField}
+        <RoleEditor
+          options={users}
+          defaultValue={originalMembers}
+          onChange={(granted, revoked) => {
+            setGrantedRoles(granted);
+            setRevokedRoles(revoked);
+          }}
+        />
+        {conflictVersion !== undefined ? (
+          <VersionContentEditor disabled name={'Conflicting content'} value={conflictVersion.content} />
+        ) : (
+          <></>
+        )}
+        <VersionContentEditor
+          defaultValue={updatedVersion.content}
+          onChange={(content) => setUpdatedVersion({ ...updatedVersion, content })}
+        />
+        <Button disabled={isSubmitting} onClick={handleClick}>
+          Modify
+        </Button>
+      </Form>
+    </>
+  );
+};
 
 export default VersionEditor;

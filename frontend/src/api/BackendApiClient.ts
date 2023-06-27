@@ -87,8 +87,8 @@ class BackendApiClient implements ApiClient {
       ? await response.json()
       : undefined;
     const textResponse = response.headers.get('content-type')?.startsWith('text/plain') === true
-        ? await response.text()
-        : undefined;
+      ? await response.text()
+      : undefined;
     const errorResponse = (jsonResponse as BackendError)?.error
       ?? textResponse
       ?? (jsonResponse !== undefined ? JSON.stringify(jsonResponse) : undefined);
@@ -271,42 +271,42 @@ class BackendApiClient implements ApiClient {
     `documents/${documentId}/${versionId}/comments`,
   );
 
-  getNotifications = async() => await this.get<Notification[]>(`events`);
+  getNotifications = async () => await this.get<Notification[]>(`events`);
   markAsRead = async (eventId: string) => await this.post(
     `events/${eventId}`,
     undefined,
     true,
     false)
 
-  createSet = async(data: CreateSet) => await this.post(
+  createSet = async (data: CreateSet) => await this.post(
     'document-sets',
     data
-  )as SetWithInitialVersion;
-  
+  ) as SetWithInitialVersion;
+
   createSetVersion = async (documentSetId: string, data: CreateSetVersion) => await this.post(
     `document-sets/${documentSetId}`,
     data
-  ) as SetVersion; 
+  ) as SetVersion;
 
-  
+
   getSetSet = async () => await this.get(
     'document-sets/sets'
   ) as Set[];
 
-  getSetVersionsSet= async (documentSetId:string) => await this.get(
+  getSetVersionsSet = async (documentSetId: string) => await this.get(
     `document-sets/${documentSetId}`
   ) as SetVersion[]
-    
-      
-  removeVersion = async (documentSetId: string, setVersionId: string, documentId: string) => await this.delete(
-      `document-sets/${documentSetId}/${setVersionId}/${documentId}`      
-    ); 
-  
-  addDocumentVersion = async (documentSetId: string, setVersionId: string, data: SetDocumentVersion): Promise<void> =>  await this.post(
-    `document-sets/${documentSetId}/${setVersionId}`, data
-    );
 
-  
+
+  removeVersion = async (documentSetId: string, setVersionId: string, documentId: string) => await this.delete(
+    `document-sets/${documentSetId}/${setVersionId}/${documentId}`
+  );
+
+  addDocumentVersion = async (documentSetId: string, setVersionId: string, data: SetDocumentVersion): Promise<void> => await this.post(
+    `document-sets/${documentSetId}/${setVersionId}`, data
+  );
+
+
 
   constructor(url: string, loginState: LoginState, authenticationErrorHandler?: (message: string) => void) {
     if (url[url.length - 1] !== '/')

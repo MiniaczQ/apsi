@@ -10,7 +10,7 @@ import UpdateVersion from "../models/UpdateVersion";
 import User from "../models/User";
 import Comment from "../models/Comment";
 import CreateComment from "../models/CreateComment";
-import {Notification} from "../models/Notification";
+import { Notification } from "../models/Notification";
 import ChangeVersionState from "../models/ChangeVersionState";
 
 import CreateSet from "../models/CreateSet";
@@ -90,13 +90,13 @@ interface ApiClient {
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>
 
 
-    createSet: (data: CreateSet) =>Promise<SetWithInitialVersion>;
-    createSetVersion: (documentSetId:string,data:CreateSetVersion) =>Promise<SetVersion>;
-    addDocumentVersion:(documentSetId:string,setVersionId: string,data:SetDocumentVersion )=>Promise<void>;
+    createSet: (data: CreateSet) => Promise<SetWithInitialVersion>;
+    createSetVersion: (documentSetId: string, data: CreateSetVersion) => Promise<SetVersion>;
+    addDocumentVersion: (documentSetId: string, setVersionId: string, data: SetDocumentVersion) => Promise<void>;
 
-    getSetSet:() => Promise<Set[]>;
-    getSetVersionsSet: (documentSetId: string) =>Promise<SetVersion[]>
-    removeVersion:(documentSetId:string,setVersionId:string,documentId:string) =>Promise<void>;
+    getSetSet: () => Promise<Set[]>;
+    getSetVersionsSet: (documentSetId: string) => Promise<SetVersion[]>
+    removeVersion: (documentSetId: string, setVersionId: string, documentId: string) => Promise<void>;
 
     getSets: () => Promise<DocumentSet[]>;
     getSetVersions: (documentSetId: string) => Promise<DocumentVersionSet[]>;

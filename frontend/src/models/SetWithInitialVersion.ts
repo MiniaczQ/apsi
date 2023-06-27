@@ -1,9 +1,9 @@
-import Set from "./Set";
-import SetVersion from "./SetVersion";
+import Set from './Set';
+import SetVersion from './SetVersion';
 
 type SetWithInitialVersion = {
-    document: Set;
-    initialVersion: SetVersion;
+  document: Set;
+  initialVersion: SetVersion;
 };
 
 export default SetWithInitialVersion;

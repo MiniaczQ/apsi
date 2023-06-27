@@ -16,6 +16,11 @@ type VersionsProps = {
   apiClient: ApiClient
 };
 
+export function compare_names(a_name: string, b_name: string){
+  // MIND THE MINUS, WE WANT THE NEWEST TO APPEAR ON TOP
+  return -String(a_name).localeCompare(b_name, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
 
 const columns = [
@@ -43,9 +48,9 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
       .then(response => { setVersions(response) });
   }, [apiClient, documentId]);
 
+
   function compareVersions(a: DocumentVersion, b: DocumentVersion): number {
-    // MIND THE MINUS, WE WANT THE NEWEST TO APPEAR ON TOP
-    return -String(a.versionName).localeCompare(b.versionName, undefined, { numeric: true, sensitivity: 'base' });
+    return compare_names(a.versionName, b.versionName);
   }
 
    const data: any[] = versions?.sort(compareVersions).map(({ documentId, versionId, versionName, versionState, createdAt }: DocumentVersion, index: number) => ({

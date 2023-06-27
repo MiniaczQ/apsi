@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
 import DocumentVersionSet from '../models/DocumentVersionSet';
+import {compare_names} from "../versions/Versions";
 
 type VersionSetProps = {
   apiClient: ApiClient
@@ -28,12 +29,12 @@ export const VersionsSet: FunctionComponent<VersionSetProps> = ({ apiClient }) =
       .then(response => { setVersionSets(response) });
   }, [apiClient, documentSetId]);
 
-  function compareVersions(a: DocumentVersionSet, b: DocumentVersionSet): number {
-    // MIND THE MINUS, WE WANT THE NEWEST TO APPEAR ON TOP
-    return -String(a.setVersionName).localeCompare(b.setVersionName, undefined, { numeric: true, sensitivity: 'base' });
+
+  function compareVersionSets(a: DocumentVersionSet, b: DocumentVersionSet): number {
+    return compare_names(a.setVersionName, b.setVersionName);
   }
 
-  const versionRows = versions?.sort(compareVersions).map(({ documentSetId, setVersionId, setVersionName, createdAt }: DocumentVersionSet) =>
+  const versionRows = versions?.sort(compareVersionSets).map(({ documentSetId, setVersionId, setVersionName, createdAt }: DocumentVersionSet) =>
     <tr key={setVersionId}>
       <td>
         {setVersionName}

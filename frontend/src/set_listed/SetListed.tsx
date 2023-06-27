@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
 import ApiClient from '../api/ApiClient';
-import DocumentVersionSet from '../models/DocumentVersionSet';
 import DocumentVersion from '../models/DocumentVersion';
 import Document from '../models/Document';
 
@@ -34,9 +33,8 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
                     {
                         setVersion.documentVersionIds.forEach(
                             (pair,index) => {
-                              console.log(pair);
-                                apiClient.getDocument(pair[0]).then(doc => setDocs([...docs,  doc] ));
-                                apiClient.getVersion(pair[0], pair[1]).then(ver => setVers([...vers, ver]))
+                              apiClient.getDocument(pair[0]).then(doc => setDocs(oldDocs => [...oldDocs,  doc]));
+                              apiClient.getVersion(pair[0], pair[1]).then(ver => setVers(oldVers => [...oldVers, ver]))
                             }
                         )
                     }
@@ -48,6 +46,7 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
 
 
       const documentRows = vers.map(( ver: DocumentVersion, index: number) => {
+        
         const docName = docs[index].documentName;
         return(
         <tr key={ver.versionId}>
@@ -67,6 +66,7 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
           </td>
         </tr>
         )
+        
       });
 
 

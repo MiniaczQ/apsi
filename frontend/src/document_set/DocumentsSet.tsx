@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 
 import ApiClient from '../api/ApiClient';
 import DocumentVersionSet from '../models/DocumentVersionSet';
-
+import { compareByCreationTime } from '../documents/Documents';
 
 type DocumentsSetProps = {
   apiClient: ApiClient
@@ -17,19 +17,7 @@ type DocumentNamedVersionSet = {
 
 const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
 
-export const compareByCreationTime = (first: { createdAt: string }, second: { createdAt: string }) => {
-  let firstDate = new Date(first.createdAt);
-  let secondDate = new Date(second.createdAt)
-  if(firstDate > secondDate){
-    return -1;
-  }
-  if(firstDate < secondDate){
-    return 1;
-  }
-  return 0;
-}
-
-const distinctByDocumentId = (array: DocumentNamedVersionSet[]) => {
+const distinctByDocumentSetId = (array: DocumentNamedVersionSet[]) => {
   const uniqueKeys = new Set();
   return array.reduce((result: DocumentNamedVersionSet[], element) => {
     const elementKey = element.documentVersionSet.documentSetId;
@@ -63,7 +51,7 @@ export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }
   const navigateToVersionSetList = (documentSetId: string) => navigate(`/VersionSets?documentSetId=${encodeURIComponent(documentSetId)}`);
   //const navigateToDocumentCreator = () => navigate('/Versions/new');
 
-  const documentRows = distinctByDocumentId(docsVersions).map(({ documentVersionSet, documentSetName }: DocumentNamedVersionSet, index: number) => (
+  const documentRows = distinctByDocumentSetId(docsVersions).map(({ documentVersionSet, documentSetName }: DocumentNamedVersionSet, index: number) => (
     <tr key={documentVersionSet.documentSetId}>
       <td>
         {index + 1}

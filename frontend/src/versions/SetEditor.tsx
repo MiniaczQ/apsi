@@ -62,7 +62,7 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
       setDocuments(response)
     });
     let promises =[usersPromise];
-    if(isCreatingNewVersion){
+    if(documentSetId!==undefined){
         
         let setsPromise=apiClient.getSets().then(response => setdocumentSets(response));
 
@@ -71,7 +71,7 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
     }
     Promise.all(promises)
       .then(() => setIsLoading(false));
-  }, [apiClient, isCreatingNewVersion]);
+  }, [apiClient]);
 
   const EditedSet=documentsets?.find(set=>set.documentSetId===documentSetId);
 
@@ -89,9 +89,8 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
         setCreatedVersion(createdVersion => ({
             ...createdVersion,            
             parents: [SetVersion.setVersionId],
-          }));
-          
-          if(isCreatingNewVersion){
+          }));         
+         
            
             const parentdocver=SetVersion?.documentVersionIds
             setSet(EditedSet);
@@ -118,13 +117,12 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
     
     
                 }   
-            })
-            
-        }
+            })    
 
 
 
-        }, [SetVersion]);
+
+        }, [EditedSet]);
 
 
 
@@ -268,7 +266,9 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
     (evt.target as HTMLButtonElement).disabled = true;
     
     if(previoustableData1!==undefined && SetVersion!==undefined){
+     
       previoustableData1.forEach(record=>{
+        
         apiClient.removeVersion(SetVersion?.documentSetId,SetVersion?.setVersionId,record[0]);
       })
     }

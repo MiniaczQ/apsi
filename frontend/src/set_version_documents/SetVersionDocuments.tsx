@@ -1,5 +1,5 @@
 import { FunctionComponent, useState, useEffect } from 'react';
-import { Button, Container, Table } from 'react-bootstrap';
+import { Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { useSearchParams } from 'react-router-dom';
 
@@ -51,31 +51,6 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
       });
   }, [apiClient, documentSetId, versionSetId]);
 
-
-  const documentRows = vers.map((ver: DocumentVersion, index: number) => {
-    let docName = ''
-    if(typeof docs[index] !== 'undefined')
-      docName = docs[index].documentName;
-    return (
-      <tr key={ver.versionId}>
-        <td>
-          {index + 1}
-        </td>
-        <td align="center">
-          {docName}
-        </td>
-        <td align='center'>
-          {ver.versionName}
-        </td>
-        <td align='center'>
-          <Button variant="outline-secondary" onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(ver.documentId)}&versionId=${encodeURIComponent(ver.versionId)}`)}>
-            Inspect document version
-          </Button>
-        </td>
-      </tr>
-    )
-  });
-
   const data = vers.map((ver: DocumentVersion, index: number) => ({
     index: index + 1,
     name: typeof docs[index] !== 'undefined' ? docs[index].documentName : '',
@@ -86,7 +61,6 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
       </Button>
     )
   }));
-
 
   return (
     <Container>

@@ -14,7 +14,7 @@ type VersionSetProps = {
 
 const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
 
-export const VersionsSet: FunctionComponent<VersionSetProps> = ({ apiClient }) => {
+export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) => {
   const navigate = useNavigate();
   const searchParams = useSearchParams()[0];
   const documentSetId = searchParams.get('documentSetId') ?? undefined;
@@ -77,4 +77,4 @@ export const VersionsSet: FunctionComponent<VersionSetProps> = ({ apiClient }) =
   );
 }
 
-export default VersionsSet;
+export default SetVersions;

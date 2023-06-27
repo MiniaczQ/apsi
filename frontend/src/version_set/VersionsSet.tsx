@@ -25,7 +25,7 @@ export const VersionsSet: FunctionComponent<VersionSetProps> = ({ apiClient }) =
   useEffect(() => {
     if (documentSetId === undefined)
       return;
-    apiClient.getVersionSets(documentSetId)
+    apiClient.getSetVersions(documentSetId)
       .then(response => { setVersionSets(response) });
   }, [apiClient, documentSetId]);
 

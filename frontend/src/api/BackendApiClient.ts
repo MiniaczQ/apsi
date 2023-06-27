@@ -276,11 +276,11 @@ class BackendApiClient implements ApiClient {
     this.authenticationErrorHandler = authenticationErrorHandler;
   }
 
-  getDocumentSets = async () => await this.get<DocumentSet[]>(
+  getSets = async () => await this.get<DocumentSet[]>(
     'document-sets/sets',
   );
 
-  getVersionSets = async (documentSetId: string) => await this.get<DocumentVersionSet[]>(
+  getSetVersions = async (documentSetId: string) => await this.get<DocumentVersionSet[]>(
     `document-sets/${documentSetId}`
   );
 }

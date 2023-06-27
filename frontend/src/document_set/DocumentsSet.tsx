@@ -11,7 +11,7 @@ type DocumentsSetProps = {
 };
 
 type DocumentNamedVersionSet = {
-  documentSetName: String,
+  documentSetName: string,
   documentVersionSet: DocumentVersionSet
 }
 
@@ -34,11 +34,11 @@ export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }
   const [docsVersions, setDocsVersions] = useState<DocumentNamedVersionSet[]>([])
 
   useEffect(() => {
-    apiClient.getDocumentSets()
+    apiClient.getSets()
       .then(documentsResponse => {
         documentsResponse.forEach(
           documentSet => {
-            apiClient.getVersionSets(documentSet.documentSetId)
+            apiClient.getSetVersions(documentSet.documentSetId)
               .then(response => {
                 setDocsVersions(old => [...old, { documentSetName: documentSet.documentSetName, documentVersionSet: response.slice().sort(compareByCreationTime).at(0)! }]);
               })
@@ -49,7 +49,6 @@ export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }
   }, [apiClient]);
 
   const navigateToVersionSetList = (documentSetId: string) => navigate(`/VersionSets?documentSetId=${encodeURIComponent(documentSetId)}`);
-  //const navigateToDocumentCreator = () => navigate('/Versions/new');
 
   const documentRows = distinctByDocumentSetId(docsVersions).map(({ documentVersionSet, documentSetName }: DocumentNamedVersionSet, index: number) => (
     <tr key={documentVersionSet.documentSetId}>

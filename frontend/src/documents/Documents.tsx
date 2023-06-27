@@ -13,7 +13,7 @@ type DocumentsProps = {
 };
 
 export type DocumentNamedVersion = {
-  documentName: String,
+  documentName: string,
   documentVersion: DocumentVersion
 }
 

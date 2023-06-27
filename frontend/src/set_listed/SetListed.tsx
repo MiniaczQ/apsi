@@ -24,7 +24,7 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
   useEffect(() => {
     if (documentSetId === undefined || versionSetId === undefined)
       return;
-    apiClient.getVersionSets(documentSetId)
+    apiClient.getSetVersions(documentSetId)
       .then(response => {
         response.forEach(
           setVersion => {

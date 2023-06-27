@@ -80,8 +80,8 @@ interface ApiClient {
     createComment: (documentId: string, versionId: string, comment: CreateComment) => Promise<Comment>;
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>
 
-    getDocumentSets: () => Promise<DocumentSet[]>;
-    getVersionSets: (documentSetId: string) => Promise<DocumentVersionSet[]>;
+    getSets: () => Promise<DocumentSet[]>;
+    getSetVersions: (documentSetId: string) => Promise<DocumentVersionSet[]>;
 };
 
 export default ApiClient;

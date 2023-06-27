@@ -234,16 +234,16 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
               Roles
             </h5>
             <div>
-              <h6 className={styles.pblue}>
+              <h6 className={`${styles.pblue} ${styles.conciseLine}`}>
                 Owner: <span className={styles.textblack}>{owner?.username}</span>
               </h6>
-              <h6 className={styles.pblue}>
+              <h6 className={`${styles.pblue} ${styles.conciseLine}`}>
                 Viewers: <span className={styles.textblack}>{viewers?.map(viewer => viewer.username)?.join(', ')}</span>
               </h6>
-              <h6 className={styles.pblue}>
+              <h6 className={`${styles.pblue} ${styles.conciseLine}`}>
                 Editors: <span className={styles.textblack}>{editors?.map(editor => editor.username)?.join(', ')}</span>
               </h6>
-              <h6 className={styles.pblue}>
+              <h6 className={`${styles.pblue} ${styles.conciseLine}`}>
                 Reviewers: <span className={styles.textblack}>{reviewers?.map(reviewer => reviewer.username)?.join(', ')}</span>
               </h6>
             </div>

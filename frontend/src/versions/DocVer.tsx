@@ -107,7 +107,7 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
   const navigateToVersionCreator = (documentId: string, versionId: string) =>
     navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`);
   const navigateToVersionEditor = (documentId: string, versionId: string) =>
-    navigate(`/versions/edit?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`);
+    navigate(`/version/edit?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`);
 
   function getActionButtons() {
     const newVersionButton = (

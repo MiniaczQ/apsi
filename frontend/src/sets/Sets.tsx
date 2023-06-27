@@ -3,7 +3,7 @@ import { Button, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 
 import ApiClient from '../api/ApiClient';
-import DocumentVersionSet from '../models/DocumentVersionSet';
+import DocumentSetVersion from '../models/DocumentSetVersion';
 import { compareByCreationTime } from '../documents/Documents';
 import { SortedTable } from '../table/SortedTable';
 import { Column } from '../table/TableBody';
@@ -14,7 +14,7 @@ type DocumentsSetProps = {
 
 type DocumentNamedVersionSet = {
   documentSetName: string;
-  documentVersionSet: DocumentVersionSet;
+  documentVersionSet: DocumentSetVersion;
 };
 
 const columns: Column[] = [
@@ -66,7 +66,8 @@ export const Sets: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
   }, [apiClient]);
 
   const navigateToVersionSetList = (documentSetId: string) =>
-    navigate(`/VersionSets?documentSetId=${encodeURIComponent(documentSetId)}`);
+    navigate(`/set-versions?documentSetId=${encodeURIComponent(documentSetId)}`);
+  const navigateToSetCreator = () => navigate('/set-versions/new');
 
   const data = distinctByDocumentSetId(docsVersions).map(
     ({ documentVersionSet, documentSetName }: DocumentNamedVersionSet, index: number) => ({
@@ -87,7 +88,9 @@ export const Sets: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
       <h3>Sets</h3>
       <SortedTable data={data} columns={columns} />
       <p>
-        <Button variant="outline-primary">Create Document Set</Button>
+        <Button onClick={navigateToSetCreator} variant="outline-primary">
+          Create Document Set
+        </Button>
       </p>
     </Container>
   );

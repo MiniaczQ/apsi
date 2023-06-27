@@ -59,7 +59,7 @@ export const Versions: FunctionComponent<VersionsProps> = ({ apiClient }) => {
         <Button
           variant="outline-secondary"
           onClick={() =>
-            navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)
+            navigate(`/version?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`)
           }
         >
           Inspect version

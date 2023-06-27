@@ -1,6 +1,6 @@
 import { FunctionComponent, useCallback, useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import ApiClient from '../api/ApiClient';
 
@@ -10,15 +10,16 @@ import SetNameEditor from './SetNameEditor';
 import CreateSet from '../models/CreateSet';
 import CreateSetVersion from '../models/CreateSetVersion';
 
-import Set from '../models/Set';
-import SetVersion from '../models/SetVersion';
+import DocumentSet from '../models/DocumentSet';
+import DocumentSetVersion from '../models/DocumentSetVersion';
 import SetVersionNameChooser from './SetVersionNameChooser';
 
 type VersionCreatorProps = {
   apiClient: ApiClient;
 };
 
-export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }) => {
+const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }) => {
+  const navigate = useNavigate();
   const searchParams = useSearchParams()[0];
   const documentSetId = searchParams.get('documentSetId') ?? undefined;
   const parentVersionId = searchParams.get('parentVersionId') ?? undefined;
@@ -34,16 +35,16 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
   const [tableData, setTableData] = useState<[string, string][]>([]);
   const [tableData1, setTableData1] = useState<[string, string][]>([]);
 
-  const [documentsets, setdocumentSets] = useState<Set[]>();
-  const [documentSetVersion, setSetVersion] = useState<SetVersion[]>();
+  const [documentsets, setdocumentSets] = useState<DocumentSet[]>();
+  const [documentSetVersion, setSetVersion] = useState<DocumentSetVersion[]>();
 
   useEffect(() => {
     let usersPromise = apiClient.getDocuments().then((response) => setDocuments(response));
     let promises = [usersPromise];
     if (isCreatingNewVersion) {
-      let setsPromise = apiClient.getSetSet().then((response) => setdocumentSets(response));
+      let setsPromise = apiClient.getSets().then((response) => setdocumentSets(response));
 
-      let docsetsPromise = apiClient.getSetVersionsSet(documentSetId).then((response) => setSetVersion(response));
+      let docsetsPromise = apiClient.getSetVersions(documentSetId).then((response) => setSetVersion(response));
       promises = [...promises, setsPromise, docsetsPromise];
     }
     Promise.all(promises).then(() => setIsLoading(false));
@@ -66,7 +67,7 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
     }
   }, [isCreatingNewVersion, parentSet, parentVersion]);
 
-  const [set, setSet] = useState<Set>();
+  const [set, setSet] = useState<DocumentSet>();
 
   const [createdSet, setCreatedSet] = useState<CreateSet>({
     documentSetName: 'frontendowy',
@@ -175,22 +176,20 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
         documentVersionIds: tableData1,
       }));
 
-      console.log(documentSetId);
-      console.log(createdVersion);
       creationPromise = apiClient.createSetVersion(documentSetId, createdVersion);
-      console.log(creationPromise);
     }
-    creationPromise.then((version) => {
+    const response = await creationPromise.then((version) => {
       if (tableData1 === undefined) return version;
       tableData1.forEach((member) => {
         docs.documentId = member[0];
         docs.versionId = member[1];
 
-        apiClient.addDocumentVersion(version.documentSetId, version.setVersionId, docs);
+        apiClient.addDocumentToSetVersion(version.documentSetId, version.setVersionId, docs);
       });
 
       return version;
     });
+    navigate(`/set-version?documentSetId=${response.documentSetId}&versionSetId=${response.setVersionId}`);
   };
 
   if (isCreatingNewDocument) {
@@ -306,7 +305,7 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
             <tbody>
               {tableData.map((data, index) => (
                 <tr key={index}>
-                  <td>{index}</td>
+                  <td>{index + 1}</td>
                   <td>{data[0]}</td>
                   <td>{data[1]}</td>
                   <td>

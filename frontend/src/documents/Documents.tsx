@@ -72,8 +72,8 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
     });
   }, [apiClient]);
 
-  const navigateToVersionList = (documentId: string) => navigate(`/Versions?documentId=${encodeURIComponent(documentId)}`);
-  const navigateToDocumentCreator = () => navigate('/Versions/new');
+  const navigateToVersionList = (documentId: string) => navigate(`/versions?documentId=${encodeURIComponent(documentId)}`);
+  const navigateToDocumentCreator = () => navigate('/versions/new');
 
   const data = distinctByDocumentId(docsVersions).map(
     ({ documentVersion, documentName }: DocumentNamedVersion, index: number) => ({

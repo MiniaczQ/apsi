@@ -110,18 +110,17 @@ function App() {
       <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
         {isLoggedIn ? (
           <>
-            <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
-            <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
-            <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
-            <Route index path="/DocSets" element={<Sets apiClient={apiClient} />} />
-            <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
-            <Route index path="/VersionSets" element={<SetVersions apiClient={apiClient} />} />
-            <Route index path="/SetVersionDocuments" element={<SetVersionDocuments apiClient={apiClient} />} />
-            <Route index path="/*" element={<Documents apiClient={apiClient} />} />
             <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState} />} />
-            <Route index path="/Sets" element={<Sets apiClient={apiClient} />} />
-            <Route index path="/setversions/new" element={<SetCreator apiClient={apiClient} />} />
-            <Route index path="/setversions/edit" element={<SetEditor apiClient={apiClient} />} />
+            <Route index path="/set-versions/new" element={<SetCreator apiClient={apiClient} />} />
+            <Route index path="/set-versions" element={<SetVersions apiClient={apiClient} />} />
+            <Route index path="/set-version/edit" element={<SetEditor apiClient={apiClient} />} />
+            <Route index path="/set-version" element={<SetVersionDocuments apiClient={apiClient} />} />
+            <Route index path="/sets" element={<Sets apiClient={apiClient} />} />
+            <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
+            <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
+            <Route index path="/version/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
+            <Route index path="/version" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
+            <Route index path="/*" element={<Documents apiClient={apiClient} />} />
           </>
         ) : (
           <>

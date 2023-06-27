@@ -28,7 +28,7 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
 
   useEffect(() => {
     if (gotRequiredSearchParams) return;
-    if (documentId !== undefined) navigate(`/Versions?documentId=${documentId}`);
+    if (documentId !== undefined) navigate(`/versions?documentId=${documentId}`);
     else navigate('/');
   }, [documentId, gotRequiredSearchParams, navigate]);
 
@@ -92,7 +92,7 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
           revokedRoles[role].forEach((member) => apiClient.revokeRole(documentId, versionId, member, role));
         });
       }
-      navigate(`/Versions?documentId=${documentId}`);
+      navigate(`/versions?documentId=${documentId}`);
     } catch (e) {
       setIsSubmitting(false);
       const prefix = 'Error modifying version: ';

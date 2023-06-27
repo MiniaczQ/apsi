@@ -22,7 +22,7 @@ type NotificationVersion = {
 export const Notifications: FunctionComponent<NotificationsProps> = ({ apiClient, loginState }) => {
   const navigate = useNavigate();
   const navigateToVersionInspect = (documentId: string, versionId: string) =>
-    navigate(`/DocVer?documentId=${encodeURIComponent(documentId)}&versionId=${versionId}`);
+    navigate(`/version?documentId=${encodeURIComponent(documentId)}&versionId=${versionId}`);
   const [notifications, setNotifications] = useState<NotificationVersion[]>([]);
 
   const distinctByEventId = (array: NotificationVersion[]) => {

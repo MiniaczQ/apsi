@@ -1,11 +1,11 @@
 import { FunctionComponent, useCallback, useEffect, useMemo } from 'react';
 import { Form } from 'react-bootstrap';
 import Select from 'react-select';
-import SetVersion from '../models/SetVersion';
+import DocumentSetVersion from '../models/DocumentSetVersion';
 
 type VersionNameChooserProps = {
-  versions: SetVersion[];
-  parentVersion: SetVersion;
+  versions: DocumentSetVersion[];
+  parentVersion: DocumentSetVersion;
   disabled?: boolean;
   onChange?: (name: string) => any;
 };

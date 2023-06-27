@@ -8,7 +8,7 @@ import DocumentVersion from '../models/DocumentVersion';
 import Document from '../models/Document';
 import { SortedTable } from '../table/SortedTable';
 import { Column } from '../table/TableBody';
-import DocumentVersionSet from '../models/DocumentVersionSet';
+import DocumentSetVersion from '../models/DocumentSetVersion';
 
 type DocumentsSetProps = {
   apiClient: ApiClient;
@@ -29,13 +29,18 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
   const versionSetId = searchParams.get('versionSetId') ?? undefined;
   const gotRequiredSearchParams = documentSetId !== undefined && versionSetId !== undefined;
 
+  const navigateToSetVersionCreator = (setId: string, setVersionId: string) =>
+    navigate(`/set-versions/new?documentSetId=${encodeURIComponent(setId)}&parentVersionId=${encodeURIComponent(setVersionId)}`);
+  const navigateToSetVersionEditor = (setId: string, setVersionId: string) =>
+    navigate(`/set-version/edit?documentSetId=${encodeURIComponent(setId)}&setVersionId=${encodeURIComponent(setVersionId)}`);
+
   useEffect(() => {
     if (gotRequiredSearchParams) return;
-    if (documentSetId !== undefined) navigate(`/SetVersions?documentSetId=${documentSetId}`);
-    else navigate('/Sets');
+    if (documentSetId !== undefined) navigate(`/set-versions?documentSetId=${documentSetId}`);
+    else navigate('/sets');
   }, [documentSetId, gotRequiredSearchParams, navigate]);
 
-  const [documentSetVersion, setDocumentSetVersion] = useState<DocumentVersionSet>();
+  const [documentSetVersion, setDocumentSetVersion] = useState<DocumentSetVersion>();
   const [docs, setDocs] = useState<Document[]>([]);
   const [vers, setVers] = useState<DocumentVersion[]>([]);
 
@@ -49,8 +54,8 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
         setDocumentSetVersion(currentSetVersion);
       })
       .catch(() => {
-        if (documentSetId !== undefined) navigate(`/SetVersions?documentSetId=${documentSetId}`);
-        else navigate('/Sets');
+        if (documentSetId !== undefined) navigate(`/set-versions?documentSetId=${documentSetId}`);
+        else navigate('/sets');
       });
   }, [apiClient, documentSetId, versionSetId, gotRequiredSearchParams, navigate]);
 
@@ -78,14 +83,14 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
         <Button
           variant="outline-secondary"
           onClick={() =>
-            navigate(`/DocVer?documentId=${encodeURIComponent(ver.documentId)}&versionId=${encodeURIComponent(ver.versionId)}`)
+            navigate(`/version?documentId=${encodeURIComponent(ver.documentId)}&versionId=${encodeURIComponent(ver.versionId)}`)
           }
         >
-          Check versions
+          Inspect
         </Button>
       ) : (
         <Button disabled variant="outline-danger">
-          Check versions
+          Inspect
         </Button>
       ),
   }));
@@ -94,6 +99,20 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
     <Container>
       <h3>Set Version Documents</h3>
       {docs.length === vers.length ? <SortedTable data={data} columns={columns} /> : null}
+      <Button
+        className="ms-3"
+        variant="outline-primary"
+        onClick={() => navigateToSetVersionCreator(documentSetId!, versionSetId!)}
+      >
+        Create new document set version
+      </Button>
+      <Button
+        className="ms-3"
+        variant="outline-primary"
+        onClick={() => navigateToSetVersionEditor(documentSetId!, versionSetId!)}
+      >
+        Modify
+      </Button>
     </Container>
   );
 };

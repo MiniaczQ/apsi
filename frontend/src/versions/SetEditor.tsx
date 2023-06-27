@@ -1,6 +1,6 @@
 import { FunctionComponent, useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import ApiClient from '../api/ApiClient';
 
@@ -11,14 +11,15 @@ import SetNameEditor from './SetNameEditor';
 import CreateSet from '../models/CreateSet';
 import CreateSetVersion from '../models/CreateSetVersion';
 
-import Set from '../models/Set';
-import SetVersion from '../models/SetVersion';
+import DocumentSet from '../models/DocumentSet';
+import DocumentSetVersion from '../models/DocumentSetVersion';
 
 type VersionCreatorProps = {
   apiClient: ApiClient;
 };
 
 export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }) => {
+  const navigate = useNavigate();
   const searchParams = useSearchParams()[0];
   const documentSetId = searchParams.get('documentSetId') ?? undefined;
   const SetVersionId = searchParams.get('setVersionId') ?? undefined;
@@ -32,8 +33,8 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
   const [tableData, setTableData] = useState<[string, string][]>([]);
   const [tableData1, setTableData1] = useState<[string, string][]>([]);
 
-  const [documentsets, setdocumentSets] = useState<Set[]>();
-  const [documentSetVersion, setSetVersion] = useState<SetVersion[]>();
+  const [documentsets, setdocumentSets] = useState<DocumentSet[]>();
+  const [documentSetVersion, setSetVersion] = useState<DocumentSetVersion[]>();
 
   const [, setPrevious] = useState<[string, string][]>([]);
   const [previoustableData1, setPrevious1] = useState<[string, string][]>([]);
@@ -44,9 +45,9 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
     });
     let promises = [usersPromise];
     if (documentSetId !== undefined) {
-      let setsPromise = apiClient.getSetSet().then((response) => setdocumentSets(response));
+      let setsPromise = apiClient.getSets().then((response) => setdocumentSets(response));
 
-      let docsetsPromise = apiClient.getSetVersionsSet(documentSetId).then((response) => setSetVersion(response));
+      let docsetsPromise = apiClient.getSetVersions(documentSetId).then((response) => setSetVersion(response));
       promises = [...promises, setsPromise, docsetsPromise];
     }
     Promise.all(promises).then(() => setIsLoading(false));
@@ -93,7 +94,7 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
     });
   }, [apiClient, EditedSet, SetVersion, documents]);
 
-  const [set, setSet] = useState<Set>();
+  const [set, setSet] = useState<DocumentSet>();
 
   const [createdSet, setCreatedSet] = useState<CreateSet>({
     documentSetName: 'frontendowy',
@@ -187,22 +188,29 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
   const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
     (evt.target as HTMLButtonElement).disabled = true;
 
+    let promises: Promise<void>[] = [];
     if (previoustableData1 !== undefined && SetVersion !== undefined) {
-      previoustableData1.forEach((record) => {
-        apiClient.removeVersion(SetVersion?.documentSetId, SetVersion?.setVersionId, record[0]);
-      });
+      promises = [
+        ...promises,
+        ...previoustableData1.map((record) =>
+          apiClient.removeDocumentFromSetVersion(SetVersion?.documentSetId, SetVersion?.setVersionId, record[0])
+        ),
+      ];
     }
 
-    if (tableData1 === undefined || SetVersion === undefined) {
-      return;
+    if (tableData1 !== undefined && SetVersion !== undefined) {
+      promises = [
+        ...promises,
+        ...tableData1.map((member) => {
+          docs.documentId = member[0];
+          docs.versionId = member[1];
+
+          return apiClient.addDocumentToSetVersion(SetVersion?.documentSetId, SetVersion?.setVersionId, docs);
+        }),
+      ];
     }
-
-    tableData1.forEach((member) => {
-      docs.documentId = member[0];
-      docs.versionId = member[1];
-
-      apiClient.addDocumentVersion(SetVersion?.documentSetId, SetVersion?.setVersionId, docs);
-    });
+    await Promise.all(promises);
+    navigate(`/set-version?documentSetId=${documentSetId}&versionSetId=${SetVersionId}`);
   };
 
   const parentVersionField = (
@@ -262,7 +270,7 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
             <tbody>
               {tableData.map((data, index) => (
                 <tr key={index}>
-                  <td>{index}</td>
+                  <td>{index + 1}</td>
                   <td>{data[0]}</td>
                   <td>{data[1]}</td>
                   <td>

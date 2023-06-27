@@ -1,4 +1,4 @@
-export type DocumentVersionSet = {
+export type DocumentSetVersion = {
   documentSetId: string;
   setVersionId: string;
   setVersionName: string;
@@ -8,4 +8,4 @@ export type DocumentVersionSet = {
   children: string[];
 };
 
-export default DocumentVersionSet;
+export default DocumentSetVersion;

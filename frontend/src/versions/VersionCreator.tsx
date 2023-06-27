@@ -34,8 +34,8 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
 
   useEffect(() => {
     if (gotRequiredSearchParams) return;
-    if (documentId !== undefined) navigate(`/Versions?documentId=${documentId}`);
-    else navigate(`/`);
+    if (documentId !== undefined) navigate(`/versions?documentId=${documentId}`);
+    else navigate('/');
   }, [documentId, gotRequiredSearchParams, navigate]);
 
   const [error, setError] = useState<string>();
@@ -107,7 +107,7 @@ export const VersionCreator: FunctionComponent<VersionCreatorProps> = ({ loginSt
           grantedRoles[role].forEach((member) => apiClient.grantRole(response.documentId, response.versionId, member, role))
         );
       }
-      navigate(`/Versions?documentId=${response.documentId}`);
+      navigate(`/versions?documentId=${response.documentId}`);
     } catch (e) {
       setIsSubmitting(false);
       const prefix = isCreatingNewVersion

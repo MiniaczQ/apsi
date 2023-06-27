@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
-import DocumentVersionSet from '../models/DocumentVersionSet';
+import DocumentSetVersion from '../models/DocumentSetVersion';
 import { compare_names } from '../versions/Versions';
 import { SortedTable } from '../table/SortedTable';
 import { Column } from '../table/TableBody';
@@ -25,7 +25,7 @@ export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) =
   const searchParams = useSearchParams()[0];
   const documentSetId = searchParams.get('documentSetId') ?? undefined;
 
-  const [versions, setVersionSets] = useState<DocumentVersionSet[]>([]);
+  const [versions, setVersionSets] = useState<DocumentSetVersion[]>([]);
 
   useEffect(() => {
     if (documentSetId === undefined) return;
@@ -34,13 +34,13 @@ export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) =
     });
   }, [apiClient, documentSetId]);
 
-  function compareVersionSets(a: DocumentVersionSet, b: DocumentVersionSet): number {
+  function compareVersionSets(a: DocumentSetVersion, b: DocumentSetVersion): number {
     return compare_names(a.setVersionName, b.setVersionName);
   }
 
   const versionRows = versions
     ?.sort(compareVersionSets)
-    .map(({ documentSetId, setVersionId, setVersionName, createdAt }: DocumentVersionSet, index: number) => ({
+    .map(({ documentSetId, setVersionId, setVersionName, createdAt }: DocumentSetVersion) => ({
       version: setVersionName,
       created: createdAt,
       option: (
@@ -48,13 +48,11 @@ export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) =
           variant="outline-secondary"
           onClick={() =>
             navigate(
-              `/SetVersionDocuments?documentSetId=${encodeURIComponent(documentSetId)}&versionSetId=${encodeURIComponent(
-                setVersionId
-              )}`
+              `/set-version?documentSetId=${encodeURIComponent(documentSetId)}&versionSetId=${encodeURIComponent(setVersionId)}`
             )
           }
         >
-          Check versions
+          Inspect version
         </Button>
       ),
     }));

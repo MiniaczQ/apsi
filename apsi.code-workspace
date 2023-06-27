@@ -5,7 +5,6 @@
         }
     ],
     "settings": {
-        "editor.formatOnPaste": true,
         "editor.formatOnSave": true,
         "files.eol": "\n",
         "rust-analyzer.procMacro.attributes.enable": true,

@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router';
 import ApiClient from '../api/ApiClient';
 import DocumentVersionSet from '../models/DocumentVersionSet';
 import { compareByCreationTime } from '../documents/Documents';
+import { SortedTable } from '../table/SortedTable';
+import { Column } from '../table/TableBody';
 
 type DocumentsSetProps = {
   apiClient: ApiClient
@@ -14,6 +16,15 @@ type DocumentNamedVersionSet = {
   documentSetName: string,
   documentVersionSet: DocumentVersionSet
 }
+
+const columns = [
+  { label: '#', accessor: 'index', sortable: false, sortByOrder: 'asc', rowSpan: 2 },
+  { label: 'Set Name', accessor: 'version', sortable: true, sortByOrder: 'asc', rowSpan: 2 },
+  { label: 'Name', accessor: 'name', sortable: true, sortByOrder: 'asc', colSpan: 2, group: 'Most recent version' },
+  { label: 'Created at', accessor: 'created', sortable: true, sortByOrder: 'asc', colSpan: 2, group: 'Most recent version' },
+  { label: 'Options', accessor: 'option', sortable: false, sortByOrder: 'asc', rowSpan: 2 }
+] as Column[]
+
 
 const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
 
@@ -49,67 +60,28 @@ export const Sets: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
   }, [apiClient]);
 
   const navigateToVersionSetList = (documentSetId: string) => navigate(`/VersionSets?documentSetId=${encodeURIComponent(documentSetId)}`);
-
-  const documentRows = distinctByDocumentSetId(docsVersions).map(({ documentVersionSet, documentSetName }: DocumentNamedVersionSet, index: number) => (
-    <tr key={documentVersionSet.documentSetId}>
-      <td>
-        {index + 1}
-      </td>
-      <td align="center">
-        {documentSetName}
-      </td>
-      <td align='center'>
-        {documentVersionSet.setVersionName}
-      </td>
-      <td align='center'>
-        {getFormattedDate(documentVersionSet.createdAt)}
-      </td>
-      <td align='center'>
-        <Button variant="outline-secondary" onClick={() => navigateToVersionSetList(documentVersionSet.documentSetId)}>
-          Check set versions
-        </Button>
-      </td>
-    </tr>
+  
+  const data = distinctByDocumentSetId(docsVersions).map(({ documentVersionSet, documentSetName }: DocumentNamedVersionSet, index: number) => ({
+    index: index + 1,
+    version: documentSetName,
+    name: documentVersionSet.setVersionName,
+    created: getFormattedDate(documentVersionSet.createdAt),
+    option: (
+      <Button variant="outline-secondary" onClick={() => navigateToVersionSetList(documentVersionSet.documentSetId)}>
+        Check versions
+      </Button>
+    )
+  }
   ));
-
 
   return (
     <Container>
       <h3>
         Document Sets
       </h3>
-
-      <Table striped bordered hover size="sm">
-        <thead>
-          <tr>
-            <th rowSpan={2}>
-              #
-            </th>
-            <th rowSpan={2}>
-              Name
-            </th>
-            <th colSpan={2}>
-              Most recent version
-            </th>
-            <th rowSpan={2}>
-              Options
-            </th>
-          </tr>
-          <tr>
-            <th >
-              Name
-            </th>
-            <th >
-              Created at
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {documentRows}
-        </tbody>
-      </Table>
+      <SortedTable data={data} columns={columns} />
       <p>
-        <Button variant="outline-primary" onClick={() => console.log("navigate to new site")}>
+        <Button variant="outline-primary" >
           Create Document Set
         </Button>
       </p>

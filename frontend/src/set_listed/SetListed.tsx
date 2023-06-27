@@ -52,7 +52,7 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
         return(
         <tr key={ver.versionId}>
           <td>
-            {index}
+            {index + 1}
           </td>
           <td align="center">
             {docName}
@@ -62,7 +62,7 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
           </td>
           <td align='center'>
             <Button variant="outline-secondary" onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(ver.documentId)}&versionId=${encodeURIComponent(ver.versionId)}`)}>
-              Check set versions
+              Inspect document version
             </Button>
           </td>
         </tr>
@@ -96,11 +96,6 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
             {(docs.length === vers.length  && docs[0] !== undefined) ? documentRows : null}
           </tbody>
         </Table>
-        <p>
-          <Button variant="outline-primary" onClick={() =>console.log("navigate to new site")}>
-            Create Document Set
-          </Button>
-        </p>
       </Container>
     );
 }

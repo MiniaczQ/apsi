@@ -18,11 +18,11 @@ export type DocumentNamedVersion = {
 }
 
 const columns = [
-  { label: '#', accessor: 'index', sortable: false, sortByOrder: 'asc', rowSpan: 2},
-  { label: 'Version', accessor: 'version', sortable: true, sortByOrder: 'asc', rowSpan: 2},
-  { label: 'Name', accessor: 'name', sortable: true, sortByOrder: 'asc', colSpan: 2, group: 'Most recent version'},
-  { label: 'Created at', accessor: 'created', sortable: true, sortByOrder: 'asc', colSpan: 2, group: 'Most recent version'}, 
-  { label: 'Options', accessor: 'option', sortable: false, sortByOrder: 'asc', rowSpan: 2}   
+  { label: '#', accessor: 'index', sortable: false, sortByOrder: 'asc', rowSpan: 2 },
+  { label: 'Version', accessor: 'version', sortable: true, sortByOrder: 'asc', rowSpan: 2 },
+  { label: 'Name', accessor: 'name', sortable: true, sortByOrder: 'asc', colSpan: 2, group: 'Most recent version' },
+  { label: 'Created at', accessor: 'created', sortable: true, sortByOrder: 'asc', colSpan: 2, group: 'Most recent version' },
+  { label: 'Options', accessor: 'option', sortable: false, sortByOrder: 'asc', rowSpan: 2 }
 ] as Column[]
 
 const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
@@ -30,10 +30,10 @@ const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleStri
 export const compareByCreationTime = (first: { createdAt: string }, second: { createdAt: string }) => {
   let firstDate = new Date(first.createdAt);
   let secondDate = new Date(second.createdAt)
-  if(firstDate > secondDate){
+  if (firstDate > secondDate) {
     return -1;
   }
-  if(firstDate < secondDate){
+  if (firstDate < secondDate) {
     return 1;
   }
   return 0;
@@ -60,9 +60,9 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
         documentsResponse.forEach(
           document => {
             apiClient.getVersions(document.documentId)
-            .then(response => {
-                setDocsVersions(old => [...old,{documentName: document.documentName, documentVersion: response.slice().sort(compareByCreationTime).at(0)!} ]);
-            })
+              .then(response => {
+                setDocsVersions(old => [...old, { documentName: document.documentName, documentVersion: response.slice().sort(compareByCreationTime).at(0)! }]);
+              })
           }
         )
 
@@ -89,7 +89,7 @@ export const Documents: FunctionComponent<DocumentsProps> = ({ apiClient }) => {
       <h3>
         Documents
       </h3>
-      <SortedTable data={data} columns={columns}/>
+      <SortedTable data={data} columns={columns} />
       <p>
         <Button variant="outline-primary" onClick={navigateToDocumentCreator}>
           Create Document

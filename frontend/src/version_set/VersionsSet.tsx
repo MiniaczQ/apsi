@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
 import DocumentVersionSet from '../models/DocumentVersionSet';
-import {compare_names} from "../versions/Versions";
+import { compare_names } from "../versions/Versions";
 
 type VersionSetProps = {
   apiClient: ApiClient

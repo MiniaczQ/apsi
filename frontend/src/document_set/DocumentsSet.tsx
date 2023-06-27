@@ -39,9 +39,9 @@ export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }
         documentsResponse.forEach(
           documentSet => {
             apiClient.getVersionSets(documentSet.documentSetId)
-            .then(response => {
-                setDocsVersions(old =>[...old,{documentSetName: documentSet.documentSetName, documentVersionSet: response.slice().sort(compareByCreationTime).at(0)!} ]);
-            })
+              .then(response => {
+                setDocsVersions(old => [...old, { documentSetName: documentSet.documentSetName, documentVersionSet: response.slice().sort(compareByCreationTime).at(0)! }]);
+              })
           }
         )
 
@@ -97,11 +97,11 @@ export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }
             </th>
           </tr>
           <tr>
-          <th >
+            <th >
               Name
             </th>
             <th >
-            Created at
+              Created at
             </th>
           </tr>
         </thead>
@@ -110,7 +110,7 @@ export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }
         </tbody>
       </Table>
       <p>
-        <Button variant="outline-primary" onClick={() =>console.log("navigate to new site")}>
+        <Button variant="outline-primary" onClick={() => console.log("navigate to new site")}>
           Create Document Set
         </Button>
       </p>

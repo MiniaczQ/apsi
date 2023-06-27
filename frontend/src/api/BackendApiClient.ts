@@ -1,3 +1,4 @@
+import { SetVersion } from './../models/SetVersion';
 import ApiClient, { ApiError, AuthenticationError, ConcurrencyConflict, PermissionError } from "./ApiClient";
 import AuthResponse from "../models/AuthResponse";
 import CreateDocument from "../models/CreateDocument";
@@ -15,8 +16,17 @@ import Comment from '../models/Comment';
 import CreateComment from '../models/CreateComment';
 import { Notification } from "../models/Notification";
 import ChangeVersionState from "../models/ChangeVersionState";
+
+import SetWithInitialVersion from "../models/SetWithInitialVersion";
+import CreateSet from "../models/CreateSet";
+import CreateSetVersion from "../models/CreateSetVersion";
+import SetDocumentVersion from '../models/SetDocumentVersion';
+import Set from '../models/Set';
+
+
 import DocumentSet from "../models/DocumentSet";
 import DocumentVersionSet from "../models/DocumentVersionSet";
+
 
 type BackendError = {
   error: string;
@@ -267,6 +277,36 @@ class BackendApiClient implements ApiClient {
     undefined,
     true,
     false)
+
+  createSet = async(data: CreateSet) => await this.post(
+    'document-sets',
+    data
+  )as SetWithInitialVersion;
+  
+  createSetVersion = async (documentSetId: string, data: CreateSetVersion) => await this.post(
+    `document-sets/${documentSetId}`,
+    data
+  ) as SetVersion; 
+
+  
+  getSetSet = async () => await this.get(
+    'document-sets/sets'
+  ) as Set[];
+
+  getSetVersionsSet= async (documentSetId:string) => await this.get(
+    `document-sets/${documentSetId}`
+  ) as SetVersion[]
+    
+      
+  removeVersion = async (documentSetId: string, setVersionId: string, documentId: string) => await this.delete(
+      `document-sets/${documentSetId}/${setVersionId}/${documentId}`      
+    ); 
+  
+  addDocumentVersion = async (documentSetId: string, setVersionId: string, data: SetDocumentVersion): Promise<void> =>  await this.post(
+    `document-sets/${documentSetId}/${setVersionId}`, data
+    );
+
+  
 
   constructor(url: string, loginState: LoginState, authenticationErrorHandler?: (message: string) => void) {
     if (url[url.length - 1] !== '/')

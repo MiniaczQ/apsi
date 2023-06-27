@@ -12,8 +12,17 @@ import Comment from "../models/Comment";
 import CreateComment from "../models/CreateComment";
 import {Notification} from "../models/Notification";
 import ChangeVersionState from "../models/ChangeVersionState";
+
+import CreateSet from "../models/CreateSet";
+import SetWithInitialVersion from "../models/SetWithInitialVersion";
+import CreateSetVersion from "../models/CreateSetVersion";
+import SetVersion from "../models/SetVersion";
+import SetDocumentVersion from "../models/SetDocumentVersion";
+import Set from "../models/Set";
+
 import DocumentSet from "../models/DocumentSet";
 import DocumentVersionSet from "../models/DocumentVersionSet";
+
 
 export class ApiError extends Error {
     constructor(message?: string) {
@@ -80,8 +89,18 @@ interface ApiClient {
     createComment: (documentId: string, versionId: string, comment: CreateComment) => Promise<Comment>;
     loadComments: (documentId: string, versionId: string) => Promise<Comment[]>
 
+
+    createSet: (data: CreateSet) =>Promise<SetWithInitialVersion>;
+    createSetVersion: (documentSetId:string,data:CreateSetVersion) =>Promise<SetVersion>;
+    addDocumentVersion:(documentSetId:string,setVersionId: string,data:SetDocumentVersion )=>Promise<void>;
+
+    getSetSet:() => Promise<Set[]>;
+    getSetVersionsSet: (documentSetId: string) =>Promise<SetVersion[]>
+    removeVersion:(documentSetId:string,setVersionId:string,documentId:string) =>Promise<void>;
+
     getSets: () => Promise<DocumentSet[]>;
     getSetVersions: (documentSetId: string) => Promise<DocumentVersionSet[]>;
+
 };
 
 export default ApiClient;

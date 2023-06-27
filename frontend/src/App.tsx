@@ -22,7 +22,10 @@ import SetVersions from './set_versions/SetVersions';
 import SetVersionDocuments from './set_version_documents/SetVersionDocuments';
 import { Button, Modal } from 'react-bootstrap';
 import Notifications from './notifications/Notifications';
-
+import SetCreator from './versions/SetCreator';
+import SetEditor from './versions/SetEditor';
+import Set from './models/Set';
+import Sets from './sets/Sets';
 
 const API_BASE_URL = 'http://localhost:3000/api/'
 
@@ -122,6 +125,10 @@ function App() {
           <Route index path="/SetVersionDocuments" element={<SetVersionDocuments apiClient={apiClient} />} />
           <Route index path="/*" element={<Documents apiClient={apiClient} />} />
           <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState} />}/>
+          <Route index path="/Sets" element={<Sets apiClient={apiClient} />} />
+          <Route index path="/setversions/new" element={<SetCreator loginState={loginState} apiClient={apiClient} />} />
+          <Route index path="/setversions/edit" element={<SetEditor loginState={loginState} apiClient={apiClient} />} />
+
         </>) : (<>
           <Route index path="/register" element={<Register apiClient={apiClient} />} />
           <Route index path="/*" element={<Login apiClient={apiClient} />} />

@@ -229,7 +229,6 @@ impl DocumentSetsRepository {
         document_set_id: Uuid,
         set_version_id: Uuid,
         document_id: Uuid,
-        version_id: Uuid,
     ) -> Result<bool, Box<dyn Error>> {
         let removed = self
             .database
@@ -239,9 +238,8 @@ impl DocumentSetsRepository {
                 WHERE document_set_id = $1
                 AND set_version_id = $2
                 AND document_id = $3
-                AND version_id = $4
                 ",
-                &[&document_set_id, &set_version_id, &document_id, &version_id],
+                &[&document_set_id, &set_version_id, &document_id],
             )
             .await?;
         Ok(removed == 1)

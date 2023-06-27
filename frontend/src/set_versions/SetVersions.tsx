@@ -7,12 +7,22 @@ import '../TableStyle.css';
 import ApiClient from '../api/ApiClient';
 import DocumentVersionSet from '../models/DocumentVersionSet';
 import { compare_names } from "../versions/Versions";
+import { SortedTable } from '../table/SortedTable';
+import { Column } from '../table/TableBody';
 
 type VersionSetProps = {
   apiClient: ApiClient
 };
 
 const getFormattedDate = (createdAt: string) => new Date(createdAt).toLocaleString('ro-RO');
+
+const columns = [
+  { label: 'Set Name', accessor: 'version', sortable: true, sortByOrder: 'asc', rowSpan: 2 },
+  { label: 'Created at', accessor: 'created', sortable: true, sortByOrder: 'asc', rowSpan: 2},
+  { label: 'Options', accessor: 'option', sortable: false, sortByOrder: 'asc', rowSpan: 2 }
+] as Column[]
+
+
 
 export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) => {
   const navigate = useNavigate();
@@ -34,45 +44,23 @@ export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) =
     return compare_names(a.setVersionName, b.setVersionName);
   }
 
-  const versionRows = versions?.sort(compareVersionSets).map(({ documentSetId, setVersionId, setVersionName, createdAt }: DocumentVersionSet) =>
-    <tr key={setVersionId}>
-      <td>
-        {setVersionName}
-      </td>
-      <td>
-        {getFormattedDate(createdAt)}
-      </td>
-      <td>
-        <Button variant="outline-secondary"
-          onClick={() => navigate(`/SetVersionDocuments?documentSetId=${encodeURIComponent(documentSetId)}&versionSetId=${encodeURIComponent(setVersionId)}`)}
-        >
-          Inspect set version
-        </Button>
-      </td>
-    </tr>
-  );
-
+  const versionRows = versions?.sort(compareVersionSets).map(({ documentSetId, setVersionId, setVersionName, createdAt }: DocumentVersionSet, index: number) =>
+  ({
+    version: setVersionName,
+    created: getFormattedDate(createdAt),
+    option: (
+      <Button variant="outline-secondary"   onClick={() => navigate(`/SetVersionDocuments?documentSetId=${encodeURIComponent(documentSetId)}&versionSetId=${encodeURIComponent(setVersionId)}`)}>
+        Check versions
+      </Button>
+    )
+  }));
 
   return (
     <Container>
-      <Table striped bordered hover size="sm">
-        <thead>
-          <tr>
-            <th>
-              Set Version
-            </th>
-            <th >
-              Created
-            </th>
-            <th>
-              Options
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {versionRows}
-        </tbody>
-      </Table>
+      <h3>
+        Set Versions
+      </h3>
+      <SortedTable data={versionRows} columns={columns} />
     </Container>
   );
 }

@@ -25,7 +25,7 @@ export const VersionEditor: FunctionComponent<VersionEditorProps> = ({ loginStat
   const searchParams = useSearchParams()[0];
   const documentId = searchParams.get('documentId') ?? undefined;
   const versionId = searchParams.get('versionId') ?? undefined;
-  const gotRequiredSearchParams = documentId !== undefined || versionId !== undefined;
+  const gotRequiredSearchParams = documentId !== undefined && versionId !== undefined;
 
   useEffect(() => {
     if (gotRequiredSearchParams)

@@ -15,6 +15,8 @@ import Comment from '../models/Comment';
 import CreateComment from '../models/CreateComment';
 import { Notification } from "../models/Notification";
 import ChangeVersionState from "../models/ChangeVersionState";
+import DocumentSet from "../models/DocumentSet";
+import DocumentVersionSet from "../models/DocumentVersionSet";
 
 type BackendError = {
   error: string;
@@ -273,6 +275,14 @@ class BackendApiClient implements ApiClient {
     this.loginState = loginState;
     this.authenticationErrorHandler = authenticationErrorHandler;
   }
+
+  getSets = async () => await this.get<DocumentSet[]>(
+    'document-sets/sets',
+  );
+
+  getSetVersions = async (documentSetId: string) => await this.get<DocumentVersionSet[]>(
+    `document-sets/${documentSetId}`
+  );
 }
 
 export default BackendApiClient;

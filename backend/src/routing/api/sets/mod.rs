@@ -118,16 +118,14 @@ async fn add_to_document_set_version(
 async fn remove_from_document_set_version(
     set_repository: DocumentSetsRepository,
     claims: Claims,
-    Path((document_set_id, set_version_id)): Path<(Uuid, Uuid)>,
-    Json(data): Json<UpdateSetVersion>,
+    Path((document_set_id, set_version_id, document_id)): Path<(Uuid, Uuid, Uuid)>,
 ) -> Result<StatusCode, StatusCode> {
     let removed = set_repository
         .remove_from_document_set_version(
             claims.user_id,
             document_set_id,
             set_version_id,
-            data.document_id,
-            data.version_id,
+            document_id,
         )
         .await
         .map_err(|e| {
@@ -156,7 +154,7 @@ where
             post(add_to_document_set_version),
         )
         .route(
-            "/:document_set_id/:set_version_id",
+            "/:document_set_id/:set_version_id/:document_id",
             delete(remove_from_document_set_version),
         )
 }

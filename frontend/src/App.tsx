@@ -17,7 +17,7 @@ import Versions from './versions/Versions';
 import ApiClient from './api/ApiClient';
 import BackendApiClient from './api/BackendApiClient';
 import VersionEditor from './versions/VersionEditor';
-import DocumentsSet from './document_set/DocumentsSet';
+import Sets from './sets/Sets';
 import VersionsSet from './version_set/VersionsSet';
 import SetListed from './set_listed/SetListed';
 import { Button, Modal } from 'react-bootstrap';
@@ -116,7 +116,7 @@ function App() {
           <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
           <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
-          <Route index path="/DocSets" element={<DocumentsSet apiClient={apiClient} />} />
+          <Route index path="/DocSets" element={<Sets apiClient={apiClient} />} />
           <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
           <Route index path="/VersionSets" element={<VersionsSet apiClient={apiClient} />} />
           <Route index path="/SetListed" element={<SetListed apiClient={apiClient} />} />

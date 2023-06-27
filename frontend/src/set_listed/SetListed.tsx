@@ -42,7 +42,9 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
   }, [apiClient, documentSetId, versionSetId]);
 
   const documentRows = vers.map((ver: DocumentVersion, index: number) => {
-    const docName = docs[index].documentName;
+    let docName = ''
+    if(typeof docs[index] !== 'undefined')
+      docName = docs[index].documentName;
     return (
       <tr key={ver.versionId}>
         <td>

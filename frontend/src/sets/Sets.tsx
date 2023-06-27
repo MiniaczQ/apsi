@@ -29,7 +29,7 @@ const distinctByDocumentSetId = (array: DocumentNamedVersionSet[]) => {
   }, []);
 }
 
-export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
+export const Sets: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
   const navigate = useNavigate();
   const [docsVersions, setDocsVersions] = useState<DocumentNamedVersionSet[]>([])
 
@@ -117,4 +117,4 @@ export const DocumentsSet: FunctionComponent<DocumentsSetProps> = ({ apiClient }
   );
 }
 
-export default DocumentsSet;
+export default Sets;

@@ -60,7 +60,7 @@ export const Sets: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
   }, [apiClient]);
 
   const navigateToVersionSetList = (documentSetId: string) => navigate(`/VersionSets?documentSetId=${encodeURIComponent(documentSetId)}`);
-  
+
   const data = distinctByDocumentSetId(docsVersions).map(({ documentVersionSet, documentSetName }: DocumentNamedVersionSet, index: number) => ({
     index: index + 1,
     version: documentSetName,
@@ -77,7 +77,7 @@ export const Sets: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
   return (
     <Container>
       <h3>
-        Document Sets
+        Sets
       </h3>
       <SortedTable data={data} columns={columns} />
       <p>

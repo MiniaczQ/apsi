@@ -6,10 +6,20 @@ import { useSearchParams } from 'react-router-dom';
 import ApiClient from '../api/ApiClient';
 import DocumentVersion from '../models/DocumentVersion';
 import Document from '../models/Document';
+import { SortedTable } from '../table/SortedTable';
+import { Column } from '../table/TableBody';
 
 type DocumentsSetProps = {
   apiClient: ApiClient
 };
+
+const columns = [
+  { label: '#', accessor: 'index', sortable: false, sortByOrder: 'asc', rowSpan: 2 },
+  { label: 'Name', accessor: 'name', sortable: true, sortByOrder: 'asc',  rowSpan: 2 },
+  { label: 'Version', accessor: 'version', sortable: true, sortByOrder: 'asc', rowSpan: 2 },
+  { label: 'Options', accessor: 'option', sortable: false, sortByOrder: 'asc', rowSpan: 2 }
+] as Column[]
+
 
 export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
   const navigate = useNavigate();
@@ -41,6 +51,7 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
       });
   }, [apiClient, documentSetId, versionSetId]);
 
+
   const documentRows = vers.map((ver: DocumentVersion, index: number) => {
     let docName = ''
     if(typeof docs[index] !== 'undefined')
@@ -65,31 +76,24 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
     )
   });
 
+  const data = vers.map((ver: DocumentVersion, index: number) => ({
+    index: index + 1,
+    name: typeof docs[index] !== 'undefined' ? docs[index].documentName : '',
+    version: ver.versionName,
+    option: (
+      <Button variant="outline-secondary" onClick={() => navigate(`/DocVer?documentId=${encodeURIComponent(ver.documentId)}&versionId=${encodeURIComponent(ver.versionId)}`)}>
+        Check versions
+      </Button>
+    )
+  }));
+
+
   return (
     <Container>
-
-      <Table striped bordered hover size="sm">
-        <thead>
-          <tr>
-            <th rowSpan={2}>
-              #
-            </th>
-            <th rowSpan={2}>
-              Document
-            </th>
-            <th>
-              Version
-            </th>
-            <th rowSpan={2}>
-              Options
-            </th>
-          </tr>
-
-        </thead>
-        <tbody>
-          {(docs.length === vers.length && docs[0] !== undefined) ? documentRows : null}
-        </tbody>
-      </Table>
+      <h3>
+        Set Version Documents
+      </h3>
+        {(docs.length === vers.length) ? <SortedTable data={data} columns={columns} /> : null}
     </Container>
   );
 }

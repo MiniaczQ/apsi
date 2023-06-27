@@ -15,6 +15,7 @@ import Comment from "../comments/Comment";
 import { __String } from 'typescript';
 import SetWithInitialVersion from '../models/SetWithInitialVersion';
 import SetDocumentVersion from '../models/SetDocumentVersion';
+import Set from '../models/Set';
 
 interface ApiClient {
     register: (username: string, password: string) => Promise<void>,
@@ -29,6 +30,8 @@ interface ApiClient {
     deleteDocument: (documentId: string) => Promise<void>;
 
     getVersions: (documentId: string) => Promise<DocumentVersion[]>;
+
+    
     createVersion: (documentId: string, data: CreateVersion) => Promise<DocumentVersion>;
     getVersion: (documentId: string, versionId: string) => Promise<DocumentVersion>;
     updateVersion: (documentId: string, versionId: string, data: UpdateVersion) => Promise<void>;
@@ -52,6 +55,10 @@ interface ApiClient {
     createSet: (data: CreateSet) =>Promise<SetWithInitialVersion>;
     createSetVersion: (documentSetId:string,data:CreateSetVersion) =>Promise<SetVersion>;
     addDocumentVersion:(documentSetId:string,setVersionId: string,data:SetDocumentVersion )=>Promise<void>;
+
+    getSets:() => Promise<Set[]>;
+    getSetVersions: (documentSetId: string) =>Promise<SetVersion[]>
+    /*removeVersion:(documentSetId:string,setVersionId:string,data:SetDocumentVersion) =>Promise<void>;*/
 };
 
 export default ApiClient;

@@ -1,3 +1,4 @@
+import { SetVersion } from './../models/SetVersion';
 import { CreateSetVersion } from './../models/CreateSetVersion';
 import { CreateSet } from './../models/CreateSet';
 import ApiClient from "./ApiClient";
@@ -16,6 +17,7 @@ import DocumentWithInitialVersion from "../models/DocumentWithInitialVersion";
 import Comment from '../comments/Comment';
 import SetWithInitialVersion from '../models/SetWithInitialVersion';
 import SetDocumentVersion from '../models/SetDocumentVersion';
+import Set from '../models/Set';
 
 class BackendApiClient implements ApiClient {
   private apiBaseUrl: string;
@@ -130,6 +132,9 @@ class BackendApiClient implements ApiClient {
   getDocuments = async () => await this.get(
     'documents/documents'
   ) as Document[];
+
+  
+  
   createDocument = async (data: CreateDocument) => await this.post(
     `documents`,
     data
@@ -246,6 +251,22 @@ class BackendApiClient implements ApiClient {
     `document-sets/${documentSetId}/${setVersionId}`,
     data,
   );
+
+  getSets = async () => await this.get(
+    'document-sets/sets'
+  ) as Set[];
+
+  getSetVersions= async (documentSetId:string) => await this.get(
+    `document-sets/${documentSetId}`
+  ) as SetVersion[]
+  
+    /*
+      removeVersion = async (documentSetId: string, setVersionId: string, data: SetDocumentVersion) => await this.delete(
+          `document-sets/${documentSetId}/${setVersionId}`,
+          data,
+        ); 
+    */
+
 
   constructor(url: string, loginState: LoginState) {
     if (url[url.length - 1] !== '/')

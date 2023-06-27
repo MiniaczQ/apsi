@@ -29,9 +29,9 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
 
   const searchParams = useSearchParams()[0];
   const documentSetId = searchParams.get('documentSetId') ?? undefined;
-  const parentVersionId = searchParams.get('parentVersionId') ?? undefined;
-  const isCreatingNewDocument = documentSetId === undefined && parentVersionId === undefined;
-  const isCreatingNewVersion = documentSetId!==undefined && parentVersionId !==undefined;
+  const SetVersionId = searchParams.get('setVersionId') ?? undefined;
+  const isCreatingNewDocument = documentSetId === undefined && SetVersionId === undefined;
+  const isCreatingNewVersion = documentSetId!==undefined && SetVersionId !==undefined;
   
 
 
@@ -68,31 +68,55 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
       .then(() => setIsLoading(false));
   }, [apiClient, isCreatingNewVersion, documentSetId]);
 
-  const parentVersion = documentSetVersion?.find(version => version.setVersionId === parentVersionId);
+  const EditedSet=documentsets?.find(set=>set.documentSetId===documentSetId);
 
+  const SetVersion = documentSetVersion?.find(version => version.setVersionId === SetVersionId);
 
-  const parentSet=documentsets?.find(set=>set.documentSetId===documentSetId);
+  const parents = SetVersion?.parents?.map(parentId => documentSetVersion?.find(version => version.setVersionId === parentId));
 
+  const parentNames = parents?.map(parent => parent?.setVersionName)?.filter(x => x !== undefined)?.join(', ');
+  
   useEffect(()=>{
-    if (parentVersion ===undefined)
+    if (SetVersion ===undefined)
         return;
         
         
         setCreatedVersion(createdVersion => ({
             ...createdVersion,            
-            parents: [parentVersion.setVersionId],
+            parents: [SetVersion.setVersionId],
           }));
           
           if(isCreatingNewVersion){
-           
-            setSet(parentSet);
-           
+            const parentdocver=SetVersion?.documentVersionIds
+            setSet(EditedSet);
+            parentdocver?.forEach(async agregacje=>{
+    
+              
+                const selectedDocument = documents.find((doc) => doc.documentId === agregacje[0]);
+                const response= apiClient.getVersions(agregacje[0]);
+    
+                const selectedVersion = (await response).find((ver) => ver.versionId === agregacje[1]);
+               
+    
+                if (selectedDocument && selectedVersion) {
+                    const newData: [string, string] = [selectedDocument.documentName, selectedVersion.versionName];
+                    setTableData((prevData) => [...prevData, newData]);
+                    setPrevious((prevData) => [...prevData, newData]);
+                    const newData1: [string, string] = [selectedDocument.documentId, selectedVersion.versionId];
+                    setTableData1((prevData) => [...prevData, newData1]);
+                    setPrevious1((prevData) => [...prevData, newData1]);    
+    
+                     
+    
+    
+                }   
+            })
             
         }
 
 
 
-        }, [parentVersion]);
+        }, [SetVersion]);
 
 
 
@@ -270,76 +294,26 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
        
   };
 
+  const parentVersionField = (
+    <Form.Group className="mb-3" controlId="parentVersionName">
+      <Form.Label>Parent versions</Form.Label>
+      <Form.Control disabled type="text" value={parentNames ?? ''} />
+      <Form.Label>Version name</Form.Label>
+      <Form.Control disabled type="text" value={SetVersion?.setVersionName ?? ''} />
+    </Form.Group>
+  );
 
 
   
-  if (isCreatingNewDocument){
-    return (<>
-      <SetNameEditor disabled={parentVersionId !== undefined} defaultValue={set?. documentSetName} onChange={documentSetName => setCreatedSet({ ...createdSet, documentSetName })} />
-           
-      
-      <div>
-      
-      <div>
-          <select value={selectedDocumentId} onChange={handleDocumentChange}>
-            <option value="">Wybierz dokument</option>
-            {documents.map((document) => (
-              <option key={document.documentId} value={document.documentId}>
-                {document.documentName}
-              </option>
-            ))}
-          </select>
-
-      
-          <select value={selectedVersionId} onChange={handleVersionChange}>
-            <option value="" >Wybierz wersję</option>
-            {version.map((version) => (
-              <option key={version.versionId} value={version.versionId}>
-                {version.versionName}
-              </option>
-            ))}
-          </select>
-
-          <button onClick={handleAddElement}>Dodaj element</button>
-        </div>
-      
-      {tableData.length>0 && (
-      <table style={{border: '1px solid black', borderCollapse: 'collapse',	width: '100%'}}>
-        <thead>
-          <tr >
-            <th>Nr</th>
-            <th >Plik</th>
-            <th >Wersja</th>
-            <th >Akcje</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tableData.map((data, index) => (
-            <tr key={index} >
-              <td>{index}</td>
-              <td>{data[0]}</td>
-              <td>{data[1]}</td>
-              <td> <button onClick={() => handleDelete(index)}>Usuń</button> </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      )}
-    </div>
-  
-
-      <Button style={{marginTop:'20px'}}   onClick={createVersion}>Create</Button>
-    </>);
-  }
-
-  if(documentSetVersion===undefined || parentVersion=== undefined)
+ 
+  if(documentSetVersion===undefined || SetVersion=== undefined)
     return null;
 
 
     return (<>
-        <SetNameEditor disabled={parentVersionId !== undefined} defaultValue={set?. documentSetName} onChange={documentSetName => setCreatedSet({ ...createdSet, documentSetName })} />
-        <SetVersionNameChooser versions={documentSetVersion} parentVersion={parentVersion} onChange={changeVersion} />
-      
+        <SetNameEditor disabled={SetVersionId !== undefined} defaultValue={set?. documentSetName} onChange={documentSetName => setCreatedSet({ ...createdSet, documentSetName })} />
+        {/*<SetVersionNameChooser versions={documentSetVersion} parentVersion={parentVersion} onChange={changeVersion} />*/}
+        {parentVersionField}
         
         <div>
         

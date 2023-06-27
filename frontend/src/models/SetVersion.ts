@@ -1,7 +1,7 @@
 export type SetVersion = {
     documentSetId: string,
     setVersionId: string,
-    SetVersionName: string,
+    setVersionName: string,
     createdAt: string,
     documentVersionIds: string[][],
     children: string[],

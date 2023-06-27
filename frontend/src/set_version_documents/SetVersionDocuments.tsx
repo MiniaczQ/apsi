@@ -11,7 +11,7 @@ type DocumentsSetProps = {
   apiClient: ApiClient
 };
 
-export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
+export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiClient }) => {
   const navigate = useNavigate();
 
   const searchParams = useSearchParams()[0];
@@ -93,4 +93,4 @@ export const SetListed: FunctionComponent<DocumentsSetProps> = ({ apiClient }) =
     </Container>
   );
 }
-export default SetListed;
+export default SetVersionDocuments;

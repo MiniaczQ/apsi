@@ -44,7 +44,7 @@ export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) =
       </td>
       <td>
         <Button variant="outline-secondary"
-          onClick={() => navigate(`/SetListed?documentSetId=${encodeURIComponent(documentSetId)}&versionSetId=${encodeURIComponent(setVersionId)}`)}
+          onClick={() => navigate(`/SetVersionDocuments?documentSetId=${encodeURIComponent(documentSetId)}&versionSetId=${encodeURIComponent(setVersionId)}`)}
         >
           Inspect set version
         </Button>

@@ -64,9 +64,9 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
     let promises =[usersPromise];
     if(documentSetId!==undefined){
         
-        let setsPromise=apiClient.getSets().then(response => setdocumentSets(response));
+        let setsPromise=apiClient.getSetSet().then(response => setdocumentSets(response));
 
-        let docsetsPromise=apiClient.getSetVersions(documentSetId).then(response =>setSetVersion(response));
+        let docsetsPromise=apiClient.getSetVersionsSet(documentSetId).then(response =>setSetVersion(response));
         promises = [...promises,setsPromise, docsetsPromise];
     }
     Promise.all(promises)

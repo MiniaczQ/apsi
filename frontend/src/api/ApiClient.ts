@@ -88,8 +88,8 @@ interface ApiClient {
     createSetVersion: (documentSetId:string,data:CreateSetVersion) =>Promise<SetVersion>;
     addDocumentVersion:(documentSetId:string,setVersionId: string,data:SetDocumentVersion )=>Promise<void>;
 
-    getSets:() => Promise<Set[]>;
-    getSetVersions: (documentSetId: string) =>Promise<SetVersion[]>
+    getSetSet:() => Promise<Set[]>;
+    getSetVersionsSet: (documentSetId: string) =>Promise<SetVersion[]>
     removeVersion:(documentSetId:string,setVersionId:string,documentId:string) =>Promise<void>;
 };
 

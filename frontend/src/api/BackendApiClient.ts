@@ -297,10 +297,9 @@ class BackendApiClient implements ApiClient {
       `document-sets/${documentSetId}/${setVersionId}/${documentId}`      
     ); 
   
-  addDocumentVersion=async(documentSetId: string, setVersionId:string,data:SetDocumentVersion) => await this.post(
-    `document-sets/${documentSetId}/${setVersionId}`,
-    data,
-  );
+  addDocumentVersion = async (documentSetId: string, setVersionId: string, data: SetDocumentVersion): Promise<void> =>  await this.post(
+    `document-sets/${documentSetId}/${setVersionId}`, data
+    );
 
   
 

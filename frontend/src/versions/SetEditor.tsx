@@ -56,7 +56,11 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
 
 
   useEffect(()=>{
-    let usersPromise =apiClient.getDocuments().then(response =>setDocuments(response));
+    let usersPromise =apiClient.getDocuments().then(response =>{
+    
+      
+      setDocuments(response)
+    });
     let promises =[usersPromise];
     if(isCreatingNewVersion){
         
@@ -67,7 +71,7 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
     }
     Promise.all(promises)
       .then(() => setIsLoading(false));
-  }, [apiClient, isCreatingNewVersion, documentSetId]);
+  }, [apiClient, isCreatingNewVersion]);
 
   const EditedSet=documentsets?.find(set=>set.documentSetId===documentSetId);
 
@@ -88,17 +92,20 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
           }));
           
           if(isCreatingNewVersion){
+           
             const parentdocver=SetVersion?.documentVersionIds
             setSet(EditedSet);
-            parentdocver?.forEach(async agregacje=>{
-    
-              
+            
+
+            parentdocver?.forEach(async agregacje=>{    
+                
+
                 const selectedDocument = documents.find((doc) => doc.documentId === agregacje[0]);
                 const response= apiClient.getVersions(agregacje[0]);
     
                 const selectedVersion = (await response).find((ver) => ver.versionId === agregacje[1]);
-               
-    
+                
+              
                 if (selectedDocument && selectedVersion) {
                     const newData: [string, string] = [selectedDocument.documentName, selectedVersion.versionName];
                     setTableData((prevData) => [...prevData, newData]);
@@ -266,8 +273,10 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
       })
     }
     
-      if (tableData1 === undefined || SetVersion===undefined)
-        return ;
+      if (tableData1 === undefined || SetVersion===undefined){
+        return;
+      }
+        
        tableData1.forEach(member => {
             docs.documentId=member[0];
             docs.versionId=member[1];
@@ -275,7 +284,7 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ loginState,
            apiClient.addDocumentVersion(SetVersion?.documentSetId, SetVersion?.setVersionId,docs)
         })
       
-      return ;  
+        
        
   };
 

@@ -31,6 +31,7 @@ function RoutingRoot({ loginState, apiClient }: RoutingRootProps) {
     <Nav.Link as={Link} to="/">Home</Nav.Link>
     <Nav.Link as={Link} to="/notifications">Notifications {notificationMarker}</Nav.Link>
     <Nav.Link as={Button} onClick={logout}>Logout ({loginState.username})</Nav.Link>
+    <Nav.Link as={Link} to="/Sets">Sets</Nav.Link>
   </>);
 
   const loggedOutLinks = (<>

@@ -16,11 +16,16 @@ import Comment from '../models/Comment';
 import CreateComment from '../models/CreateComment';
 import { Notification } from "../models/Notification";
 import ChangeVersionState from "../models/ChangeVersionState";
+
 import SetWithInitialVersion from "../models/SetWithInitialVersion";
 import CreateSet from "../models/CreateSet";
 import CreateSetVersion from "../models/CreateSetVersion";
 import SetDocumentVersion from '../models/SetDocumentVersion';
 import Set from '../models/Set';
+
+
+import DocumentSet from "../models/DocumentSet";
+import DocumentVersionSet from "../models/DocumentVersionSet";
 
 
 type BackendError = {
@@ -310,6 +315,14 @@ class BackendApiClient implements ApiClient {
     this.loginState = loginState;
     this.authenticationErrorHandler = authenticationErrorHandler;
   }
+
+  getSets = async () => await this.get<DocumentSet[]>(
+    'document-sets/sets',
+  );
+
+  getSetVersions = async (documentSetId: string) => await this.get<DocumentVersionSet[]>(
+    `document-sets/${documentSetId}`
+  );
 }
 
 export default BackendApiClient;

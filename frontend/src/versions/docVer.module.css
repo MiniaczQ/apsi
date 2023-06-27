@@ -1,9 +1,9 @@
 .pblue {
-    color: DodgerBlue;
-    padding: 10px;
-    font-family: Arial;
-    text-align: left;
-  }
+  color: DodgerBlue;
+  padding: 10px;
+  font-family: Arial;
+  text-align: left;
+}
 
 .textblack {
   color: black;
@@ -14,4 +14,8 @@
 
 .versionContent {
   white-space: pre;
+}
+
+.conciseLine {
+  line-height: 0.25em;
 }

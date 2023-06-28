@@ -7,210 +7,113 @@ import ApiClient from '../api/ApiClient';
 import Document from '../models/Document';
 import DocumentVersion from '../models/DocumentVersion';
 import { Form } from 'react-bootstrap';
-import SetNameEditor from './SetNameEditor';
-import CreateSet from '../models/CreateSet';
-import CreateSetVersion from '../models/CreateSetVersion';
 
-import DocumentSet from '../models/DocumentSet';
 import DocumentSetVersion from '../models/DocumentSetVersion';
+import SetDocumentVersion from '../models/SetDocumentVersion';
 
 type VersionCreatorProps = {
   apiClient: ApiClient;
 };
 
-export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }) => {
+export const SetEditor: FunctionComponent<VersionCreatorProps> = ({ apiClient }) => {
   const navigate = useNavigate();
   const searchParams = useSearchParams()[0];
   const documentSetId = searchParams.get('documentSetId') ?? undefined;
-  const SetVersionId = searchParams.get('setVersionId') ?? undefined;
-
-  const [, setIsLoading] = useState(true);
-
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string>();
-  const [selectedVersionId, setSelectedVersionId] = useState<string>();
-  const [version, setVersion] = useState<DocumentVersion[]>([]);
-  const [tableData, setTableData] = useState<[string, string][]>([]);
-  const [tableData1, setTableData1] = useState<[string, string][]>([]);
-
-  const [documentsets, setdocumentSets] = useState<DocumentSet[]>();
-  const [documentSetVersion, setSetVersion] = useState<DocumentSetVersion[]>();
-
-  const [, setPrevious] = useState<[string, string][]>([]);
-  const [previoustableData1, setPrevious1] = useState<[string, string][]>([]);
+  const setVersionId = searchParams.get('setVersionId') ?? undefined;
+  const gotRequiredSearchParams = documentSetId !== undefined && setVersionId !== undefined;
 
   useEffect(() => {
-    let usersPromise = apiClient.getDocuments().then((response) => {
-      setDocuments(response);
-    });
-    let promises = [usersPromise];
-    if (documentSetId !== undefined) {
-      let setsPromise = apiClient.getSets().then((response) => setdocumentSets(response));
+    if (gotRequiredSearchParams) return;
+    if (documentSetId !== undefined) navigate(`/set-versions?documentSetId=${documentSetId}`);
+    else navigate('/sets');
+  }, [documentSetId, gotRequiredSearchParams, navigate]);
 
-      let docsetsPromise = apiClient.getSetVersions(documentSetId).then((response) => setSetVersion(response));
-      promises = [...promises, setsPromise, docsetsPromise];
-    }
-    Promise.all(promises).then(() => setIsLoading(false));
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [versions, setVersions] = useState<{ [key: string]: DocumentVersion[] }>({});
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string>('');
+  const [selectedVersionId, setSelectedVersionId] = useState<string>('');
+
+  const [documentSetVersions, setDocumentSetVersions] = useState<DocumentSetVersion[]>();
+  const [editedDocumentVersionIds, setEditedDocumentVersionIds] = useState<[string, string][]>([]);
+
+  useEffect(() => {
+    if (documentSetId === undefined) return;
+    apiClient.getDocuments().then((response) => {
+      setDocuments(response);
+      Promise.all(
+        response.map((document) =>
+          apiClient.getVersions(document.documentId).then((versionsResponse) => [document.documentId, versionsResponse])
+        )
+      ).then((versionsPerDocument) => setVersions(Object.fromEntries(versionsPerDocument)));
+    });
+    apiClient.getSetVersions(documentSetId).then(setDocumentSetVersions);
   }, [apiClient, documentSetId]);
 
-  const EditedSet = documentsets?.find((set) => set.documentSetId === documentSetId);
+  const documentSetVersion = documentSetVersions?.find((version) => version.setVersionId === setVersionId);
 
-  const SetVersion = documentSetVersion?.find((version) => version.setVersionId === SetVersionId);
+  useEffect(() => {
+    if (documentSetVersion === undefined) return;
+    setEditedDocumentVersionIds(documentSetVersion.documentVersionIds.map((x) => [...x]));
+  }, [documentSetVersion, setEditedDocumentVersionIds]);
 
-  const parents = SetVersion?.parents?.map((parentId) =>
-    documentSetVersion?.find((version) => version.setVersionId === parentId)
+  const parents = documentSetVersion?.parents?.map((parentId) =>
+    documentSetVersions?.find((version) => version.setVersionId === parentId)
   );
-
   const parentNames = parents
     ?.map((parent) => parent?.setVersionName)
     ?.filter((x) => x !== undefined)
     ?.join(', ');
 
-  useEffect(() => {
-    if (SetVersion === undefined) return;
-
-    setCreatedVersion((createdVersion) => ({
-      ...createdVersion,
-      parents: [SetVersion.setVersionId],
-    }));
-
-    const parentdocver = SetVersion?.documentVersionIds;
-    setSet(EditedSet);
-
-    parentdocver?.forEach(async (agregacje) => {
-      const selectedDocument = documents.find((doc) => doc.documentId === agregacje[0]);
-      const response = apiClient.getVersions(agregacje[0]);
-
-      const selectedVersion = (await response).find((ver) => ver.versionId === agregacje[1]);
-
-      if (selectedDocument && selectedVersion) {
-        const newData: [string, string] = [selectedDocument.documentName, selectedVersion.versionName];
-        setTableData((prevData) => [...prevData, newData]);
-        setPrevious((prevData) => [...prevData, newData]);
-        const newData1: [string, string] = [selectedDocument.documentId, selectedVersion.versionId];
-        setTableData1((prevData) => [...prevData, newData1]);
-        setPrevious1((prevData) => [...prevData, newData1]);
-      }
-    });
-  }, [apiClient, EditedSet, SetVersion, documents]);
-
-  const [set, setSet] = useState<DocumentSet>();
-
-  const [createdSet, setCreatedSet] = useState<CreateSet>({
-    documentSetName: 'frontendowy',
-    initialVersion: {
-      setVersionName: '1',
-      documentVersionIds: [],
-    },
-  });
-  const [, setCreatedVersion] = useState<CreateSetVersion>({
-    setVersionName: '1',
-    documentVersionIds: [],
-    parents: [],
-  });
-
-  const docs = {
-    documentId: '',
-    versionId: '',
-  };
-
   const handleDocumentChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    apiClient.getDocuments().then((response) => {
-      const filteredResponse = response.filter((item) => {
-        return !tableData.some((tableItem) => tableItem[0] === item.documentName);
-      });
-
-      setDocuments(filteredResponse);
-    });
-
     const selectedId = event.target.value;
     setSelectedDocumentId(selectedId);
-
-    if (selectedId !== '') {
-      try {
-        const response = await apiClient.getVersions(selectedId);
-        setVersion(response);
-      } catch (error) {
-        console.error('Błąd pobierania wersji dokumentu:', error);
-      }
-    } else {
-      setVersion([]);
-    }
+    setSelectedVersionId('');
   };
 
   const handleVersionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (selectedDocumentId !== '') {
-      const selectedVersion = event.target.value;
-
-      setSelectedVersionId(selectedVersion);
-    } else {
-      setSelectedVersionId('');
-      setVersion([]);
-    }
+    const selectedVersion = event.target.value;
+    setSelectedVersionId(selectedVersion);
   };
 
   const handleAddElement = () => {
-    apiClient.getDocuments().then((response) => {
-      const filteredResponse = response.filter((item) => {
-        return !tableData.some((tableItem) => tableItem[0] === item.documentName);
-      });
-
-      setDocuments(filteredResponse);
-    });
-
-    if (selectedDocumentId) {
-      const selectedDocument = documents.find((doc) => doc.documentId === selectedDocumentId);
-      const selectedVersion = version.find((ver) => ver.versionId === selectedVersionId);
-
-      if (selectedDocument && selectedVersion) {
-        const newData: [string, string] = [selectedDocument.documentName, selectedVersion.versionName];
-        setTableData((prevData) => [...prevData, newData]);
-
-        const newData1: [string, string] = [selectedDocument.documentId, selectedVersion.versionId];
-        setTableData1((prevData) => [...prevData, newData1]);
-      }
-    }
-
+    if (selectedDocumentId === '' || selectedVersionId === '') return;
+    setEditedDocumentVersionIds([...editedDocumentVersionIds, [selectedDocumentId, selectedVersionId]]);
     setSelectedDocumentId('');
     setSelectedVersionId('');
   };
 
-  const handleDelete = (index: number) => {
-    const updatedTableData = [...tableData];
-    updatedTableData.splice(index, 1);
-    setTableData(updatedTableData);
-
-    const updatedTableData1 = [...tableData1];
-    updatedTableData1.splice(index, 1);
-    setTableData1(updatedTableData1);
+  const handleRemoveElement = (removedDocumentId: string) => {
+    setEditedDocumentVersionIds(editedDocumentVersionIds.filter(([documentId, versionId]) => documentId !== removedDocumentId));
   };
 
-  const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
+  const modifySetVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
+    if (documentSetVersion === undefined) return;
     (evt.target as HTMLButtonElement).disabled = true;
 
-    let promises: Promise<void>[] = [];
-    if (previoustableData1 !== undefined && SetVersion !== undefined) {
-      promises = [
-        ...promises,
-        ...previoustableData1.map((record) =>
-          apiClient.removeDocumentFromSetVersion(SetVersion?.documentSetId, SetVersion?.setVersionId, record[0])
-        ),
-      ];
-    }
+    const documentsToRemove: string[] = documentSetVersion.documentVersionIds
+      .filter(
+        ([originalDocumentId]) => editedDocumentVersionIds.find(([documentId]) => documentId === originalDocumentId) === undefined
+      )
+      .map(([documentId]) => documentId);
+    const documentVersionsToAdd: SetDocumentVersion[] = editedDocumentVersionIds
+      .filter(
+        ([documentId]) =>
+          documentSetVersion.documentVersionIds.find(([originalDocumentId]) => originalDocumentId === documentId) === undefined
+      )
+      .map(([documentId, versionId]) => ({ documentId, versionId }));
 
-    if (tableData1 !== undefined && SetVersion !== undefined) {
-      promises = [
-        ...promises,
-        ...tableData1.map((member) => {
-          docs.documentId = member[0];
-          docs.versionId = member[1];
+    await Promise.all(
+      documentsToRemove.map((documentId) =>
+        apiClient.removeDocumentFromSetVersion(documentSetVersion.documentSetId, documentSetVersion.setVersionId, documentId)
+      )
+    );
+    await Promise.all(
+      documentVersionsToAdd.map((addedData) =>
+        apiClient.addDocumentToSetVersion(documentSetVersion.documentSetId, documentSetVersion.setVersionId, addedData)
+      )
+    );
 
-          return apiClient.addDocumentToSetVersion(SetVersion?.documentSetId, SetVersion?.setVersionId, docs);
-        }),
-      ];
-    }
-    await Promise.all(promises);
-    navigate(`/set-version?documentSetId=${documentSetId}&versionSetId=${SetVersionId}`);
+    navigate(`/set-version?documentSetId=${documentSetId}&versionSetId=${setVersionId}`);
   };
 
   const parentVersionField = (
@@ -218,64 +121,67 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
       <Form.Label>Parent versions</Form.Label>
       <Form.Control disabled type="text" value={parentNames ?? ''} />
       <Form.Label>Version name</Form.Label>
-      <Form.Control disabled type="text" value={SetVersion?.setVersionName ?? ''} />
+      <Form.Control disabled type="text" value={documentSetVersion?.setVersionName ?? ''} />
     </Form.Group>
   );
 
-  if (documentSetVersion === undefined || SetVersion === undefined) return null;
+  if (documentSetVersions === undefined || documentSetVersion === undefined) return null;
 
   return (
     <>
-      <SetNameEditor
-        disabled={SetVersionId !== undefined}
-        defaultValue={set?.documentSetName}
-        onChange={(documentSetName) => setCreatedSet({ ...createdSet, documentSetName })}
-      />
-      {/*<SetVersionNameChooser versions={documentSetVersion} parentVersion={parentVersion} onChange={changeVersion} />*/}
       {parentVersionField}
-
       <div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <select value={selectedDocumentId} onChange={handleDocumentChange}>
-            <option value="">Wybierz dokument</option>
-            {documents.map((document) => (
-              <option key={document.documentId} value={document.documentId}>
-                {document.documentName}
-              </option>
-            ))}
+            <option value="" disabled>
+              Select document
+            </option>
+            {documents
+              .filter(({ documentId }) => editedDocumentVersionIds.find(([docId]) => docId === documentId) === undefined)
+              .map((document) => (
+                <option key={document.documentId} value={document.documentId}>
+                  {document.documentName}
+                </option>
+              ))}
           </select>
 
           <select value={selectedVersionId} onChange={handleVersionChange}>
-            <option value="">Wybierz wersję</option>
-            {version.map((version) => (
-              <option key={version.versionId} value={version.versionId}>
-                {version.versionName}
-              </option>
-            ))}
+            <option value="" disabled>
+              Select version
+            </option>
+            {selectedDocumentId !== '' ? (
+              versions[selectedDocumentId]?.map((version) => (
+                <option key={version.versionId} value={version.versionId}>
+                  {version.versionName}
+                </option>
+              ))
+            ) : (
+              <></>
+            )}
           </select>
 
           <button onClick={handleAddElement}>Dodaj element</button>
         </div>
 
-        {tableData.length > 0 && (
+        {editedDocumentVersionIds.length > 0 && (
           <table style={{ border: '1px solid black', borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}>
             <thead>
               <tr>
-                <th>Nr</th>
-                <th>Plik</th>
-                <th>Wersja</th>
-                <th>Akcje</th>
+                <th>#</th>
+                <th>Document</th>
+                <th>Version</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {tableData.map((data, index) => (
-                <tr key={index}>
+              {editedDocumentVersionIds.map((data, index) => (
+                <tr key={data[0]}>
                   <td>{index + 1}</td>
-                  <td>{data[0]}</td>
-                  <td>{data[1]}</td>
+                  <td>{documents.find(({ documentId }) => documentId === data[0])?.documentName}</td>
+                  <td>{versions[data[0]]?.find(({ versionId }) => versionId === data[1])?.versionName}</td>
                   <td>
                     {' '}
-                    <button onClick={() => handleDelete(index)}>Usuń</button>{' '}
+                    <button onClick={() => handleRemoveElement(data[0])}>Remove</button>{' '}
                   </td>
                 </tr>
               ))}
@@ -284,11 +190,11 @@ export const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }
         )}
       </div>
 
-      <Button style={{ marginTop: '20px' }} onClick={createVersion}>
+      <Button style={{ marginTop: '20px' }} onClick={modifySetVersion}>
         Save
       </Button>
     </>
   );
 };
 
-export default SetCreator;
+export default SetEditor;

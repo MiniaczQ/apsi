@@ -26,6 +26,7 @@ export const VersionContentEditor: FunctionComponent<VersionContentEditorProps> 
         defaultValue={defaultValue}
         value={value}
         onChange={(evt) => onChange?.(evt.target.value)}
+        maxLength={2047}
       />
     </Form.Group>
   );

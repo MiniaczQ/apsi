@@ -16,6 +16,7 @@ export const DocumentNameEditor: FunctionComponent<DocumentNameEditorProps> = ({
         type="text"
         defaultValue={defaultValue}
         onChange={(evt) => onChange?.(evt.target.value)}
+        maxLength={100}
       />
     </Form.Group>
   );

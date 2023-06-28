@@ -11,7 +11,7 @@ export const CommentEditor: FunctionComponent<CommentEditorProps> = ({ value, di
   return (
     <Form.Group className="mb-3" controlId="comment">
       <Form.Label>Comment</Form.Label>
-      <Form.Control disabled={disabled} type="text" value={value} onChange={(evt) => onChange?.(evt.target.value)} />
+      <Form.Control disabled={disabled} type="text" value={value} onChange={(evt) => onChange?.(evt.target.value)} maxLength={1000}/>
     </Form.Group>
   );
 };

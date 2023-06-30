@@ -209,6 +209,7 @@ class BackendApiClient implements ApiClient {
   markAsRead = async (eventId: string) => await this.post(`events/${eventId}`, undefined, true, false);
 
   getSets = async () => await this.get<DocumentSet[]>('document-sets/sets');
+  getSet = async (documentSetId: string) => await this.get<DocumentSet>(`document-sets/${documentSetId}/self`);
   createSet = async (data: CreateSet) => await this.post<DocumentSetWithInitialVersion>('document-sets', data);
   getSetVersions = async (documentSetId: string) => await this.get<DocumentSetVersion[]>(`document-sets/${documentSetId}`);
   createSetVersion = async (documentSetId: string, data: CreateSetVersion) =>

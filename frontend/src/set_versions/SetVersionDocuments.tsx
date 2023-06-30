@@ -9,6 +9,7 @@ import Document from '../models/Document';
 import { SortedTable } from '../table/SortedTable';
 import { Column } from '../table/TableBody';
 import DocumentSetVersion from '../models/DocumentSetVersion';
+import DocumentSet from '../models/DocumentSet';
 
 type DocumentsSetProps = {
   apiClient: ApiClient;
@@ -40,6 +41,7 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
     else navigate('/sets');
   }, [documentSetId, gotRequiredSearchParams, navigate]);
 
+  const [documentSet, setDocumentSet] = useState<DocumentSet>();
   const [documentSetVersion, setDocumentSetVersion] = useState<DocumentSetVersion>();
   const [docs, setDocs] = useState<Document[]>([]);
   const [vers, setVers] = useState<DocumentVersion[]>([]);
@@ -57,6 +59,9 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
         if (documentSetId !== undefined) navigate(`/set-versions?documentSetId=${documentSetId}`);
         else navigate('/sets');
       });
+    apiClient
+      .getSet(documentSetId)
+      .then((result) => setDocumentSet(result))
   }, [apiClient, documentSetId, versionSetId, gotRequiredSearchParams, navigate]);
 
   const filterOutPermissionError = (e: Error) => {
@@ -97,7 +102,7 @@ export const SetVersionDocuments: FunctionComponent<DocumentsSetProps> = ({ apiC
 
   return (
     <Container>
-      <h3>Set Version Documents</h3>
+      <h3>{documentSet?.documentSetName} {documentSetVersion?.setVersionName}</h3>
       {docs.length === vers.length ? <SortedTable data={data} columns={columns} /> : null}
       <Button
         className="ms-3"

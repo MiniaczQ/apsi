@@ -9,6 +9,7 @@ import DocumentSetVersion from '../models/DocumentSetVersion';
 import { compare_names } from '../versions/Versions';
 import { SortedTable } from '../table/SortedTable';
 import { Column } from '../table/TableBody';
+import DocumentSet from '../models/DocumentSet';
 
 type VersionSetProps = {
   apiClient: ApiClient;
@@ -26,9 +27,11 @@ export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) =
   const documentSetId = searchParams.get('documentSetId') ?? undefined;
 
   const [versions, setVersionSets] = useState<DocumentSetVersion[]>([]);
+  const [set, setSet] = useState<DocumentSet>();
 
   useEffect(() => {
     if (documentSetId === undefined) return;
+    apiClient.getSet(documentSetId).then((response) => setSet(response));
     apiClient.getSetVersions(documentSetId).then((response) => {
       setVersionSets(response);
     });
@@ -59,7 +62,7 @@ export const SetVersions: FunctionComponent<VersionSetProps> = ({ apiClient }) =
 
   return (
     <Container>
-      <h3>Set Versions</h3>
+      <h3>{set?.documentSetName}</h3>
       <SortedTable data={versionRows} columns={columns} />
     </Container>
   );

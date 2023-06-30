@@ -87,6 +87,7 @@ interface ApiClient {
   loadComments: (documentId: string, versionId: string) => Promise<Comment[]>;
 
   getSets: () => Promise<DocumentSet[]>;
+  getSet: (documentSetId: string) => Promise<DocumentSet>;
   createSet: (data: CreateSet) => Promise<DocumentSetWithInitialVersion>;
   getSetVersions: (documentSetId: string) => Promise<DocumentSetVersion[]>;
   createSetVersion: (documentSetId: string, data: CreateSetVersion) => Promise<DocumentSetVersion>;

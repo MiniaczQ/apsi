@@ -127,67 +127,73 @@ export const SetEditor: FunctionComponent<VersionCreatorProps> = ({ apiClient })
 
   if (documentSetVersions === undefined || documentSetVersion === undefined) return null;
 
+  const documentSelector = (
+    <select value={selectedDocumentId} onChange={handleDocumentChange}>
+      <option value="" disabled>
+        Select document
+      </option>
+      {documents
+        .filter(({ documentId }) => editedDocumentVersionIds.find(([docId]) => docId === documentId) === undefined)
+        .map((document) => (
+          <option key={document.documentId} value={document.documentId}>
+            {document.documentName}
+          </option>
+        ))}
+    </select>
+  );
+
+  const versionSelector = (
+    <select value={selectedVersionId} onChange={handleVersionChange}>
+      <option value="" disabled>
+        Select version
+      </option>
+      {selectedDocumentId !== '' ? (
+        versions[selectedDocumentId]?.map((version) => (
+          <option key={version.versionId} value={version.versionId}>
+            {version.versionName}
+          </option>
+        ))
+      ) : (
+        <></>
+      )}
+    </select>
+  );
+
+  const tableHeadingRow = (
+    <tr>
+      <th>#</th>
+      <th>Document</th>
+      <th>Version</th>
+      <th>Actions</th>
+    </tr>
+  );
+
+  const makeElementRow = (data: [string, string], index: number) => (
+    <tr key={data[0]}>
+      <td>{index + 1}</td>
+      <td>{documents.find(({ documentId }) => documentId === data[0])?.documentName}</td>
+      <td>{versions[data[0]]?.find(({ versionId }) => versionId === data[1])?.versionName}</td>
+      <td>
+        {' '}
+        <button onClick={() => handleRemoveElement(data[0])}>Remove</button>{' '}
+      </td>
+    </tr>
+  );
+
   return (
     <>
       {parentVersionField}
       <div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <select value={selectedDocumentId} onChange={handleDocumentChange}>
-            <option value="" disabled>
-              Select document
-            </option>
-            {documents
-              .filter(({ documentId }) => editedDocumentVersionIds.find(([docId]) => docId === documentId) === undefined)
-              .map((document) => (
-                <option key={document.documentId} value={document.documentId}>
-                  {document.documentName}
-                </option>
-              ))}
-          </select>
-
-          <select value={selectedVersionId} onChange={handleVersionChange}>
-            <option value="" disabled>
-              Select version
-            </option>
-            {selectedDocumentId !== '' ? (
-              versions[selectedDocumentId]?.map((version) => (
-                <option key={version.versionId} value={version.versionId}>
-                  {version.versionName}
-                </option>
-              ))
-            ) : (
-              <></>
-            )}
-          </select>
-
-          <button onClick={handleAddElement}>Dodaj element</button>
+          {documentSelector}
+          {versionSelector}
+          <button onClick={handleAddElement}>Add element</button>
         </div>
 
-        {editedDocumentVersionIds.length > 0 && (
-          <table style={{ border: '1px solid black', borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Document</th>
-                <th>Version</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {editedDocumentVersionIds.map((data, index) => (
-                <tr key={data[0]}>
-                  <td>{index + 1}</td>
-                  <td>{documents.find(({ documentId }) => documentId === data[0])?.documentName}</td>
-                  <td>{versions[data[0]]?.find(({ versionId }) => versionId === data[1])?.versionName}</td>
-                  <td>
-                    {' '}
-                    <button onClick={() => handleRemoveElement(data[0])}>Remove</button>{' '}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <table style={{ border: '1px solid black', borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}>
+          <thead>{tableHeadingRow}</thead>
+          <tbody>{editedDocumentVersionIds.map(makeElementRow)}</tbody>
+        </table>
       </div>
 
       <Button style={{ marginTop: '20px' }} onClick={modifySetVersion}>

@@ -6,7 +6,7 @@ import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 
 import styles from './docVer.module.css';
-import Attachments from "../attachments/Attachments";
+import Attachments from '../attachments/Attachments';
 import ApiClient, { ConcurrencyConflict } from '../api/ApiClient';
 import Document from '../models/Document';
 import DocumentVersion, { DocumentVersionState, DocumentVersionStateMap } from '../models/DocumentVersion';
@@ -14,10 +14,9 @@ import DocumentVersionMember, { DocumentVersionMemberRole } from '../models/Docu
 import { LoginState } from '../App';
 import Comments from '../comments/Comments';
 
-
 type DocVerProps = {
-  loginState: LoginState
-  apiClient: ApiClient
+  loginState: LoginState;
+  apiClient: ApiClient;
 };
 
 export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }) => {
@@ -35,17 +34,16 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
   const [authorizedUsers, setAuthorizedUsers] = useState<DocumentVersionMember[]>([]);
   const [userRoles, setUserRoles] = useState<DocumentVersionMemberRole[]>([]);
 
-  const owner = authorizedUsers?.filter(user => user.roles.indexOf('owner') >= 0)?.[0];
-  const viewers = authorizedUsers?.filter(user => user.roles.indexOf('viewer') >= 0);
-  const editors = authorizedUsers?.filter(user => user.roles.indexOf('editor') >= 0);
-  const reviewers = authorizedUsers?.filter(user => user.roles.indexOf('reviewer') >= 0);
-
+  const owner = authorizedUsers?.filter((user) => user.roles.indexOf('owner') >= 0)?.[0];
+  const viewers = authorizedUsers?.filter((user) => user.roles.indexOf('viewer') >= 0);
+  const editors = authorizedUsers?.filter((user) => user.roles.indexOf('editor') >= 0);
+  const reviewers = authorizedUsers?.filter((user) => user.roles.indexOf('reviewer') >= 0);
 
   const stateNameLUT: DocumentVersionStateMap<string> = {
-    'inProgress': 'In Progress',
-    'readyForReview': 'Ready For Review',
-    'reviewed': 'Reviewed',
-    'published': 'Published',
+    inProgress: 'In Progress',
+    readyForReview: 'Ready For Review',
+    reviewed: 'Reviewed',
+    published: 'Published',
   };
 
   const changeState = async (newState: DocumentVersionState) => {
@@ -69,10 +67,10 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       return;
     }
     const stateProgressionLUT: DocumentVersionStateMap<DocumentVersionState> = {
-      'inProgress': 'readyForReview',
-      'readyForReview': 'reviewed',
-      'reviewed': 'published',
-      'published': 'published'
+      inProgress: 'readyForReview',
+      readyForReview: 'reviewed',
+      reviewed: 'published',
+      published: 'published',
     };
     const newState = stateProgressionLUT[version.versionState];
     await changeState(newState);
@@ -80,13 +78,13 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
 
   const changeStateBackward: MouseEventHandler<HTMLButtonElement> = async () => {
     if (version === undefined) {
-      return
+      return;
     }
     const stateProgressionLUT: DocumentVersionStateMap<DocumentVersionState> = {
-      'inProgress': 'inProgress',
-      'readyForReview': 'inProgress',
-      'reviewed': 'inProgress',
-      'published': 'published'
+      inProgress: 'inProgress',
+      readyForReview: 'inProgress',
+      reviewed: 'inProgress',
+      published: 'published',
     };
     const newState = stateProgressionLUT[version.versionState];
     await changeState(newState);
@@ -97,19 +95,19 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
       return [];
     }
     const stateRoleLUT: DocumentVersionStateMap<DocumentVersionMemberRole[]> = {
-      'inProgress': ['owner', 'editor'],
-      'readyForReview': ['reviewer'],
-      'reviewed': ['owner'],
-      'published': []
+      inProgress: ['owner', 'editor'],
+      readyForReview: ['reviewer'],
+      reviewed: ['owner'],
+      published: [],
     };
     return stateRoleLUT[state];
-  };
+  }
 
   const showDate = (dateString: string) => new Date(dateString).toDateString();
   const navigateToVersionCreator = (documentId: string, versionId: string) =>
     navigate(`/versions/new?documentId=${encodeURIComponent(documentId)}&parentVersionId=${encodeURIComponent(versionId)}`);
   const navigateToVersionEditor = (documentId: string, versionId: string) =>
-    navigate(`/versions/edit?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`);
+    navigate(`/version/edit?documentId=${encodeURIComponent(documentId)}&versionId=${encodeURIComponent(versionId)}`);
 
   function getActionButtons() {
     const newVersionButton = (
@@ -122,140 +120,123 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
         Modify
       </Button>
     );
-    const stateButtons = (<>
-      {getNextStateActionButton(version?.versionState)}
-      {getPreviousStateActionButton(version?.versionState)}
-    </>);
+    const stateButtons = (
+      <>
+        {getNextStateActionButton(version?.versionState)}
+        {getPreviousStateActionButton(version?.versionState)}
+      </>
+    );
 
-    return (<>
-      {userRoles.length > 0 ? newVersionButton : <></>}
-      {(userRoles.includes('editor') || userRoles.includes('owner')) ? editVersionButton : <></>}
-      {userRoles.find(role => getRolesForState(version?.versionState).includes(role)) ? stateButtons : <></>}
-    </>);
+    return (
+      <>
+        {userRoles.length > 0 ? newVersionButton : <></>}
+        {userRoles.includes('editor') || userRoles.includes('owner') ? editVersionButton : <></>}
+        {userRoles.find((role) => getRolesForState(version?.versionState).includes(role)) ? stateButtons : <></>}
+      </>
+    );
   }
 
   function getNextStateActionButton(state: DocumentVersionState | undefined) {
     if (state === undefined || state === 'published') {
-      return <></>
+      return <></>;
     }
     const stateLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'Mark as Ready for Review',
-      'readyForReview': 'Review (Accept)',
-      'reviewed': 'Publish',
-      'published': ''
+      inProgress: 'Mark as Ready for Review',
+      readyForReview: 'Review (Accept)',
+      reviewed: 'Publish',
+      published: '',
     };
-    return <Button className="ms-3" variant="outline-success" onClick={changeStateForward}>
-      {stateLUT[state]}
-    </Button>
+    return (
+      <Button className="ms-3" variant="outline-success" onClick={changeStateForward}>
+        {stateLUT[state]}
+      </Button>
+    );
   }
 
   function getPreviousStateActionButton(state: DocumentVersionState | undefined) {
     if (state === undefined || state === 'inProgress' || state === 'published') {
-      return <></>
+      return <></>;
     }
     const stateLUT: DocumentVersionStateMap<string> = {
-      'inProgress': '',
-      'readyForReview': 'Review (Decline)',
-      'reviewed': 'Decline Publishing',
-      'published': ''
+      inProgress: '',
+      readyForReview: 'Review (Decline)',
+      reviewed: 'Decline Publishing',
+      published: '',
     };
-    return <Button className="ms-3" variant="outline-danger" onClick={changeStateBackward}>
-      {stateLUT[state]}
-    </Button>
+    return (
+      <Button className="ms-3" variant="outline-danger" onClick={changeStateBackward}>
+        {stateLUT[state]}
+      </Button>
+    );
   }
 
   function getStateBadge(state: DocumentVersionState | undefined) {
     if (state === undefined) {
-      return <></>
+      return <></>;
     }
     const stateStyleLUT: DocumentVersionStateMap<string> = {
-      'inProgress': 'primary',
-      'readyForReview': 'danger',
-      'reviewed': 'warning',
-      'published': 'success',
+      inProgress: 'primary',
+      readyForReview: 'danger',
+      reviewed: 'warning',
+      published: 'success',
     };
-    return <Badge className="ms-3" pill bg={stateStyleLUT[state]}>
-      {stateNameLUT[state]}
-    </Badge>
+    return (
+      <Badge className="ms-3" pill bg={stateStyleLUT[state]}>
+        {stateNameLUT[state]}
+      </Badge>
+    );
   }
 
   useEffect(() => {
-    if (documentId === undefined || versionId === undefined)
-      return;
-    apiClient.getDocument(documentId)
-      .then(response => setDocument(response));
-    apiClient.getVersion(documentId, versionId)
-      .then(response => setVersion(response));
-    apiClient.getVersions(documentId)
-      .then(response => setVersions(response));
-    apiClient.getMembers(documentId, versionId)
-      .then(response => setAuthorizedUsers(response));
+    if (documentId === undefined || versionId === undefined) return;
+    apiClient.getDocument(documentId).then((response) => setDocument(response));
+    apiClient.getVersion(documentId, versionId).then((response) => setVersion(response));
+    apiClient.getVersions(documentId).then((response) => setVersions(response));
+    apiClient.getMembers(documentId, versionId).then((response) => setAuthorizedUsers(response));
   }, [apiClient, documentId, versionId]);
 
   useEffect(() => {
-    const member = authorizedUsers.find(member => member.userId === loginState.userId!);
+    const member = authorizedUsers.find((member) => member.userId === loginState.userId!);
     setUserRoles(member?.roles ?? []);
   }, [loginState.userId, authorizedUsers]);
 
-  return (documentId !== undefined && versionId !== undefined) ? (
+  return documentId !== undefined && versionId !== undefined ? (
     <Container>
-      <Tabs
-        defaultActiveKey="details"
-        id="noanim-tab-example"
-        className="mb-3"
-        fill
-        justify
-      >
+      <Tabs defaultActiveKey="details" id="noanim-tab-example" className="mb-3" fill justify>
         <Tab eventKey="details" title="Details">
           <Alert variant="danger" show={isErrorSet} onClose={() => setError(undefined)} dismissible>
             {error}
           </Alert>
           <div className="container w-75">
-            <h4 className={styles.pblue}>
-              Document name
-            </h4>
-            <p className={styles.textblack}>
-              {document?.documentName}
-            </p>
-            <h5 className={styles.pblue}>
-              Version
-            </h5>
+            <h4 className={styles.pblue}>Document name</h4>
+            <p className={styles.textblack}>{document?.documentName}</p>
+            <h5 className={styles.pblue}>Version</h5>
             <p className={styles.textblack}>
               {version?.versionName}
               {getStateBadge(version?.versionState)}
             </p>
-            <h5 className={styles.pblue}>
-              Creation date
-            </h5>
-            <p className={styles.textblack}>
-              {showDate(version?.createdAt ?? '')}
-            </p>
-            <h5 className={styles.pblue}>
-              Roles
-            </h5>
+            <h5 className={styles.pblue}>Creation date</h5>
+            <p className={styles.textblack}>{showDate(version?.createdAt ?? '')}</p>
+            <h5 className={styles.pblue}>Roles</h5>
             <div>
               <h6 className={`${styles.pblue} ${styles.conciseLine}`}>
                 Owner: <span className={styles.textblack}>{owner?.username}</span>
               </h6>
               <h6 className={`${styles.pblue} ${styles.conciseLine}`}>
-                Viewers: <span className={styles.textblack}>{viewers?.map(viewer => viewer.username)?.join(', ')}</span>
+                Viewers: <span className={styles.textblack}>{viewers?.map((viewer) => viewer.username)?.join(', ')}</span>
               </h6>
               <h6 className={`${styles.pblue} ${styles.conciseLine}`}>
-                Editors: <span className={styles.textblack}>{editors?.map(editor => editor.username)?.join(', ')}</span>
+                Editors: <span className={styles.textblack}>{editors?.map((editor) => editor.username)?.join(', ')}</span>
               </h6>
               <h6 className={`${styles.pblue} ${styles.conciseLine}`}>
-                Reviewers: <span className={styles.textblack}>{reviewers?.map(reviewer => reviewer.username)?.join(', ')}</span>
+                Reviewers: <span className={styles.textblack}>{reviewers?.map((reviewer) => reviewer.username)?.join(', ')}</span>
               </h6>
             </div>
-            <h5 className={styles.pblue}>
-              Content
-            </h5>
-            <div className={[styles.textblack, styles.versionContent].join(' ')}>
-              {version?.content}
-            </div>
+            <h5 className={styles.pblue}>Content</h5>
+            <div className={[styles.textblack, styles.versionContent].join(' ')}>{version?.content}</div>
             {getActionButtons()}
-          </div >
-        </Tab >
+          </div>
+        </Tab>
         <Tab eventKey="comments" title="Comments">
           <Comments loginState={loginState} apiClient={apiClient} documentId={documentId} versionId={versionId} />
         </Tab>
@@ -263,14 +244,20 @@ export const DocVer: FunctionComponent<DocVerProps> = ({ loginState, apiClient }
           <Attachments apiClient={apiClient} documentId={documentId} versionId={versionId} />
         </Tab>
         <Tab eventKey="past" title="Parent Versions">
-          {version?.parents?.map(versionId => <p key={versionId}>{versions?.find(version => version.versionId === versionId)?.versionName}</p>)}
+          {version?.parents?.map((versionId) => (
+            <p key={versionId}>{versions?.find((version) => version.versionId === versionId)?.versionName}</p>
+          ))}
         </Tab>
         <Tab eventKey="future" title="Descendant Versions">
-          {version?.children?.map(versionId => <p key={versionId}>{versions?.find(version => version.versionId === versionId)?.versionName}</p>)}
+          {version?.children?.map((versionId) => (
+            <p key={versionId}>{versions?.find((version) => version.versionId === versionId)?.versionName}</p>
+          ))}
         </Tab>
-      </Tabs >
-    </Container >
-  ) : <></>;
-}
+      </Tabs>
+    </Container>
+  ) : (
+    <></>
+  );
+};
 
 export default DocVer;

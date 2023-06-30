@@ -1313,6 +1313,32 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/document-sets/:documentSetId/self",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"document-sets",
+								":documentSetId",
+								"self"
+							],
+							"variable": [
+								{
+									"key": "documentSetId",
+									"value": "{{documentSetId}}"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"auth": {

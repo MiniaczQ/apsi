@@ -1,5 +1,5 @@
 type AuthResponse = {
-    token: string
+  token: string;
 };
 
 export default AuthResponse;

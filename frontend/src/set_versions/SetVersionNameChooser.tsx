@@ -1,17 +1,16 @@
 import { FunctionComponent, useCallback, useEffect, useMemo } from 'react';
 import { Form } from 'react-bootstrap';
 import Select from 'react-select';
-
-import DocumentVersion from '../models/DocumentVersion';
+import DocumentSetVersion from '../models/DocumentSetVersion';
 
 type VersionNameChooserProps = {
-  versions: DocumentVersion[];
-  parentVersion: DocumentVersion;
+  versions: DocumentSetVersion[];
+  parentVersion: DocumentSetVersion;
   disabled?: boolean;
   onChange?: (name: string) => any;
 };
 
-export const VersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({
+export const SetVersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({
   versions,
   parentVersion,
   disabled,
@@ -22,7 +21,7 @@ export const VersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({
       prefix +
       (1 +
         versions
-          .map((version) => version.versionName.match(`^${prefix.replaceAll('.', '\\.')}(\\d+)$`)?.[1])
+          .map((version) => version.setVersionName.match(`^${prefix.replaceAll('.', '\\.')}(\\d+)$`)?.[1])
           .filter((number) => number !== undefined)
           .map((number) => Number(number))
           .reduce((acc, val) => Math.max(acc, val), 0)),
@@ -50,9 +49,9 @@ export const VersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({
 
   const possibleNames = useMemo(
     () =>
-      [getNestedVersionName(parentVersion.versionName)]
-        .concat([getSameLevelVersionName(parentVersion.versionName)])
-        .concat(getParentLevelVersionNames(parentVersion.versionName))
+      [getNestedVersionName(parentVersion.setVersionName)]
+        .concat([getSameLevelVersionName(parentVersion.setVersionName)])
+        .concat(getParentLevelVersionNames(parentVersion.setVersionName))
         .map((name) => ({ value: name, label: name })),
     [parentVersion, getNestedVersionName, getSameLevelVersionName, getParentLevelVersionNames]
   );
@@ -61,10 +60,9 @@ export const VersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({
   return (
     <Form.Group className="mb-3" controlId="parentVersionName">
       <Form.Label>Parent version name</Form.Label>
-      <Form.Control disabled type="text" value={parentVersion.versionName} />
-      <Form.Label>New version name</Form.Label>
+      <Form.Control disabled type="text" value={parentVersion.setVersionName} />
+      <Form.Label style={{ marginTop: '20px' }}>New version name</Form.Label>
       <Select
-        key={versions.length}
         required
         options={possibleNames}
         defaultValue={possibleNames[0]}
@@ -75,4 +73,4 @@ export const VersionNameChooser: FunctionComponent<VersionNameChooserProps> = ({
   );
 };
 
-export default VersionNameChooser;
+export default SetVersionNameChooser;

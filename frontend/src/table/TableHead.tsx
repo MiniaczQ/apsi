@@ -1,18 +1,17 @@
-import { FunctionComponent, useState } from "react";
-import { Column, SortOrder } from "./TableBody";
-import { v4 as uuidv4 } from 'uuid';
+import { FunctionComponent, useState } from 'react';
+import { Column, SortOrder } from './TableBody';
 
 type TableHeadProps = {
-  columns: Column[]
-  handleSorting: (sortField: any, sortOrder: SortOrder) => void
-}
+  columns: Column[];
+  handleSorting: (sortField: any, sortOrder: SortOrder) => void;
+};
+
 export const TableHead: FunctionComponent<TableHeadProps> = ({ columns, handleSorting }) => {
-  const [sortField, setSortField] = useState("");
-  const [order, setOrder] = useState("asc");
+  const [sortField, setSortField] = useState('');
+  const [order, setOrder] = useState('asc');
 
   const handleSortingChange = (accessor: string) => {
-    const sortOrder =
-      accessor === sortField && order === "asc" ? "desc" : "asc";
+    const sortOrder = accessor === sortField && order === 'asc' ? 'desc' : 'asc';
     setSortField(accessor);
     setOrder(sortOrder);
     handleSorting(accessor, sortOrder);
@@ -20,16 +19,16 @@ export const TableHead: FunctionComponent<TableHeadProps> = ({ columns, handleSo
 
   const createColumn = (label: string, accessor: string, sortable: boolean, colSpan: number = 1, rowSpan: number = 1) => {
     const cl = sortable
-      ? sortField === accessor && order === "asc"
-        ? "up"
-        : sortField === accessor && order === "desc"
-          ? "down"
-          : "default"
-      : "";
+      ? sortField === accessor && order === 'asc'
+        ? 'up'
+        : sortField === accessor && order === 'desc'
+        ? 'down'
+        : 'default'
+      : '';
     return (
       <th
-        key={uuidv4()}
-        onClick={() => sortable ? handleSortingChange(accessor) : null}
+        key={label}
+        onClick={() => (sortable ? handleSortingChange(accessor) : null)}
         className={cl}
         rowSpan={rowSpan}
         colSpan={colSpan}
@@ -37,50 +36,44 @@ export const TableHead: FunctionComponent<TableHeadProps> = ({ columns, handleSo
         {label}
       </th>
     );
-  }
+  };
 
-  const header: JSX.Element[] = []
-  const uniqueGroups: string[] = []
-  const groups: Record<string, Column[]> = {}
-  columns.forEach(column => {
-    if (column.group !== undefined) {
-      if (groups[column.group] === undefined) {
-        groups[column.group] = [column]
-      }
-      else {
-        groups[column.group] = [...groups[column.group], column]
-      }
+  const header: JSX.Element[] = [];
+  const uniqueGroups: string[] = [];
+  const groups: Record<string, Column[]> = {};
+  columns.forEach((column) => {
+    if (column.group === undefined) {
+      header.push(createColumn(column.label, column.accessor, column.sortable, 1, column.rowSpan));
+      return;
+    }
 
-      if (!uniqueGroups.includes(column.group)) {
-        uniqueGroups.push(column.group)
-        header.push(<th key={uuidv4()} colSpan={column.colSpan}>{column.group}</th>)
-      }
+    groups[column.group] = [...(groups[column.group] ?? []), column];
+    if (!uniqueGroups.includes(column.group)) {
+      uniqueGroups.push(column.group);
+      header.push(
+        <th key={column.group} colSpan={column.colSpan}>
+          {column.group}
+        </th>
+      );
     }
-    else {
-      header.push(createColumn(column.label, column.accessor, column.sortable, 1, column.rowSpan))
-    }
-  })
+  });
 
   if (header.length > 0) {
-    const secondRow = Object.values(groups).map(value => {
-      return (<tr key={uuidv4()}>
-        {value.map(column => (createColumn(column.label, column.accessor, column.sortable, 1, column.rowSpan)))}
-      </tr>)
-    })
+    const secondRow = Object.values(groups).map((value, index) => (
+      <tr key={index}>
+        {value.map((column) => createColumn(column.label, column.accessor, column.sortable, 1, column.rowSpan))}
+      </tr>
+    ));
     return (
       <thead>
-        <tr key={uuidv4()}>
-          {header}
-        </tr>
+        <tr>{header}</tr>
         {secondRow}
       </thead>
-    )
+    );
   }
   return (
     <thead>
-      <tr key={uuidv4()}>
-        {columns.map(({ label, accessor, sortable }) => createColumn(label, accessor, sortable))}
-      </tr>
+      <tr>{columns.map(({ label, accessor, sortable }) => createColumn(label, accessor, sortable))}</tr>
     </thead>
   );
 };

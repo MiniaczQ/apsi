@@ -4,7 +4,6 @@ import { Form, Tab, Row, ListGroup, Col } from 'react-bootstrap';
 import styles from './docVer.module.css';
 import DocumentVersion from '../models/DocumentVersion';
 
-
 type VersionMergingOptionsProps = {
   /** Without parent version. */
   versions: DocumentVersion[];
@@ -21,7 +20,7 @@ export const VersionMergingOptions: FunctionComponent<VersionMergingOptionsProps
     onChange?.(newSelected);
   };
   const updateSelected = (value: string, checked: boolean) =>
-    setSelectedAndOnChange(checked ? [...selected, value] : selected.filter(entry => entry !== value));
+    setSelectedAndOnChange(checked ? [...selected, value] : selected.filter((entry) => entry !== value));
 
   return (
     <Form.Group className="mb-3" controlId="merged">
@@ -31,14 +30,17 @@ export const VersionMergingOptions: FunctionComponent<VersionMergingOptionsProps
           <Col sm={2}>
             <ListGroup>
               {versions.map(({ versionId, versionName }) => (
-                <ListGroup.Item key={versionId}
+                <ListGroup.Item
+                  key={versionId}
                   disabled={disabled}
-                  action href={`#version-${versionId}`}
+                  action
+                  href={`#version-${versionId}`}
                   variant={isChecked(versionId) ? 'primary' : 'secondary'}
                 >
-                  <Form.Check checked={isChecked(versionId)}
+                  <Form.Check
+                    checked={isChecked(versionId)}
                     id={`checkbox-${versionId}`}
-                    onChange={evt => updateSelected(versionId, evt.target.checked)}
+                    onChange={(evt) => updateSelected(versionId, evt.target.checked)}
                     label={versionName}
                   />
                 </ListGroup.Item>
@@ -50,9 +52,7 @@ export const VersionMergingOptions: FunctionComponent<VersionMergingOptionsProps
               {versions.map(({ versionId, content }) => (
                 <Tab.Pane key={versionId} eventKey={`#version-${versionId}`}>
                   <Form.Label>Version content preview</Form.Label>
-                  <div className={[styles.textblack, styles.versionContent].join(' ')}>
-                    {content}
-                  </div>
+                  <div className={[styles.textblack, styles.versionContent].join(' ')}>{content}</div>
                 </Tab.Pane>
               ))}
             </Tab.Content>
@@ -61,6 +61,6 @@ export const VersionMergingOptions: FunctionComponent<VersionMergingOptionsProps
       </Tab.Container>
     </Form.Group>
   );
-}
+};
 
 export default VersionMergingOptions;

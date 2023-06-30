@@ -131,6 +131,26 @@ impl DocumentSetsRepository {
         })
     }
 
+    pub async fn get_document_set(
+        &self,
+        _user_id: Uuid,
+        _document_set_id: Uuid,
+    ) -> Result<DocumentSet, Box<dyn Error>> {
+        let document_set = self
+            .database
+            .query_one(
+                "
+                SELECT d.document_set_id, d.document_set_name
+                FROM document_sets d
+                WHERE document_set_id = $1
+                ", // TODO: potencjalnie filtrowanie dostępności
+                &[&_document_set_id],
+            )
+            .await?;
+        let document = DocumentSet::try_from(document_set)?;
+        Ok(document)
+    }
+
     pub async fn get_document_sets(
         &self,
         _user_id: Uuid,

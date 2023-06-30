@@ -1,7 +1,6 @@
 import { FunctionComponent } from 'react';
 import { Form } from 'react-bootstrap';
 
-
 type DocumentNameEditorProps = {
   defaultValue?: string;
   disabled?: boolean;
@@ -12,9 +11,15 @@ export const DocumentNameEditor: FunctionComponent<DocumentNameEditorProps> = ({
   return (
     <Form.Group className="mb-3" controlId="documentName">
       <Form.Label>Document name</Form.Label>
-      <Form.Control disabled={disabled} type="text" defaultValue={defaultValue} onChange={evt => onChange?.(evt.target.value)} />
+      <Form.Control
+        disabled={disabled}
+        type="text"
+        defaultValue={defaultValue}
+        onChange={(evt) => onChange?.(evt.target.value)}
+        maxLength={255}
+      />
     </Form.Group>
   );
-}
+};
 
 export default DocumentNameEditor;

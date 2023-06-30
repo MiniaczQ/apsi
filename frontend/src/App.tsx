@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useCookies } from 'react-cookie';
-import {
-  createBrowserRouter,
-  createRoutesFromElements,
-  Route,
-  RouterProvider,
-} from 'react-router-dom';
+import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider } from 'react-router-dom';
 
 import Documents from './documents/Documents';
 import DocVer from './versions/DocVer';
@@ -19,16 +14,13 @@ import BackendApiClient from './api/BackendApiClient';
 import VersionEditor from './versions/VersionEditor';
 import Sets from './sets/Sets';
 import SetVersions from './set_versions/SetVersions';
-import SetVersionDocuments from './set_version_documents/SetVersionDocuments';
+import SetVersionDocuments from './set_versions/SetVersionDocuments';
 import { Button, Modal } from 'react-bootstrap';
 import Notifications from './notifications/Notifications';
-import SetCreator from './versions/SetCreator';
-import SetEditor from './versions/SetEditor';
-import Set from './models/Set';
-import Sets from './sets/Sets';
+import SetCreator from './set_versions/SetCreator';
+import SetEditor from './set_versions/SetEditor';
 
-const API_BASE_URL = 'http://localhost:3000/api/'
-
+const API_BASE_URL = 'http://localhost:3000/api/';
 
 export type LoginData = {
   token: string;
@@ -41,7 +33,7 @@ export type LoginState = {
   token?: string;
   username?: string;
   userId?: string;
-  setToken: ((token: string | undefined) => void);
+  setToken: (token: string | undefined) => void;
 };
 
 type ModalError = {
@@ -54,9 +46,13 @@ type ModalError = {
 function parseJwt(token: string) {
   const base64Url = token.split('.')[1];
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(
-    c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-  ).join(''));
+  const jsonPayload = decodeURIComponent(
+    window
+      .atob(base64)
+      .split('')
+      .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+  );
   return JSON.parse(jsonPayload);
 }
 
@@ -70,7 +66,7 @@ function App() {
   const [modalError, setModalError] = useState<ModalError>();
   const isModalErrorSet = modalError !== undefined;
 
-  const setLoginDataUsingToken: ((token: string | undefined) => void) = token => {
+  const setLoginDataUsingToken: (token: string | undefined) => void = (token) => {
     if (token === undefined) {
       setLoginData(undefined);
       return;
@@ -79,7 +75,7 @@ function App() {
     setLoginData({
       token,
       username: parsedToken.username as string,
-      userId: parsedToken.userId as string
+      userId: parsedToken.userId as string,
     });
   };
 
@@ -87,52 +83,51 @@ function App() {
     setLoginDataUsingToken(cookies[cookieName]);
   }, [cookies]);
 
-  const setToken: ((token: string | undefined) => void) = token => {
-    if (token !== undefined)
-      setCookie(cookieName, token);
-    else
-      removeCookie(cookieName);
+  const setToken: (token: string | undefined) => void = (token) => {
+    if (token !== undefined) setCookie(cookieName, token);
+    else removeCookie(cookieName);
     setLoginDataUsingToken(token);
   };
 
   const loginState: LoginState = {
     ...loginData,
     isLoggedIn,
-    setToken
+    setToken,
   };
 
   const clearModalError = () => {
     modalError?.resolveFunc?.();
     setModalError(undefined);
-  }
+  };
 
   const apiClient: ApiClient = new BackendApiClient(API_BASE_URL, loginState, (message: string) => {
-    if (isModalErrorSet)
-      return;
+    if (isModalErrorSet) return;
     setModalError({ title: 'Authentication error', message, resolveFunc: () => loginState.setToken(undefined) });
   });
-  
+
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route element={<RoutingRoot loginState={loginState} apiClient={apiClient} />}>
-        {isLoggedIn ? (<>
-          <Route index path="/DocVer" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
-          <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
-          <Route index path="/versions/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
-          <Route index path="/DocSets" element={<Sets apiClient={apiClient} />} />
-          <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
-          <Route index path="/VersionSets" element={<SetVersions apiClient={apiClient} />} />
-          <Route index path="/SetVersionDocuments" element={<SetVersionDocuments apiClient={apiClient} />} />
-          <Route index path="/*" element={<Documents apiClient={apiClient} />} />
-          <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState} />}/>
-          <Route index path="/Sets" element={<Sets apiClient={apiClient} />} />
-          <Route index path="/setversions/new" element={<SetCreator loginState={loginState} apiClient={apiClient} />} />
-          <Route index path="/setversions/edit" element={<SetEditor loginState={loginState} apiClient={apiClient} />} />
-
-        </>) : (<>
-          <Route index path="/register" element={<Register apiClient={apiClient} />} />
-          <Route index path="/*" element={<Login apiClient={apiClient} />} />
-        </>)}
+        {isLoggedIn ? (
+          <>
+            <Route index path="/notifications" element={<Notifications apiClient={apiClient} loginState={loginState} />} />
+            <Route index path="/set-versions/new" element={<SetCreator apiClient={apiClient} />} />
+            <Route index path="/set-versions" element={<SetVersions apiClient={apiClient} />} />
+            <Route index path="/set-version/edit" element={<SetEditor apiClient={apiClient} />} />
+            <Route index path="/set-version" element={<SetVersionDocuments apiClient={apiClient} />} />
+            <Route index path="/sets" element={<Sets apiClient={apiClient} />} />
+            <Route index path="/versions/new" element={<VersionCreator loginState={loginState} apiClient={apiClient} />} />
+            <Route index path="/versions" element={<Versions apiClient={apiClient} />} />
+            <Route index path="/version/edit" element={<VersionEditor loginState={loginState} apiClient={apiClient} />} />
+            <Route index path="/version" element={<DocVer loginState={loginState} apiClient={apiClient} />} />
+            <Route index path="/*" element={<Documents apiClient={apiClient} />} />
+          </>
+        ) : (
+          <>
+            <Route index path="/register" element={<Register apiClient={apiClient} />} />
+            <Route index path="/*" element={<Login apiClient={apiClient} />} />
+          </>
+        )}
       </Route>
     )
   );
@@ -145,7 +140,7 @@ function App() {
         </Modal.Header>
         <Modal.Body>{modalError?.message}</Modal.Body>
         <Modal.Footer>
-          <Button autoFocus onBlur={evt => evt.target.focus()} variant="primary" onClick={clearModalError}>
+          <Button autoFocus onBlur={(evt) => evt.target.focus()} variant="primary" onClick={clearModalError}>
             OK
           </Button>
         </Modal.Footer>

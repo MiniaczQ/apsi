@@ -5,12 +5,21 @@
         }
     ],
     "settings": {
-        "files.autoSave": "afterDelay",
-        "editor.formatOnPaste": true,
         "editor.formatOnSave": true,
         "files.eol": "\n",
         "rust-analyzer.procMacro.attributes.enable": true,
         "rust-analyzer.showUnlinkedFileNotification": false,
+        "[css]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescript]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+            "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "prettier.singleQuote": true,
+        "prettier.printWidth": 130
     },
     "extensions": {
         "recommendations": [
@@ -19,7 +28,8 @@
             "wayou.vscode-todo-highlight",
             "mhutchie.git-graph",
             "waderyan.gitblame",
-            "tamasfe.even-better-toml"
+            "tamasfe.even-better-toml",
+            "esbenp.prettier-vscode"
         ]
     }
 }

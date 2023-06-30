@@ -53,6 +53,21 @@ async fn get_document_sets(
     Ok(Json(document_sets))
 }
 
+async fn get_document_set(
+    set_repository: DocumentSetsRepository,
+    claims: Claims,
+    Path(document_set_id): Path<Uuid>,
+) -> Result<Json<DocumentSet>, StatusCode> {
+    let set = set_repository
+        .get_document_set(claims.user_id, document_set_id)
+        .await
+        .map_err(|e| {
+            error!("{}", e);
+            StatusCode::BAD_REQUEST
+        })?;
+    Ok(Json(set))
+}
+
 async fn create_document_set_version(
     mut set_repository: DocumentSetsRepository,
     claims: Claims,
@@ -149,6 +164,7 @@ where
         .route("/sets", get(get_document_sets))
         .route("/:document_set_id", post(create_document_set_version))
         .route("/:document_set_id", get(get_document_set_versions))
+        .route("/:document_set_id/self", get(get_document_set))
         .route(
             "/:document_set_id/:set_version_id",
             post(add_to_document_set_version),

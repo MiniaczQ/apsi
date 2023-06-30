@@ -1,9 +1,9 @@
-import Role from "./Role";
+import Role from './Role';
 
 export type UserWithRoles = {
-    userId: string,
-    username: string,
-    roles: Role[],
+  userId: string;
+  username: string;
+  roles: Role[];
 };
 
 export default UserWithRoles;

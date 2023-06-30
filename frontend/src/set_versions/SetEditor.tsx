@@ -37,7 +37,6 @@ export const SetEditor: FunctionComponent<VersionCreatorProps> = ({ apiClient })
   const [editedDocumentVersionIds, setEditedDocumentVersionIds] = useState<[string, string][]>([]);
 
   useEffect(() => {
-    if (documentSetId === undefined) return;
     apiClient.getDocuments().then((response) => {
       setDocuments(response);
       Promise.all(
@@ -46,6 +45,7 @@ export const SetEditor: FunctionComponent<VersionCreatorProps> = ({ apiClient })
         )
       ).then((versionsPerDocument) => setVersions(Object.fromEntries(versionsPerDocument)));
     });
+    if (documentSetId === undefined) return;
     apiClient.getSetVersions(documentSetId).then(setDocumentSetVersions);
   }, [apiClient, documentSetId]);
 
@@ -83,7 +83,7 @@ export const SetEditor: FunctionComponent<VersionCreatorProps> = ({ apiClient })
   };
 
   const handleRemoveElement = (removedDocumentId: string) => {
-    setEditedDocumentVersionIds(editedDocumentVersionIds.filter(([documentId, versionId]) => documentId !== removedDocumentId));
+    setEditedDocumentVersionIds(editedDocumentVersionIds.filter(([documentId]) => documentId !== removedDocumentId));
   };
 
   const modifySetVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {

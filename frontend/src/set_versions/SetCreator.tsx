@@ -23,304 +23,196 @@ const SetCreator: FunctionComponent<VersionCreatorProps> = ({ apiClient }) => {
   const searchParams = useSearchParams()[0];
   const documentSetId = searchParams.get('documentSetId') ?? undefined;
   const parentVersionId = searchParams.get('parentVersionId') ?? undefined;
-  const isCreatingNewDocument = documentSetId === undefined && parentVersionId === undefined;
+  const isCreatingNewSet = documentSetId === undefined && parentVersionId === undefined;
   const isCreatingNewVersion = documentSetId !== undefined && parentVersionId !== undefined;
+  const gotRequiredSearchParams = isCreatingNewSet || isCreatingNewVersion;
 
-  const [, setIsLoading] = useState(true);
+  useEffect(() => {
+    if (gotRequiredSearchParams) return;
+    if (documentSetId !== undefined) navigate(`/set-versions?documentSetId=${documentSetId}`);
+    else navigate('/sets');
+  }, [documentSetId, gotRequiredSearchParams, navigate]);
 
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [selectedDocumentId, setSelectedDocumentId] = useState<string>();
-  const [selectedVersionId, setSelectedVersionId] = useState<string>();
-  const [version, setVersion] = useState<DocumentVersion[]>([]);
-  const [tableData, setTableData] = useState<[string, string][]>([]);
-  const [tableData1, setTableData1] = useState<[string, string][]>([]);
+  const [versions, setVersions] = useState<{ [key: string]: DocumentVersion[] }>({});
+  const [selectedDocumentId, setSelectedDocumentId] = useState<string>('');
+  const [selectedVersionId, setSelectedVersionId] = useState<string>('');
 
-  const [documentsets, setdocumentSets] = useState<DocumentSet[]>();
-  const [documentSetVersion, setSetVersion] = useState<DocumentSetVersion[]>();
-
-  useEffect(() => {
-    let usersPromise = apiClient.getDocuments().then((response) => setDocuments(response));
-    let promises = [usersPromise];
-    if (isCreatingNewVersion) {
-      let setsPromise = apiClient.getSets().then((response) => setdocumentSets(response));
-
-      let docsetsPromise = apiClient.getSetVersions(documentSetId).then((response) => setSetVersion(response));
-      promises = [...promises, setsPromise, docsetsPromise];
-    }
-    Promise.all(promises).then(() => setIsLoading(false));
-  }, [apiClient, isCreatingNewVersion, documentSetId]);
-
-  const parentVersion = documentSetVersion?.find((version) => version.setVersionId === parentVersionId);
-
-  const parentSet = documentsets?.find((set) => set.documentSetId === documentSetId);
-
-  useEffect(() => {
-    if (parentVersion === undefined) return;
-
-    setCreatedVersion((createdVersion) => ({
-      ...createdVersion,
-      parents: [parentVersion.setVersionId],
-    }));
-
-    if (isCreatingNewVersion) {
-      setSet(parentSet);
-    }
-  }, [isCreatingNewVersion, parentSet, parentVersion]);
-
-  const [set, setSet] = useState<DocumentSet>();
-
+  const [documentSets, setDocumentSets] = useState<DocumentSet[]>();
+  const [documentSetVersions, setDocumentSetVersions] = useState<DocumentSetVersion[]>();
   const [createdSet, setCreatedSet] = useState<CreateSet>({
-    documentSetName: 'frontendowy',
+    documentSetName: '',
     initialVersion: {
       setVersionName: '1',
       documentVersionIds: [],
     },
   });
-  const [createdVersion, setCreatedVersion] = useState<CreateSetVersion>({
-    setVersionName: '1',
+  const [createdSetVersion, setCreatedSetVersion] = useState<CreateSetVersion>({
+    setVersionName: '',
     documentVersionIds: [],
     parents: [],
   });
 
   const changeVersion = useCallback(
-    (setVersionName: string) => setCreatedVersion((createdVersion) => ({ ...createdVersion, setVersionName })),
+    (setVersionName: string) => setCreatedSetVersion((createdVersion) => ({ ...createdVersion, setVersionName })),
     []
   );
 
-  const docs = {
-    documentId: '',
-    versionId: '',
-  };
+  useEffect(() => {
+    apiClient.getDocuments().then((response) => {
+      setDocuments(response);
+      Promise.all(
+        response.map((document) =>
+          apiClient.getVersions(document.documentId).then((versionsResponse) => [document.documentId, versionsResponse])
+        )
+      ).then((versionsPerDocument) => setVersions(Object.fromEntries(versionsPerDocument)));
+    });
+    apiClient.getSets().then(setDocumentSets);
+    if (documentSetId === undefined) return;
+    apiClient.getSetVersions(documentSetId).then(setDocumentSetVersions);
+  }, [apiClient, documentSetId]);
+
+  const parentSet = documentSets?.find((set) => set.documentSetId === documentSetId);
+  const parentSetVersion = documentSetVersions?.find((version) => version.setVersionId === parentVersionId);
+
+  useEffect(() => {
+    if (parentSetVersion === undefined) return;
+    setCreatedSetVersion((version) => ({
+      ...version,
+      documentVersionIds: parentSetVersion.documentVersionIds.map((x) => [...x]),
+      parents: [parentSetVersion.setVersionId],
+    }));
+  }, [parentSetVersion, setCreatedSetVersion]);
 
   const handleDocumentChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
-    apiClient.getDocuments().then((response) => {
-      const filteredResponse = response.filter((item) => {
-        return !tableData.some((tableItem) => tableItem[0] === item.documentName);
-      });
-
-      setDocuments(filteredResponse);
-    });
-
     const selectedId = event.target.value;
     setSelectedDocumentId(selectedId);
-
-    if (selectedId !== '') {
-      try {
-        const response = await apiClient.getVersions(selectedId);
-        setVersion(response);
-      } catch (error) {
-        console.error('Błąd pobierania wersji dokumentu:', error);
-      }
-    } else {
-      setVersion([]);
-    }
+    setSelectedVersionId('');
   };
 
   const handleVersionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    if (selectedDocumentId !== '') {
-      const selectedVersion = event.target.value;
-
-      setSelectedVersionId(selectedVersion);
-    } else {
-      setSelectedVersionId('');
-      setVersion([]);
-    }
+    const selectedVersion = event.target.value;
+    setSelectedVersionId(selectedVersion);
   };
 
   const handleAddElement = () => {
-    apiClient.getDocuments().then((response) => {
-      const filteredResponse = response.filter((item) => {
-        return !tableData.some((tableItem) => tableItem[0] === item.documentName);
-      });
-
-      setDocuments(filteredResponse);
+    if (selectedDocumentId === '' || selectedVersionId === '') return;
+    setCreatedSetVersion({
+      ...createdSetVersion,
+      documentVersionIds: [...createdSetVersion.documentVersionIds, [selectedDocumentId, selectedVersionId]],
     });
-
-    if (selectedDocumentId) {
-      const selectedDocument = documents.find((doc) => doc.documentId === selectedDocumentId);
-      const selectedVersion = version.find((ver) => ver.versionId === selectedVersionId);
-
-      if (selectedDocument && selectedVersion) {
-        const newData: [string, string] = [selectedDocument.documentName, selectedVersion.versionName];
-        setTableData((prevData) => [...prevData, newData]);
-
-        const newData1: [string, string] = [selectedDocument.documentId, selectedVersion.versionId];
-        setTableData1((prevData) => [...prevData, newData1]);
-      }
-    }
-
     setSelectedDocumentId('');
     setSelectedVersionId('');
   };
 
-  const handleDelete = (index: number) => {
-    const updatedTableData = [...tableData];
-    updatedTableData.splice(index, 1);
-    setTableData(updatedTableData);
-
-    const updatedTableData1 = [...tableData1];
-    updatedTableData1.splice(index, 1);
-    setTableData1(updatedTableData1);
-  };
-
-  const createVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
-    (evt.target as HTMLButtonElement).disabled = true;
-    let creationPromise;
-    if (documentSetId === undefined) {
-      let doc = createdSet;
-
-      creationPromise = apiClient.createSet(doc).then((response) => response.initialVersion);
-    } else {
-      setCreatedVersion((createdVersion) => ({
-        ...createdVersion,
-        documentVersionIds: tableData1,
-      }));
-
-      creationPromise = apiClient.createSetVersion(documentSetId, createdVersion);
-    }
-    const response = await creationPromise.then((version) => {
-      if (tableData1 === undefined) return version;
-      tableData1.forEach((member) => {
-        docs.documentId = member[0];
-        docs.versionId = member[1];
-
-        apiClient.addDocumentToSetVersion(version.documentSetId, version.setVersionId, docs);
-      });
-
-      return version;
+  const handleRemoveElement = (removedDocumentId: string) => {
+    setCreatedSetVersion({
+      ...createdSetVersion,
+      documentVersionIds: createdSetVersion.documentVersionIds.filter(([documentId]) => documentId !== removedDocumentId),
     });
-    navigate(`/set-version?documentSetId=${response.documentSetId}&versionSetId=${response.setVersionId}`);
   };
 
-  if (isCreatingNewDocument) {
-    return (
-      <>
-        <SetNameEditor
-          disabled={parentVersionId !== undefined}
-          defaultValue={set?.documentSetName}
-          onChange={(documentSetName) => setCreatedSet({ ...createdSet, documentSetName })}
-        />
+  const createSetVersion: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
+    if (documentSetId === undefined) return;
+    (evt.target as HTMLButtonElement).disabled = true;
+    const createdVersion = await apiClient.createSetVersion(documentSetId, createdSetVersion);
+    navigate(`/set-version?documentSetId=${createdVersion.documentSetId}&versionSetId=${createdVersion.setVersionId}`);
+  };
 
-        <div>
-          <div>
-            <select value={selectedDocumentId} onChange={handleDocumentChange}>
-              <option value="">Wybierz dokument</option>
-              {documents.map((document) => (
-                <option key={document.documentId} value={document.documentId}>
-                  {document.documentName}
-                </option>
-              ))}
-            </select>
+  const createSet: React.MouseEventHandler<HTMLButtonElement> = async (evt) => {
+    (evt.target as HTMLButtonElement).disabled = true;
+    const createdDocument = await apiClient.createSet({
+      ...createdSet,
+      initialVersion: { ...createdSet.initialVersion, documentVersionIds: createdSetVersion.documentVersionIds },
+    });
+    const createdVersion = createdDocument.initialVersion;
+    navigate(`/set-version?documentSetId=${createdVersion.documentSetId}&versionSetId=${createdVersion.setVersionId}`);
+  };
 
-            <select value={selectedVersionId} onChange={handleVersionChange}>
-              <option value="">Wybierz wersję</option>
-              {version.map((version) => (
-                <option key={version.versionId} value={version.versionId}>
-                  {version.versionName}
-                </option>
-              ))}
-            </select>
+  const documentSelector = (
+    <select value={selectedDocumentId} onChange={handleDocumentChange}>
+      <option value="" disabled>
+        Select document
+      </option>
+      {documents
+        .filter(({ documentId }) => createdSetVersion.documentVersionIds.find(([docId]) => docId === documentId) === undefined)
+        .map((document) => (
+          <option key={document.documentId} value={document.documentId}>
+            {document.documentName}
+          </option>
+        ))}
+    </select>
+  );
 
-            <button onClick={handleAddElement}>Dodaj element</button>
-          </div>
+  const versionSelector = (
+    <select value={selectedVersionId} onChange={handleVersionChange}>
+      <option value="" disabled>
+        Select version
+      </option>
+      {selectedDocumentId !== '' ? (
+        versions[selectedDocumentId]?.map((version) => (
+          <option key={version.versionId} value={version.versionId}>
+            {version.versionName}
+          </option>
+        ))
+      ) : (
+        <></>
+      )}
+    </select>
+  );
 
-          {tableData.length > 0 && (
-            <table style={{ border: '1px solid black', borderCollapse: 'collapse', width: '100%' }}>
-              <thead>
-                <tr>
-                  <th>Nr</th>
-                  <th>Plik</th>
-                  <th>Wersja</th>
-                  <th>Akcje</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tableData.map((data, index) => (
-                  <tr key={index}>
-                    <td>{index}</td>
-                    <td>{data[0]}</td>
-                    <td>{data[1]}</td>
-                    <td>
-                      {' '}
-                      <button onClick={() => handleDelete(index)}>Usuń</button>{' '}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+  const tableHeadingRow = (
+    <tr>
+      <th>#</th>
+      <th>Document</th>
+      <th>Version</th>
+      <th>Actions</th>
+    </tr>
+  );
 
-        <Button style={{ marginTop: '20px' }} onClick={createVersion}>
-          Create
-        </Button>
-      </>
-    );
-  }
-
-  if (documentSetVersion === undefined || parentVersion === undefined) return null;
+  const makeElementRow = (data: [string, string], index: number) => (
+    <tr key={data[0]}>
+      <td>{index + 1}</td>
+      <td>{documents.find(({ documentId }) => documentId === data[0])?.documentName}</td>
+      <td>{versions[data[0]]?.find(({ versionId }) => versionId === data[1])?.versionName}</td>
+      <td>
+        {' '}
+        <button onClick={() => handleRemoveElement(data[0])}>Remove</button>{' '}
+      </td>
+    </tr>
+  );
 
   return (
     <>
       <SetNameEditor
+        key={parentSet?.documentSetId ?? ''}
         disabled={parentVersionId !== undefined}
-        defaultValue={set?.documentSetName}
+        defaultValue={parentSet?.documentSetName}
         onChange={(documentSetName) => setCreatedSet({ ...createdSet, documentSetName })}
       />
-      <SetVersionNameChooser versions={documentSetVersion} parentVersion={parentVersion} onChange={changeVersion} />
+      {isCreatingNewVersion && documentSetVersions !== undefined && parentSetVersion !== undefined ? (
+        <SetVersionNameChooser versions={documentSetVersions} parentVersion={parentSetVersion} onChange={changeVersion} />
+      ) : (
+        <></>
+      )}
 
       <div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <select value={selectedDocumentId} onChange={handleDocumentChange}>
-            <option value="">Wybierz dokument</option>
-            {documents.map((document) => (
-              <option key={document.documentId} value={document.documentId}>
-                {document.documentName}
-              </option>
-            ))}
-          </select>
-
-          <select value={selectedVersionId} onChange={handleVersionChange}>
-            <option value="">Wybierz wersję</option>
-            {version.map((version) => (
-              <option key={version.versionId} value={version.versionId}>
-                {version.versionName}
-              </option>
-            ))}
-          </select>
-
-          <button onClick={handleAddElement}>Dodaj element</button>
+          {documentSelector}
+          {versionSelector}
+          <button onClick={handleAddElement}>Add element</button>
         </div>
-
-        {tableData.length > 0 && (
-          <table style={{ border: '1px solid black', borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}>
-            <thead>
-              <tr>
-                <th>Nr</th>
-                <th>Plik</th>
-                <th>Wersja</th>
-                <th>Akcje</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((data, index) => (
-                <tr key={index}>
-                  <td>{index + 1}</td>
-                  <td>{data[0]}</td>
-                  <td>{data[1]}</td>
-                  <td>
-                    {' '}
-                    <button onClick={() => handleDelete(index)}>Usuń</button>{' '}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+        <table style={{ border: '1px solid black', borderCollapse: 'collapse', width: '100%', marginTop: '20px' }}>
+          <thead>{tableHeadingRow}</thead>
+          <tbody>{createdSetVersion.documentVersionIds.map(makeElementRow)}</tbody>
+        </table>
       </div>
 
-      <Button style={{ marginTop: '20px' }} onClick={createVersion}>
-        Create
+      <Button
+        style={{ marginTop: '20px' }}
+        onClick={isCreatingNewSet ? createSet : isCreatingNewVersion ? createSetVersion : undefined}
+      >
+        Create {isCreatingNewSet ? 'a set' : isCreatingNewVersion ? 'a version' : undefined}
       </Button>
     </>
   );
